@@ -1,0 +1,33 @@
+{
+  "name": "find-my-way",
+  "version": "0.1.0",
+  "description": "Crazy fast http radix based router",
+  "main": "index.js",
+  "scripts": {
+    "bench": "node bench.js",
+    "test": "standard && tap test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/delvedor/find-my-way.git"
+  },
+  "keywords": [
+    "http",
+    "router",
+    "radix",
+    "fast",
+    "speed"
+  ],
+  "author": "Tomas Della Vedova - @delvedor (http://delved.org)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/delvedor/find-my-way/issues"
+  },
+  "homepage": "https://github.com/delvedor/find-my-way#readme",
+  "devDependencies": {
+    "benchmark": "^2.1.4",
+    "request": "^2.81.0",
+    "standard": "^10.0.2",
+    "tap": "^10.3.2"
+  }
+}
