@@ -35,3 +35,9 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+
+# mac files
+.DS_Store
+
+# vim swap files
+*.swp
