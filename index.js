@@ -82,6 +82,7 @@ Router.prototype._insert = function (method, path, kind, params, handler) {
     pathLen = path.length
     len = 0
 
+    // search for the longest common prefix
     max = pathLen < prefixLen ? pathLen : prefixLen
     while (len < max && path.codePointAt(len) === prefix.codePointAt(len)) len++
 
@@ -137,6 +138,10 @@ Router.prototype.lookup = function (method, path, req, res) {
   return handle.handler(req, res, handle.params)
 }
 
+Router.prototype.find = function (method, path) {
+  return this._lookup(method, path, this.tree, { handler: null, params: [] })
+}
+
 Router.prototype._lookup = function (method, path, currentNode, route) {
   var pathLen = path.length
   var prefix = currentNode.prefix
@@ -161,6 +166,7 @@ Router.prototype._lookup = function (method, path, currentNode, route) {
   var swapPath = ''
   var prefixLen = prefix.length
   var len = 0
+  // search for the longest common prefix
   var max = pathLen < prefixLen ? pathLen : prefixLen
   while (len < max && path.codePointAt(len) === prefix.codePointAt(len)) len++
 
