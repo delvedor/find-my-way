@@ -115,3 +115,28 @@ test('wildcard', t => {
 
   findMyWay.lookup('GET', '/test/hello')
 })
+
+test('find should return the route', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test', { hello: 'world' })
+
+  t.deepEqual(findMyWay.find('GET', '/test'), { handler: { hello: 'world' }, params: {} })
+})
+
+test('find should return the route with params', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test/:id', { hello: 'world' })
+
+  t.deepEqual(findMyWay.find('GET', '/test/hello'), { handler: { hello: 'world' }, params: { id: 'hello' } })
+})
+
+test('find should return a null handler if the route does not exist', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  t.deepEqual(findMyWay.find('GET', '/test'), { handler: null, params: [] })
+})
