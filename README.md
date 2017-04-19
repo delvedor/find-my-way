@@ -5,22 +5,24 @@
 A crazy fast HTTP router, internally uses an highly performant [Radix Tree](https://en.wikipedia.com/wiki/Radix_tree) (aka compact [Prefix Tree](https://en.wikipedia.com/wiki/Trie)), supports route params, wildcards, and it's framework independent.  
 It is inspired by the [echo](https://github.com/labstack/echo) router, some parts have been extracted from [trekjs](https://github.com/trekjs) router.
 
+<a name="install"></a>
 ## Install
 ```
 npm i find-my-way --save
 ```
 
+<a name="usage"></a>
 ## Usage
 ```js
 const http = require('http')
-const findMyWay = require('./')()
+const router = require('find-my-way')()
 
-findMyWay.on('GET', '/', (req, res, params) => {
+router.on('GET', '/', (req, res, params) => {
   res.end('{"hello":"world"}')
 })
 
 const server = http.createServer((req, res) => {
-  findMyWay.lookup(req.method, req.url, req, res)
+  router.lookup(req, res)
 })
 
 server.listen(3000, err => {
@@ -29,6 +31,60 @@ server.listen(3000, err => {
 })
 ```
 
+<a name="api"></a>
+## API
+<a name="constructor"></a>
+#### FindMyway([options])
+Instance a new router.  
+You can pass a default route with the option `defaultRoute`.
+```js
+const router = require('find-my-way')({
+  defaultRoute: (req, res) => {
+    res.statusCode = 404
+    res.end()
+  }
+})
+```
+
+<a name="on"></a>
+#### on(method, path, handler, [store])
+Register a new route, `store` is an object that you can access later inside the handler function.
+```js
+router.on('GET', '/', (req, res, params) => {
+  // your code
+})
+
+// with store
+router.on('GET', '/store', (req, res, params, store) => {
+  assert.equal(store, { hello: 'world' })
+}, { hello: 'world' })
+```
+
+<a name="lookup"></a>
+#### lookup(request, response)
+Start a new search, `request` and `response` are the server req/res objects.  
+If a route is found it will automatically called the handler, otherwise the default route will be called.  
+The url is sanitized internally.
+```js
+router.lookup(req, res)
+```
+
+<a name="find"></a>
+#### find(method, path)
+Return (if present) the route registered in *method:path*.  
+The path must be sanitized.
+```js
+router.find('GET', '/example')
+// => { handler: Function, params: Object, store: Object}
+// => null
+```
+
+<a name="acknowledgements"></a>
+## Acknowledgements
+
+This project is kindly sponsored by [LetzDoIt](http://www.letzdoitapp.com/).
+
+<a name="license"></a>
 ## License
 **[find-my-way - MIT](https://github.com/delvedor/find-my-way/blob/master/LICENSE)**  
 **[trekjs/router - MIT](https://github.com/trekjs/router/blob/master/LICENSE)**

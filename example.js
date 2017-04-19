@@ -1,14 +1,15 @@
 'use strict'
 
 const http = require('http')
-const findMyWay = require('./')()
+const router = require('./')()
 
-findMyWay.on('GET', '/', (req, res, params) => {
+router.on('GET', '/test', (req, res, params) => {
   res.end('{"hello":"world"}')
 })
 
 const server = http.createServer((req, res) => {
-  findMyWay.lookup(req.method, req.url, req, res)
+  console.log(req.url)
+  router.lookup(req, res)
 })
 
 server.listen(3000, err => {

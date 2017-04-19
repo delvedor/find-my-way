@@ -17,7 +17,7 @@ test('basic router with http server', t => {
   })
 
   const server = http.createServer((req, res) => {
-    findMyWay.lookup(req.method, req.url, req, res)
+    findMyWay.lookup(req, res)
   })
 
   server.listen(0, err => {
@@ -46,7 +46,7 @@ test('router with params with http server', t => {
   })
 
   const server = http.createServer((req, res) => {
-    findMyWay.lookup(req.method, req.url, req, res)
+    findMyWay.lookup(req, res)
   })
 
   server.listen(0, err => {
@@ -74,7 +74,7 @@ test('default route', t => {
   })
 
   const server = http.createServer((req, res) => {
-    findMyWay.lookup(req.method, req.url, req, res)
+    findMyWay.lookup(req, res)
   })
 
   server.listen(0, err => {

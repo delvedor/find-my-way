@@ -5,45 +5,44 @@
     static: 0,
     param: 1,
     matchAll: 2,
-
-  Char codes:
-    slash: 47,
-    colon: 58,
-    star: 42
 */
 
+const assert = require('assert')
 const Node = require('./node')
+const httpMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE', 'CONNECT']
 
 function Router (opts) {
   if (!(this instanceof Router)) {
     return new Router(opts)
   }
   opts = opts || {}
+
   if (opts.defaultRoute) {
+    assert.equal(typeof opts.defaultRoute, 'function', 'The default route must be a function')
     this.defaultRoute = opts.defaultRoute
-  }
-  if (opts.async) {
-    this.async = true
   }
 
   this.tree = new Node()
 }
 
-Router.prototype.on = function (method, path, handler) {
+Router.prototype.on = function (method, path, handler, store) {
+  assert.equal(typeof method, 'string', 'Method should be a string')
+  assert.equal(typeof path, 'string', 'Path should be a string')
+  assert.equal(typeof handler, 'function', 'Handler should be a function')
+  assert.notEqual(httpMethods.indexOf(method), -1, `Method '${method}' is not an http method.`)
+
   const params = []
-  var charCode = 0
   var j = 0
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
-    charCode = path.codePointAt(i)
     // parametric route
-    if (charCode === 58) {
+    if (path[i] === ':') {
       j = i + 1
-      this._insert(method, path.slice(0, i), 0, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null)
 
       // isolate the parameter name
-      while (i < len && path.codePointAt(i) !== 47) i++
+      while (i < len && path[i] !== '/') i++
       params.push(path.slice(j, i))
 
       path = path.slice(0, j) + path.slice(i)
@@ -52,22 +51,22 @@ Router.prototype.on = function (method, path, handler) {
 
       // if the path is ended
       if (i === len) {
-        return this._insert(method, path.slice(0, i), 1, params, handler)
+        return this._insert(method, path.slice(0, i), 1, params, handler, store)
       }
-      this._insert(method, path.slice(0, i), 1, params, null)
+      this._insert(method, path.slice(0, i), 1, params, null, null)
 
     // wildcard route
-    } else if (charCode === 42) {
-      this._insert(method, path.slice(0, i), 0, null, null)
+    } else if (path[i] === '*') {
+      this._insert(method, path.slice(0, i), 0, null, null, null)
       params.push('*')
-      return this._insert(method, path.slice(0, len), 2, params, handler)
+      return this._insert(method, path.slice(0, len), 2, params, handler, store)
     }
   }
   // static route
-  this._insert(method, path, 0, params, handler)
+  this._insert(method, path, 0, params, handler, store)
 }
 
-Router.prototype._insert = function (method, path, kind, params, handler) {
+Router.prototype._insert = function (method, path, kind, params, handler, store) {
   var prefix = ''
   var pathLen = 0
   var prefixLen = 0
@@ -84,7 +83,7 @@ Router.prototype._insert = function (method, path, kind, params, handler) {
 
     // search for the longest common prefix
     max = pathLen < prefixLen ? pathLen : prefixLen
-    while (len < max && path.codePointAt(len) === prefix.codePointAt(len)) len++
+    while (len < max && path[len] === prefix[len]) len++
 
     if (len < prefixLen) {
       // split the node in the radix tree and add it to the parent
@@ -92,25 +91,27 @@ Router.prototype._insert = function (method, path, kind, params, handler) {
 
       // reset the parent
       currentNode.children = [node]
+      currentNode.numberOfChildren = 1
       currentNode.prefix = prefix.slice(0, len)
-      currentNode.label = currentNode.prefix.codePointAt(0)
-      currentNode.map = Object.create(null)
+      currentNode.label = currentNode.prefix[0]
+      currentNode.map = {}
       currentNode.kind = 0
 
       if (len === pathLen) {
         // add the handler to the parent node
-        currentNode.addHandler(method, handler, params)
+        assert(!currentNode.findHandler(method), `Method '${method}' already declared for route '${path}'`)
+        currentNode.addHandler(method, handler, params, store)
         currentNode.kind = kind
       } else {
         // create a child node and add an handler to it
         node = new Node(path.slice(len), [], kind)
-        node.addHandler(method, handler, params)
+        node.addHandler(method, handler, params, store)
         // add the child to the parent
         currentNode.add(node)
       }
     } else if (len < pathLen) {
       path = path.slice(len)
-      node = currentNode.findByLabel(path.codePointAt(0))
+      node = currentNode.findByLabel(path[0])
       if (node) {
         // we must go deeper in the tree
         currentNode = node
@@ -118,103 +119,99 @@ Router.prototype._insert = function (method, path, kind, params, handler) {
       }
       // create a new child node
       node = new Node(path, [], kind)
-      node.addHandler(method, handler, params)
+      node.addHandler(method, handler, params, store)
       // add the child to the parent
       currentNode.add(node)
     } else if (handler) {
       // the node already exist
-      currentNode.addHandler(method, handler, params)
+      assert(!currentNode.findHandler(method), `Method '${method}' already declared for route '${path}'`)
+      currentNode.addHandler(method, handler, params, store)
     }
     return
   }
 }
 
-Router.prototype.lookup = function (method, path, req, res) {
-  var handle = this._lookup(method, path, this.tree, { handler: null, params: [] })
-  if (!handle.handler) return this._defaultRoute(req, res)
-  if (this.async) {
-    return setImmediate(handle.handler, req, res, handle.params)
-  }
-  return handle.handler(req, res, handle.params)
+Router.prototype.lookup = function (req, res) {
+  var i = 0
+  var len = req.url.length
+  while (i < len && req.url[i] !== '?' && req.url[i] !== '#') i++
+  var handle = this.find(req.method, req.url.slice(0, i))
+  if (!handle) return this._defaultRoute(req, res)
+  return handle.handler(req, res, handle.params, handle.store)
 }
 
 Router.prototype.find = function (method, path) {
-  return this._lookup(method, path, this.tree, { handler: null, params: [] })
-}
-
-Router.prototype._lookup = function (method, path, currentNode, route) {
-  var pathLen = path.length
-  var prefix = currentNode.prefix
-
-  // found the route
-  if (pathLen === 0 || path === prefix) {
-    var handle = currentNode.findHandler(method)
-    if (!handle || !handle.handler) return route
-
-    route.handler = handle.handler
-    var paramNames = handle.params
-    var paramValues = route.params
-    route.params = {}
-
-    for (var i = 0; i < paramNames.length; i++) {
-      route.params[paramNames[i]] = paramValues[i]
-    }
-
-    return route
-  }
-
-  var swapPath = ''
-  var prefixLen = prefix.length
+  var currentNode = this.tree
+  var node = null
+  var pindex = 0
+  var params = []
+  var pathLen = 0
+  var prefix = ''
+  var prefixLen = 0
   var len = 0
-  // search for the longest common prefix
-  var max = pathLen < prefixLen ? pathLen : prefixLen
-  while (len < max && path.codePointAt(len) === prefix.codePointAt(len)) len++
+  var i = 0
 
-  if (len === prefixLen) path = path.slice(len)
-  swapPath = path
+  while (true) {
+    pathLen = path.length
+    prefix = currentNode.prefix
+    prefixLen = prefix.length
+    len = 0
 
-  // static route
-  var node = currentNode.find(path.codePointAt(0), 0)
-  if (node) {
-    this._lookup(method, path, node, route)
-    if (route.hanlder) {
-      return route
+    // found the route
+    if (pathLen === 0 || path === prefix) {
+      var handle = currentNode.findHandler(method)
+      if (!handle) return null
+
+      var paramNames = handle.params
+      var paramsObj = {}
+
+      for (i = 0; i < paramNames.length; i++) {
+        paramsObj[paramNames[i]] = params[i]
+      }
+
+      return {
+        handler: handle.handler,
+        params: paramsObj,
+        store: handle.store
+      }
     }
-    path = swapPath
-  }
 
-  // route not found
-  if (len !== prefixLen) {
-    return route
-  }
+    // search for the longest common prefix
+    i = pathLen < prefixLen ? pathLen : prefixLen
+    while (len < i && path[len] === prefix[len]) len++
 
-  // parametric route
-  node = currentNode.findByKind(1)
-  if (node) {
-    len = path.length
-    i = 0
-    // find the next '/'
-    while (i < len && path.codePointAt(i) !== 47) i++
-    // save the param value
-    route.params.push(path.slice(0, i))
-    swapPath = path
-    path = path.slice(i)
-    this._lookup(method, path, node, route)
-    if (route.handler) {
-      return route
+    if (len === prefixLen) path = path.slice(len)
+
+    // static route
+    node = currentNode.find(path[0], 0)
+    if (node) {
+      currentNode = node
+      continue
     }
-    route.params.pop()
-    path = swapPath
-  }
 
-  // wildcard route
-  node = currentNode.findByKind(2)
-  if (node) {
-    route.params.push(path)
-    this._lookup(method, '', node, route)
-  }
+    // parametric route
+    node = currentNode.findByKind(1)
+    if (node) {
+      currentNode = node
+      i = 0
+      while (i < pathLen && path[i] !== '/') i++
+      params[pindex++] = path.slice(0, i)
+      path = path.slice(i)
+      continue
+    }
 
-  return route
+    // wildcard route
+    node = currentNode.findByKind(2)
+    if (node) {
+      params[pindex] = path
+      currentNode = node
+      path = ''
+      continue
+    }
+
+    // route not found
+    if (len !== prefixLen) return null
+  }
 }
 
 Router.prototype._defaultRoute = function (req, res) {
