@@ -29,7 +29,7 @@ function Router (opts) {
   this.tree = new Node()
 }
 
-Router.prototype.on = function (method, path, handler) {
+Router.prototype.on = function (method, path, handler, store) {
   const params = []
   var charCode = 0
   var j = 0
@@ -40,7 +40,7 @@ Router.prototype.on = function (method, path, handler) {
     // parametric route
     if (charCode === 58) {
       j = i + 1
-      this._insert(method, path.slice(0, i), 0, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null)
 
       // isolate the parameter name
       while (i < len && path.codePointAt(i) !== 47) i++
@@ -52,22 +52,22 @@ Router.prototype.on = function (method, path, handler) {
 
       // if the path is ended
       if (i === len) {
-        return this._insert(method, path.slice(0, i), 1, params, handler)
+        return this._insert(method, path.slice(0, i), 1, params, handler, store)
       }
-      this._insert(method, path.slice(0, i), 1, params, null)
+      this._insert(method, path.slice(0, i), 1, params, null, null)
 
     // wildcard route
     } else if (charCode === 42) {
-      this._insert(method, path.slice(0, i), 0, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null)
       params.push('*')
-      return this._insert(method, path.slice(0, len), 2, params, handler)
+      return this._insert(method, path.slice(0, len), 2, params, handler, store)
     }
   }
   // static route
-  this._insert(method, path, 0, params, handler)
+  this._insert(method, path, 0, params, handler, store)
 }
 
-Router.prototype._insert = function (method, path, kind, params, handler) {
+Router.prototype._insert = function (method, path, kind, params, handler, store) {
   var prefix = ''
   var pathLen = 0
   var prefixLen = 0
@@ -99,12 +99,12 @@ Router.prototype._insert = function (method, path, kind, params, handler) {
 
       if (len === pathLen) {
         // add the handler to the parent node
-        currentNode.addHandler(method, handler, params)
+        currentNode.addHandler(method, handler, params, store)
         currentNode.kind = kind
       } else {
         // create a child node and add an handler to it
         node = new Node(path.slice(len), [], kind)
-        node.addHandler(method, handler, params)
+        node.addHandler(method, handler, params, store)
         // add the child to the parent
         currentNode.add(node)
       }
@@ -118,12 +118,12 @@ Router.prototype._insert = function (method, path, kind, params, handler) {
       }
       // create a new child node
       node = new Node(path, [], kind)
-      node.addHandler(method, handler, params)
+      node.addHandler(method, handler, params, store)
       // add the child to the parent
       currentNode.add(node)
     } else if (handler) {
       // the node already exist
-      currentNode.addHandler(method, handler, params)
+      currentNode.addHandler(method, handler, params, store)
     }
     return
   }
@@ -135,7 +135,7 @@ Router.prototype.lookup = function (method, path, req, res) {
   if (this.async) {
     return setImmediate(handle.handler, req, res, handle.params)
   }
-  return handle.handler(req, res, handle.params)
+  return handle.handler(req, res, handle.params, handle.store)
 }
 
 Router.prototype.find = function (method, path) {

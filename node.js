@@ -46,10 +46,11 @@ Node.prototype.findByKind = function (kind) {
   return null
 }
 
-Node.prototype.addHandler = function (method, handler, params) {
+Node.prototype.addHandler = function (method, handler, params, store) {
   this.map[method] = {
     handler: handler,
-    params: params
+    params: params,
+    store: store || null
   }
 }
 
