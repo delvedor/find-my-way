@@ -9,18 +9,20 @@
 
 function Node (prefix, children, kind, map) {
   this.prefix = prefix || '/'
-  this.label = this.prefix.codePointAt(0)
+  this.label = this.prefix[0]
   this.children = children || []
+  this.numberOfChildren = this.children.length
   this.kind = kind || 0
-  this.map = map || Object.create(null)
+  this.map = map || {}
 }
 
 Node.prototype.add = function (node) {
   this.children.push(node)
+  this.numberOfChildren++
 }
 
 Node.prototype.find = function (label, kind) {
-  for (var i = 0, len = this.children.length; i < len; i++) {
+  for (var i = 0; i < this.numberOfChildren; i++) {
     if (this.children[i].label === label && this.children[i].kind === kind) {
       return this.children[i]
     }
@@ -29,7 +31,7 @@ Node.prototype.find = function (label, kind) {
 }
 
 Node.prototype.findByLabel = function (label) {
-  for (var i = 0, len = this.children.length; i < len; i++) {
+  for (var i = 0; i < this.numberOfChildren; i++) {
     if (this.children[i].label === label) {
       return this.children[i]
     }
@@ -38,7 +40,7 @@ Node.prototype.findByLabel = function (label) {
 }
 
 Node.prototype.findByKind = function (kind) {
-  for (var i = 0, len = this.children.length; i < len; i++) {
+  for (var i = 0; i < this.numberOfChildren; i++) {
     if (this.children[i].kind === kind) {
       return this.children[i]
     }
