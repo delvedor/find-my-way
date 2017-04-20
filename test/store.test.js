@@ -28,3 +28,22 @@ test('find a store object', t => {
     store: { hello: 'world' }
   })
 })
+
+test('update the store', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+  var bool = false
+
+  findMyWay.on('GET', '/test', (req, res, params, store) => {
+    if (!bool) {
+      t.is(store.hello, 'world')
+      store.hello = 'hello'
+      bool = true
+      findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+    } else {
+      t.is(store.hello, 'hello')
+    }
+  }, { hello: 'world' })
+
+  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+})
