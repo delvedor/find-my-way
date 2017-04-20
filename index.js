@@ -138,15 +138,16 @@ Router.prototype.lookup = function (req, res) {
   var i = 0
   var len = req.url.length
   while (i < len && req.url[i] !== '?' && req.url[i] !== '#') i++
+  var url = req.url.slice(0, i)
 
   // search the route inside the cache
-  var handle = this.cache.get(req.url.slice(0, i))
+  var handle = this.cache.get(url)
   if (handle) return handle.handler(req, res, handle.params, handle.store)
 
   // if the route in not saved in the cache, we search it
-  handle = this.find(req.method, req.url.slice(0, i))
+  handle = this.find(req.method, url)
   if (!handle) return this._defaultRoute(req, res)
-  this.cache.set(req.url.slice(0, i), handle)
+  this.cache.set(url, handle)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
