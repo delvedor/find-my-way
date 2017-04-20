@@ -29,5 +29,8 @@
     "request": "^2.81.0",
     "standard": "^10.0.2",
     "tap": "^10.3.2"
+  },
+  "dependencies": {
+    "hashlru": "^2.2.0"
   }
 }
