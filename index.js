@@ -10,6 +10,7 @@
 const assert = require('assert')
 const Node = require('./node')
 const httpMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE', 'CONNECT']
+const HLRU = require('hashlru')
 
 function Router (opts) {
   if (!(this instanceof Router)) {
@@ -23,6 +24,7 @@ function Router (opts) {
   }
 
   this.tree = new Node()
+  this.cache = HLRU(100)
 }
 
 Router.prototype.on = function (method, path, handler, store) {
@@ -132,11 +134,20 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
 }
 
 Router.prototype.lookup = function (req, res) {
+  // strip the url from querystring and hashes
   var i = 0
   var len = req.url.length
   while (i < len && req.url[i] !== '?' && req.url[i] !== '#') i++
-  var handle = this.find(req.method, req.url.slice(0, i))
+  var url = req.url.slice(0, i)
+
+  // search the route inside the cache
+  var handle = this.cache.get(url)
+  if (handle) return handle.handler(req, res, handle.params, handle.store)
+
+  // if the route in not saved in the cache, we search it
+  handle = this.find(req.method, url)
   if (!handle) return this._defaultRoute(req, res)
+  this.cache.set(url, handle)
   return handle.handler(req, res, handle.params, handle.store)
 }
 

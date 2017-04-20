@@ -3,6 +3,7 @@
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](http://standardjs.com/)  [![Build Status](https://travis-ci.org/delvedor/find-my-way.svg?branch=master)](https://travis-ci.org/delvedor/find-my-way)
 
 A crazy fast HTTP router, internally uses an highly performant [Radix Tree](https://en.wikipedia.com/wiki/Radix_tree) (aka compact [Prefix Tree](https://en.wikipedia.com/wiki/Trie)), supports route params, wildcards, and it's framework independent.  
+To achieve even better performances all the routes are cached internally with [hashlru](https://github.com/dominictarr/hashlru), where the key is the striped url, so all the static routes are served even faster!  
 It is inspired by the [echo](https://github.com/labstack/echo) router, some parts have been extracted from [trekjs](https://github.com/trekjs) router.
 
 <a name="install"></a>
@@ -64,7 +65,8 @@ router.on('GET', '/store', (req, res, params, store) => {
 #### lookup(request, response)
 Start a new search, `request` and `response` are the server req/res objects.  
 If a route is found it will automatically called the handler, otherwise the default route will be called.  
-The url is sanitized internally.
+Internally *lookup* caches all the routes with [hashlru](https://github.com/dominictarr/hashlru).  
+The url is sanitized automatically.
 ```js
 router.lookup(req, res)
 ```
