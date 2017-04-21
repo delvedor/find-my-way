@@ -48,7 +48,7 @@ const router = require('find-my-way')({
 
 <a name="on"></a>
 #### on(method, path, handler, [store])
-Register a new route, `store` is an object that you can access later inside the handler function.
+Register a new route, `store` is an object that you can access later inside the handler function.  
 ```js
 router.on('GET', '/', (req, res, params) => {
   // your code
@@ -56,15 +56,22 @@ router.on('GET', '/', (req, res, params) => {
 
 // with store
 router.on('GET', '/store', (req, res, params, store) => {
+  // the store can be updated
   assert.equal(store, { hello: 'world' })
 }, { hello: 'world' })
 ```
-
+If you want to register a **parametric** path, just use the *colon* before the parameter name, if you need a **wildcard** use the *star*.
+```js
+// parametric
+router.on('GET', '/example/:name', () => {}))
+// wildcard
+router.on('GET', '/other-example/*', () => {}))
+```
 <a name="lookup"></a>
 #### lookup(request, response)
 Start a new search, `request` and `response` are the server req/res objects.  
 If a route is found it will automatically called the handler, otherwise the default route will be called.  
-The url is sanitized internally.
+The url is sanitized internally, all the parameters and wildcards are decoded automatically.
 ```js
 router.lookup(req, res)
 ```
@@ -72,7 +79,7 @@ router.lookup(req, res)
 <a name="find"></a>
 #### find(method, path)
 Return (if present) the route registered in *method:path*.  
-The path must be sanitized.
+The path must be sanitized, all the parameters and wildcards are decoded automatically.
 ```js
 router.find('GET', '/example')
 // => { handler: Function, params: Object, store: Object}
