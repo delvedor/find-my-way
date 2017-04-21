@@ -224,3 +224,23 @@ test('find should return a null handler if the route does not exist', t => {
   // t.deepEqual(findMyWay.find('GET', '/test'), { handler: null, params: [], store: null })
   t.deepEqual(findMyWay.find('GET', '/test'), null)
 })
+
+test('should decode the uri - parametric', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+  const fn = () => {}
+
+  findMyWay.on('GET', '/test/:id', fn)
+
+  t.deepEqual(findMyWay.find('GET', '/test/he%2Fllo'), { handler: fn, params: { id: 'he/llo' }, store: null })
+})
+
+test('should decode the uri - wildcard', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+  const fn = () => {}
+
+  findMyWay.on('GET', '/test/*', fn)
+
+  t.deepEqual(findMyWay.find('GET', '/test/he%2Fllo'), { handler: fn, params: { '*': 'he/llo' }, store: null })
+})
