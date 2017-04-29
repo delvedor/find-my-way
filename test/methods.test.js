@@ -37,20 +37,6 @@ test('default route', t => {
   findMyWay.lookup({ method: 'GET', url: '/test' }, null)
 })
 
-test('async handler', t => {
-  t.plan(1)
-
-  const findMyWay = FindMyWay({
-    async: true
-  })
-
-  findMyWay.on('GET', '/test', (req, res, params) => {
-    t.ok('inside async handler')
-  })
-
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
-})
-
 test('parametric route', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
@@ -194,7 +180,10 @@ test('wildcard', t => {
     t.is(params['*'], 'hello')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+  findMyWay.lookup(
+    { method: 'GET', url: '/test/hello' },
+    null
+  )
 })
 
 test('find should return the route', t => {
@@ -204,7 +193,10 @@ test('find should return the route', t => {
 
   findMyWay.on('GET', '/test', fn)
 
-  t.deepEqual(findMyWay.find('GET', '/test'), { handler: fn, params: {}, store: null })
+  t.deepEqual(
+    findMyWay.find('GET', '/test'),
+    { handler: fn, params: {}, store: null }
+  )
 })
 
 test('find should return the route with params', t => {
@@ -214,15 +206,20 @@ test('find should return the route with params', t => {
 
   findMyWay.on('GET', '/test/:id', fn)
 
-  t.deepEqual(findMyWay.find('GET', '/test/hello'), { handler: fn, params: { id: 'hello' }, store: null })
+  t.deepEqual(
+    findMyWay.find('GET', '/test/hello'),
+    { handler: fn, params: { id: 'hello' }, store: null }
+  )
 })
 
 test('find should return a null handler if the route does not exist', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
 
-  // t.deepEqual(findMyWay.find('GET', '/test'), { handler: null, params: [], store: null })
-  t.deepEqual(findMyWay.find('GET', '/test'), null)
+  t.deepEqual(
+    findMyWay.find('GET', '/test'),
+    null
+  )
 })
 
 test('should decode the uri - parametric', t => {
@@ -232,7 +229,10 @@ test('should decode the uri - parametric', t => {
 
   findMyWay.on('GET', '/test/:id', fn)
 
-  t.deepEqual(findMyWay.find('GET', '/test/he%2Fllo'), { handler: fn, params: { id: 'he/llo' }, store: null })
+  t.deepEqual(
+    findMyWay.find('GET', '/test/he%2Fllo'),
+    { handler: fn, params: { id: 'he/llo' }, store: null }
+  )
 })
 
 test('should decode the uri - wildcard', t => {
@@ -242,5 +242,47 @@ test('should decode the uri - wildcard', t => {
 
   findMyWay.on('GET', '/test/*', fn)
 
-  t.deepEqual(findMyWay.find('GET', '/test/he%2Fllo'), { handler: fn, params: { '*': 'he/llo' }, store: null })
+  t.deepEqual(
+    findMyWay.find('GET', '/test/he%2Fllo'),
+    { handler: fn, params: { '*': 'he/llo' }, store: null }
+  )
+})
+
+test('safe decodeURIComponent', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+  const fn = () => {}
+
+  findMyWay.on('GET', '/test/:id', fn)
+
+  t.deepEqual(
+    findMyWay.find('GET', '/test/hel%"Flo'),
+    null
+  )
+})
+
+test('safe decodeURIComponent - nested route', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+  const fn = () => {}
+
+  findMyWay.on('GET', '/test/hello/world/:id/blah', fn)
+
+  t.deepEqual(
+    findMyWay.find('GET', '/test/hello/world/hel%"Flo/blah'),
+    null
+  )
+})
+
+test('safe decodeURIComponent - wildcard', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+  const fn = () => {}
+
+  findMyWay.on('GET', '/test/*', fn)
+
+  t.deepEqual(
+    findMyWay.find('GET', '/test/hel%"Flo'),
+    null
+  )
 })
