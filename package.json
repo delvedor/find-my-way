@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "bench": "node bench.js",
-    "test": "standard && tap test/*.test.js"
+    "test": "standard && tap test/*.test.js",
+    "coveralls": "tap test/*.test.js --cov --coverage-report=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,7 @@
   "homepage": "https://github.com/delvedor/find-my-way#readme",
   "devDependencies": {
     "benchmark": "^2.1.4",
+    "coveralls": "^2.13.1",
     "request": "^2.81.0",
     "standard": "^10.0.2",
     "tap": "^10.3.2"

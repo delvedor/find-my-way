@@ -195,7 +195,11 @@ Router.prototype.find = function (method, path) {
       currentNode = node
       i = 0
       while (i < pathLen && path[i] !== '/') i++
-      params[pindex++] = decodeURIComponent(path.slice(0, i))
+      try {
+        params[pindex++] = decodeURIComponent(path.slice(0, i))
+      } catch (e) {
+        return null
+      }
       path = path.slice(i)
       continue
     }
@@ -203,7 +207,11 @@ Router.prototype.find = function (method, path) {
     // wildcard route
     node = currentNode.findByKind(2)
     if (node) {
-      params[pindex] = decodeURIComponent(path)
+      try {
+        params[pindex] = decodeURIComponent(path)
+      } catch (e) {
+        return null
+      }
       currentNode = node
       path = ''
       continue
