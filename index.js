@@ -37,12 +37,12 @@ Router.prototype.on = function (method, path, handler, store) {
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
     // parametric route
-    if (path[i] === ':') {
+    if (path.charCodeAt(i) === 58 /* : */) {
       j = i + 1
       this._insert(method, path.slice(0, i), 0, null, null, null)
 
       // isolate the parameter name
-      while (i < len && path[i] !== '/') i++
+      while (i < len && path.charCodeAt(i) !== 47 /* / */) i++
       params.push(path.slice(j, i))
 
       path = path.slice(0, j) + path.slice(i)
@@ -56,7 +56,7 @@ Router.prototype.on = function (method, path, handler, store) {
       this._insert(method, path.slice(0, i), 1, params, null, null)
 
     // wildcard route
-    } else if (path[i] === '*') {
+    } else if (path.charCodeAt(i) === 42 /* * */) {
       this._insert(method, path.slice(0, i), 0, null, null, null)
       params.push('*')
       return this._insert(method, path.slice(0, len), 2, params, handler, store)
@@ -133,8 +133,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
 
 Router.prototype.lookup = function (req, res) {
   var i = 0
-  var len = req.url.length
-  while (i < len && req.url[i] !== '?' && req.url[i] !== '#') i++
+  while (i < req.url.length && req.url.charCodeAt(i) !== 63 /* ? */ && req.url.charCodeAt(i) !== 35 /* # */) i++
   var handle = this.find(req.method, req.url.slice(0, i))
   if (!handle) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
@@ -194,7 +193,7 @@ Router.prototype.find = function (method, path) {
     if (node) {
       currentNode = node
       i = 0
-      while (i < pathLen && path[i] !== '/') i++
+      while (i < pathLen && path.charCodeAt(i) !== 47 /* / */) i++
       try {
         params[pindex++] = decodeURIComponent(path.slice(0, i))
       } catch (e) {
