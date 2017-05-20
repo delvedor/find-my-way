@@ -132,9 +132,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
 }
 
 Router.prototype.lookup = function (req, res) {
-  var i = 0
-  while (i < req.url.length && req.url.charCodeAt(i) !== 63 /* ? */ && req.url.charCodeAt(i) !== 35 /* # */) i++
-  var handle = this.find(req.method, req.url.slice(0, i))
+  var handle = this.find(req.method, sanitizeUrl(req.url))
   if (!handle) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
@@ -231,3 +229,13 @@ Router.prototype._defaultRoute = function (req, res) {
 }
 
 module.exports = Router
+
+function sanitizeUrl (url) {
+  for (var i = 0; i < url.length; i++) {
+    var charCode = url.charCodeAt(i)
+    if (charCode === 63 /* ? */ || charCode === 35 /* # */) {
+      return url.slice(0, i)
+    }
+  }
+  return url
+}
