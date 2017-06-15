@@ -231,7 +231,7 @@ Router.prototype._defaultRoute = function (req, res) {
 module.exports = Router
 
 function sanitizeUrl (url) {
-  for (var i = 0; i < url.length; i++) {
+  for (var i = 0, len = url.length; i < len; i++) {
     var charCode = url.charCodeAt(i)
     if (charCode === 63 /* ? */ || charCode === 35 /* # */) {
       return url.slice(0, i)

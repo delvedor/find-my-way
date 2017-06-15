@@ -231,7 +231,7 @@ Router.prototype._defaultRoute = function (path) {
 module.exports = Router
 
 function sanitizeUrl (path) {
-  for (var i = 0; i < path.length; i++) {
+  for (var i = 0, len = path.length; i < len; i++) {
     var charCode = path.charCodeAt(i)
     if (charCode === 63 /* ? */ || charCode === 35 /* # */) {
       return path.slice(0, i)
