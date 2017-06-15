@@ -3,6 +3,10 @@
 const http = require('http')
 const router = require('./')()
 
+router.on('GET', '/status', (req, res, params) => {
+  res.end('{"hello":"world"}')
+})
+
 router.on('GET', '/test', (req, res, params) => {
   res.end('{"hello":"world"}')
 })

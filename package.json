@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "bench": "node bench.js",
-    "test": "standard && tap test/*.test.js",
+    "test": "standard && tap test/*.test.js test/*/*.test.js",
     "coveralls": "tap test/*.test.js --cov --coverage-report=text-lcov | coveralls"
   },
   "repository": {
@@ -31,5 +31,8 @@
     "request": "^2.81.0",
     "standard": "^10.0.2",
     "tap": "^10.3.2"
+  },
+  "dependencies": {
+    "query-string": "^4.3.4"
   }
 }

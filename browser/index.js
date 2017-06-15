@@ -1,3 +1,4 @@
+/* global window */
 'use strict'
 
 /*
@@ -9,7 +10,7 @@
 
 const assert = require('assert')
 const Node = require('./node')
-const httpMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE', 'CONNECT']
+const parseUrl = require('query-string').parse
 
 function Router (opts) {
   if (!(this instanceof Router)) {
@@ -25,11 +26,9 @@ function Router (opts) {
   this.tree = new Node()
 }
 
-Router.prototype.on = function (method, path, handler, store) {
-  assert.equal(typeof method, 'string', 'Method should be a string')
+Router.prototype.on = function (path, handler, store) {
   assert.equal(typeof path, 'string', 'Path should be a string')
   assert.equal(typeof handler, 'function', 'Handler should be a function')
-  assert.notEqual(httpMethods.indexOf(method), -1, `Method '${method}' is not an http method.`)
 
   const params = []
   var j = 0
@@ -39,7 +38,7 @@ Router.prototype.on = function (method, path, handler, store) {
     // parametric route
     if (path.charCodeAt(i) === 58 /* : */) {
       j = i + 1
-      this._insert(method, path.slice(0, i), 0, null, null, null)
+      this._insert(path.slice(0, i), 0, null, null, null)
 
       // isolate the parameter name
       while (i < len && path.charCodeAt(i) !== 47 /* / */) i++
@@ -51,22 +50,22 @@ Router.prototype.on = function (method, path, handler, store) {
 
       // if the path is ended
       if (i === len) {
-        return this._insert(method, path.slice(0, i), 1, params, handler, store)
+        return this._insert(path.slice(0, i), 1, params, handler, store)
       }
-      this._insert(method, path.slice(0, i), 1, params, null, null)
+      this._insert(path.slice(0, i), 1, params, null, null)
 
     // wildcard route
     } else if (path.charCodeAt(i) === 42 /* * */) {
-      this._insert(method, path.slice(0, i), 0, null, null, null)
+      this._insert(path.slice(0, i), 0, null, null, null)
       params.push('*')
-      return this._insert(method, path.slice(0, len), 2, params, handler, store)
+      return this._insert(path.slice(0, len), 2, params, handler, store)
     }
   }
   // static route
-  this._insert(method, path, 0, params, handler, store)
+  this._insert(path, 0, params, handler, store)
 }
 
-Router.prototype._insert = function (method, path, kind, params, handler, store) {
+Router.prototype._insert = function (path, kind, params, handler, store) {
   var prefix = ''
   var pathLen = 0
   var prefixLen = 0
@@ -99,13 +98,13 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
 
       if (len === pathLen) {
         // add the handler to the parent node
-        assert(!currentNode.findHandler(method), `Method '${method}' already declared for route '${path}'`)
-        currentNode.addHandler(method, handler, params, store)
+        assert(!currentNode.getHandler(), `Handler already declared for route '${path}'`)
+        currentNode.addHandler(handler, params, store)
         currentNode.kind = kind
       } else {
         // create a child node and add an handler to it
         node = new Node(path.slice(len), [], kind)
-        node.addHandler(method, handler, params, store)
+        node.addHandler(handler, params, store)
         // add the child to the parent
         currentNode.add(node)
       }
@@ -119,25 +118,29 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
       }
       // create a new child node
       node = new Node(path, [], kind)
-      node.addHandler(method, handler, params, store)
+      node.addHandler(handler, params, store)
       // add the child to the parent
       currentNode.add(node)
     } else if (handler) {
       // the node already exist
-      assert(!currentNode.findHandler(method), `Method '${method}' already declared for route '${path}'`)
-      currentNode.addHandler(method, handler, params, store)
+      assert(!currentNode.getHandler(), `Handler already declared for route '${path}'`)
+      currentNode.addHandler(handler, params, store)
     }
     return
   }
 }
 
-Router.prototype.lookup = function (req, res) {
-  var handle = this.find(req.method, sanitizeUrl(req.url))
-  if (!handle) return this._defaultRoute(req, res)
-  return handle.handler(req, res, handle.params, handle.store)
+Router.prototype.lookup = function (path) {
+  var handle = this.find(sanitizeUrl(path))
+  if (!handle) return this._defaultRoute(path)
+  return handle.handler({
+    query: parseUrl(window.location.search),
+    hash: parseUrl(window.location.hash),
+    params: handle.params || {}
+  }, handle.store)
 }
 
-Router.prototype.find = function (method, path) {
+Router.prototype.find = function (path) {
   var currentNode = this.tree
   var node = null
   var pindex = 0
@@ -156,7 +159,7 @@ Router.prototype.find = function (method, path) {
 
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = currentNode.findHandler(method)
+      var handle = currentNode.getHandler()
       if (!handle) return null
 
       var paramNames = handle.params
@@ -219,23 +222,20 @@ Router.prototype.find = function (method, path) {
   }
 }
 
-Router.prototype._defaultRoute = function (req, res) {
+Router.prototype._defaultRoute = function (path) {
   if (this.defaultRoute) {
-    this.defaultRoute(req, res)
-  } else {
-    res.statusCode = 404
-    res.end()
+    this.defaultRoute(path)
   }
 }
 
 module.exports = Router
 
-function sanitizeUrl (url) {
-  for (var i = 0, len = url.length; i < len; i++) {
-    var charCode = url.charCodeAt(i)
+function sanitizeUrl (path) {
+  for (var i = 0, len = path.length; i < len; i++) {
+    var charCode = path.charCodeAt(i)
     if (charCode === 63 /* ? */ || charCode === 35 /* # */) {
-      return url.slice(0, i)
+      return path.slice(0, i)
     }
   }
-  return url
+  return path
 }
