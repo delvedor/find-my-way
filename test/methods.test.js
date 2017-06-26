@@ -186,6 +186,20 @@ test('wildcard', t => {
   )
 })
 
+test('catch all wildcard', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '*', (req, res, params) => {
+    t.is(params['*'], '/test/hello')
+  })
+
+  findMyWay.lookup(
+    { method: 'GET', url: '/test/hello' },
+    null
+  )
+})
+
 test('find should return the route', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
