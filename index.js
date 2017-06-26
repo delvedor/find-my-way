@@ -5,6 +5,13 @@
     static: 0,
     param: 1,
     matchAll: 2,
+
+  Char codes:
+    '/': 47
+    ':': 58
+    '*': 42
+    '?': 63
+    '#': 35
 */
 
 const assert = require('assert')
@@ -37,12 +44,12 @@ Router.prototype.on = function (method, path, handler, store) {
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
     // parametric route
-    if (path.charCodeAt(i) === 58 /* : */) {
+    if (path.charCodeAt(i) === 58) {
       j = i + 1
       this._insert(method, path.slice(0, i), 0, null, null, null)
 
       // isolate the parameter name
-      while (i < len && path.charCodeAt(i) !== 47 /* / */) i++
+      while (i < len && path.charCodeAt(i) !== 47) i++
       params.push(path.slice(j, i))
 
       path = path.slice(0, j) + path.slice(i)
@@ -56,7 +63,7 @@ Router.prototype.on = function (method, path, handler, store) {
       this._insert(method, path.slice(0, i), 1, params, null, null)
 
     // wildcard route
-    } else if (path.charCodeAt(i) === 42 /* * */) {
+    } else if (path.charCodeAt(i) === 42) {
       this._insert(method, path.slice(0, i), 0, null, null, null)
       params.push('*')
       return this._insert(method, path.slice(0, len), 2, params, handler, store)
@@ -94,18 +101,18 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
       currentNode.numberOfChildren = 1
       currentNode.prefix = prefix.slice(0, len)
       currentNode.label = currentNode.prefix[0]
-      currentNode.map = {}
+      currentNode.map = null
       currentNode.kind = 0
 
       if (len === pathLen) {
         // add the handler to the parent node
-        assert(!currentNode.findHandler(method), `Method '${method}' already declared for route '${path}'`)
-        currentNode.addHandler(method, handler, params, store)
+        assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${path}'`)
+        currentNode.setHandler(method, handler, params, store)
         currentNode.kind = kind
       } else {
         // create a child node and add an handler to it
         node = new Node(path.slice(len), [], kind)
-        node.addHandler(method, handler, params, store)
+        node.setHandler(method, handler, params, store)
         // add the child to the parent
         currentNode.add(node)
       }
@@ -119,13 +126,13 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
       }
       // create a new child node
       node = new Node(path, [], kind)
-      node.addHandler(method, handler, params, store)
+      node.setHandler(method, handler, params, store)
       // add the child to the parent
       currentNode.add(node)
     } else if (handler) {
       // the node already exist
-      assert(!currentNode.findHandler(method), `Method '${method}' already declared for route '${path}'`)
-      currentNode.addHandler(method, handler, params, store)
+      assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${path}'`)
+      currentNode.setHandler(method, handler, params, store)
     }
     return
   }
@@ -156,7 +163,7 @@ Router.prototype.find = function (method, path) {
 
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = currentNode.findHandler(method)
+      var handle = currentNode.getHandler(method)
       if (!handle) return null
 
       var paramNames = handle.params
@@ -191,7 +198,7 @@ Router.prototype.find = function (method, path) {
     if (node) {
       currentNode = node
       i = 0
-      while (i < pathLen && path.charCodeAt(i) !== 47 /* / */) i++
+      while (i < pathLen && path.charCodeAt(i) !== 47) i++
       try {
         params[pindex++] = decodeURIComponent(path.slice(0, i))
       } catch (e) {
@@ -231,9 +238,9 @@ Router.prototype._defaultRoute = function (req, res) {
 module.exports = Router
 
 function sanitizeUrl (url) {
-  for (var i = 0; i < url.length; i++) {
+  for (var i = 0, len = url.length; i < len; i++) {
     var charCode = url.charCodeAt(i)
-    if (charCode === 63 /* ? */ || charCode === 35 /* # */) {
+    if (charCode === 63 || charCode === 35) {
       return url.slice(0, i)
     }
   }
