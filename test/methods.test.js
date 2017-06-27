@@ -172,6 +172,32 @@ test('long parametric route with common prefix', t => {
   findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }, null)
 })
 
+test('common prefix', t => {
+  t.plan(4)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/f', (req, res, params) => {
+    t.ok('inside route')
+  })
+
+  findMyWay.on('GET', '/ff', (req, res, params) => {
+    t.ok('inside route')
+  })
+
+  findMyWay.on('GET', '/ffa', (req, res, params) => {
+    t.ok('inside route')
+  })
+
+  findMyWay.on('GET', '/ffb', (req, res, params) => {
+    t.ok('inside route')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/f' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/ff' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/ffa' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/ffb' }, null)
+})
+
 test('wildcard', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
