@@ -13,7 +13,7 @@ function Node (prefix, children, kind, map) {
   this.children = children || []
   this.numberOfChildren = this.children.length
   this.kind = kind || 0
-  this.map = map || {}
+  this.map = map || null
 }
 
 Node.prototype.add = function (node) {
@@ -23,8 +23,9 @@ Node.prototype.add = function (node) {
 
 Node.prototype.find = function (label, kind) {
   for (var i = 0; i < this.numberOfChildren; i++) {
-    if (this.children[i].label === label && this.children[i].kind === kind) {
-      return this.children[i]
+    var child = this.children[i]
+    if (child.label === label && child.kind === kind && child.map) {
+      return child
     }
   }
   return null
@@ -32,8 +33,9 @@ Node.prototype.find = function (label, kind) {
 
 Node.prototype.findByLabel = function (label) {
   for (var i = 0; i < this.numberOfChildren; i++) {
-    if (this.children[i].label === label) {
-      return this.children[i]
+    var child = this.children[i]
+    if (child.label === label) {
+      return child
     }
   }
   return null
@@ -41,14 +43,16 @@ Node.prototype.findByLabel = function (label) {
 
 Node.prototype.findByKind = function (kind) {
   for (var i = 0; i < this.numberOfChildren; i++) {
-    if (this.children[i].kind === kind) {
-      return this.children[i]
+    var child = this.children[i]
+    if (child.kind === kind && child.map) {
+      return child
     }
   }
   return null
 }
 
-Node.prototype.addHandler = function (method, handler, params, store) {
+Node.prototype.setHandler = function (method, handler, params, store) {
+  this.map = this.map || {}
   this.map[method] = {
     handler: handler,
     params: params,
@@ -56,8 +60,8 @@ Node.prototype.addHandler = function (method, handler, params, store) {
   }
 }
 
-Node.prototype.findHandler = function (method) {
-  return this.map[method]
+Node.prototype.getHandler = function (method) {
+  return this.map ? this.map[method] : null
 }
 
 module.exports = Node
