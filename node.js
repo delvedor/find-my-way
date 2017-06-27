@@ -24,7 +24,7 @@ Node.prototype.add = function (node) {
 Node.prototype.find = function (label, kind) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
-    if (child.label === label && child.kind === kind && child.map) {
+    if (child.label === label && child.kind === kind && (child.map || child.children.length)) {
       return child
     }
   }
@@ -44,7 +44,7 @@ Node.prototype.findByLabel = function (label) {
 Node.prototype.findByKind = function (kind) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
-    if (child.kind === kind && child.map) {
+    if (child.kind === kind && (child.map || child.children.length)) {
       return child
     }
   }
