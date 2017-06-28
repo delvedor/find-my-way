@@ -64,4 +64,40 @@ Node.prototype.getHandler = function (method) {
   return this.map ? this.map[method] : null
 }
 
+Node.prototype.prettyPrint = function (prefix, tail) {
+  var paramName = ''
+  var map = this.map || {}
+  var methods = Object.keys(map).filter(method => map[method].handler)
+
+  if (this.prefix === ':') {
+    methods.forEach((method, index) => {
+      var params = this.map[method].params
+      var param = params[params.length - 1]
+      if (methods.length > 1) {
+        if (index === 0) {
+          paramName += param + ` (${method})\n`
+          return
+        }
+        paramName += '    ' + prefix + ':' + param + ` (${method})`
+        paramName += (index === methods.length - 1 ? '' : '\n')
+      } else {
+        paramName = params[params.length - 1] + ` (${method})`
+      }
+    })
+  } else if (methods.length) {
+    paramName = ` (${methods.join('|')})`
+  }
+
+  var tree = `${prefix}${tail ? '└── ' : '├── '}${this.prefix}${paramName}\n`
+
+  prefix = `${prefix}${tail ? '    ' : '│   '}`
+  for (var i = 0; i < this.numberOfChildren - 1; i++) {
+    tree += this.children[i].prettyPrint(prefix, false)
+  }
+  if (this.numberOfChildren > 0) {
+    tree += this.children[this.numberOfChildren - 1].prettyPrint(prefix, true)
+  }
+  return tree
+}
+
 module.exports = Node
