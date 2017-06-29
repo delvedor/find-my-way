@@ -235,6 +235,10 @@ Router.prototype._defaultRoute = function (req, res) {
   }
 }
 
+Router.prototype.prettyPrint = function () {
+  return this.tree.prettyPrint('', true)
+}
+
 module.exports = Router
 
 function sanitizeUrl (url) {

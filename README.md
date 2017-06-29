@@ -86,6 +86,21 @@ router.find('GET', '/example')
 // => null
 ```
 
+<a name="pretty-print"></a>
+#### prettyPrint()
+Prints the representation of the internal radix tree, useful for debugging.
+```js
+findMyWay.on('GET', '/test', () => {})
+findMyWay.on('GET', '/test/hello', () => {})
+findMyWay.on('GET', '/hello/world', () => {})
+
+console.log(findMyWay.prettyPrint())
+// └── /
+//   ├── test (GET)
+//   │   └── /hello (GET)
+//   └── hello/world (GET)
+```
+
 <a name="acknowledgements"></a>
 ## Acknowledgements
 
