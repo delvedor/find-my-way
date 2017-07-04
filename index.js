@@ -239,6 +239,42 @@ Router.prototype.prettyPrint = function () {
   return this.tree.prettyPrint('', true)
 }
 
+Router.prototype.get = function (path, handler, store) {
+  return this.on('GET', path, handler, store)
+}
+
+Router.prototype.delete = function (path, handler, store) {
+  return this.on('DELETE', path, handler, store)
+}
+
+Router.prototype.head = function (path, handler, store) {
+  return this.on('HEAD', path, handler, store)
+}
+
+Router.prototype.patch = function (path, handler, store) {
+  return this.on('PATCH', path, handler, store)
+}
+
+Router.prototype.post = function (path, handler, store) {
+  return this.on('POST', path, handler, store)
+}
+
+Router.prototype.put = function (path, handler, store) {
+  return this.on('PUT', path, handler, store)
+}
+
+Router.prototype.options = function (path, handler, store) {
+  return this.on('OPTIONS', path, handler, store)
+}
+
+Router.prototype.trace = function (path, handler, store) {
+  return this.on('TRACE', path, handler, store)
+}
+
+Router.prototype.connect = function (path, handler, store) {
+  return this.on('CONNECT', path, handler, store)
+}
+
 module.exports = Router
 
 function sanitizeUrl (url) {
