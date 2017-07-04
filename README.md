@@ -67,6 +67,22 @@ router.on('GET', '/example/:name', () => {}))
 // wildcard
 router.on('GET', '/other-example/*', () => {}))
 ```
+
+<a name="shorthand-methods"></a>
+##### Shorthand methods
+If you want an even nicer api, you can also use the shorthand methods to declare your routes.
+```js
+router.get(path, handler [, store])
+router.delete(path, handler [, store])
+router.head(path, handler [, store])
+router.patch(path, handler [, store])
+router.post(path, handler [, store])
+router.put(path, handler [, store])
+router.options(path, handler [, store])
+router.trace(path, handler [, store])
+router.connect(path, handler [, store])
+```
+
 <a name="lookup"></a>
 #### lookup(request, response)
 Start a new search, `request` and `response` are the server req/res objects.  
