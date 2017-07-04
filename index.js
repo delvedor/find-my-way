@@ -17,6 +17,7 @@
 const assert = require('assert')
 const Node = require('./node')
 const httpMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE', 'CONNECT']
+var errored = false
 
 function Router (opts) {
   if (!(this instanceof Router)) {
@@ -147,6 +148,7 @@ Router.prototype.lookup = function (req, res) {
 Router.prototype.find = function (method, path) {
   var currentNode = this.tree
   var node = null
+  var decoded = null
   var pindex = 0
   var params = []
   var pathLen = 0
@@ -199,11 +201,11 @@ Router.prototype.find = function (method, path) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
-      try {
-        params[pindex++] = decodeURIComponent(path.slice(0, i))
-      } catch (e) {
+      decoded = fastDecode(path.slice(0, i))
+      if (errored) {
         return null
       }
+      params[pindex++] = decoded
       path = path.slice(i)
       continue
     }
@@ -211,11 +213,11 @@ Router.prototype.find = function (method, path) {
     // wildcard route
     node = currentNode.findByKind(2)
     if (node) {
-      try {
-        params[pindex] = decodeURIComponent(path)
-      } catch (e) {
+      decoded = fastDecode(path)
+      if (errored) {
         return null
       }
+      params[pindex] = decoded
       currentNode = node
       path = ''
       continue
@@ -285,4 +287,13 @@ function sanitizeUrl (url) {
     }
   }
   return url
+}
+
+function fastDecode (path) {
+  errored = false
+  try {
+    return decodeURIComponent(path)
+  } catch (err) {
+    errored = true
+  }
 }
