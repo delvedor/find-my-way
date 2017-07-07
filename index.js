@@ -46,7 +46,7 @@ Router.prototype.on = function (method, path, handler, store) {
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
     // parametric route
-    if (path.charCodeAt(i) === 58 || path.charCodeAt(i) === 37) {
+    if (path.charCodeAt(i) === 58) {
       j = i + 1
       this._insert(method, path.slice(0, i), 0, null, null, null)
 
