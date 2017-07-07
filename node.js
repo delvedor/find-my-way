@@ -5,15 +5,17 @@
     static: 0,
     param: 1,
     matchAll: 2,
+    regex: 3
 */
 
-function Node (prefix, children, kind, map) {
+function Node (prefix, children, kind, map, regex) {
   this.prefix = prefix || '/'
   this.label = this.prefix[0]
   this.children = children || []
   this.numberOfChildren = this.children.length
   this.kind = kind || 0
   this.map = map || null
+  this.regex = regex || null
 }
 
 Node.prototype.add = function (node) {

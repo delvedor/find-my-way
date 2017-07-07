@@ -5,6 +5,7 @@
     static: 0,
     param: 1,
     matchAll: 2,
+    regex: 3
 
   Char codes:
     '/': 47
@@ -45,13 +46,17 @@ Router.prototype.on = function (method, path, handler, store) {
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
     // parametric route
-    if (path.charCodeAt(i) === 58) {
+    if (path.charCodeAt(i) === 58 || path.charCodeAt(i) === 37) {
       j = i + 1
       this._insert(method, path.slice(0, i), 0, null, null, null)
 
       // isolate the parameter name
       while (i < len && path.charCodeAt(i) !== 47) i++
-      params.push(path.slice(j, i))
+      var parameter = path.slice(j, i)
+      var isRegex = parameter.indexOf('(') > -1
+      var regex = isRegex ? parameter.slice(parameter.indexOf('('), i) : null
+      if (isRegex) regex = new RegExp(regex)
+      params.push(parameter.slice(0, isRegex ? parameter.indexOf('(') : i))
 
       path = path.slice(0, j) + path.slice(i)
       i = j
@@ -59,9 +64,9 @@ Router.prototype.on = function (method, path, handler, store) {
 
       // if the path is ended
       if (i === len) {
-        return this._insert(method, path.slice(0, i), 1, params, handler, store)
+        return this._insert(method, path.slice(0, i), regex ? 3 : 1, params, handler, store, regex)
       }
-      this._insert(method, path.slice(0, i), 1, params, null, null)
+      this._insert(method, path.slice(0, i), regex ? 3 : 1, params, null, null, regex)
 
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
@@ -74,7 +79,7 @@ Router.prototype.on = function (method, path, handler, store) {
   this._insert(method, path, 0, params, handler, store)
 }
 
-Router.prototype._insert = function (method, path, kind, params, handler, store) {
+Router.prototype._insert = function (method, path, kind, params, handler, store, regex) {
   var prefix = ''
   var pathLen = 0
   var prefixLen = 0
@@ -95,7 +100,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
 
     if (len < prefixLen) {
       // split the node in the radix tree and add it to the parent
-      node = new Node(prefix.slice(len), currentNode.children, currentNode.kind, currentNode.map)
+      node = new Node(prefix.slice(len), currentNode.children, currentNode.kind, currentNode.map, currentNode.regex)
 
       // reset the parent
       currentNode.children = [node]
@@ -104,6 +109,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
       currentNode.label = currentNode.prefix[0]
       currentNode.map = null
       currentNode.kind = 0
+      currentNode.regex = null
 
       if (len === pathLen) {
         // add the handler to the parent node
@@ -112,7 +118,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
         currentNode.kind = kind
       } else {
         // create a child node and add an handler to it
-        node = new Node(path.slice(len), [], kind)
+        node = new Node(path.slice(len), [], kind, null, regex)
         node.setHandler(method, handler, params, store)
         // add the child to the parent
         currentNode.add(node)
@@ -126,7 +132,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store)
         continue
       }
       // create a new child node
-      node = new Node(path, [], kind)
+      node = new Node(path, [], kind, null, regex)
       node.setHandler(method, handler, params, store)
       // add the child to the parent
       currentNode.add(node)
@@ -220,6 +226,22 @@ Router.prototype.find = function (method, path) {
       params[pindex] = decoded
       currentNode = node
       path = ''
+      continue
+    }
+
+    // parametric(regex) route
+    node = currentNode.findByKind(3)
+    if (node) {
+      currentNode = node
+      i = 0
+      while (i < pathLen && path.charCodeAt(i) !== 47) i++
+      decoded = fastDecode(path.slice(0, i))
+      if (errored) {
+        return null
+      }
+      if (!node.regex.test(decoded)) return
+      params[pindex++] = decoded
+      path = path.slice(i)
       continue
     }
 
