@@ -95,3 +95,33 @@ test('mixed nested route without double matching regex', t => {
 
   findMyWay.lookup({ method: 'GET', url: '/test/12/hello/test' }, null)
 })
+
+test('route with an extension regex', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: () => {
+      t.fail('route not matched')
+    }
+  })
+
+  findMyWay.on('GET', '/test/:file(^\\d+).png', () => {
+    t.ok('regex match')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/12.png' }, null)
+})
+
+test('route with an extension regex - no match', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: () => {
+      t.ok('route not matched')
+    }
+  })
+
+  findMyWay.on('GET', '/test/:file(^\\d+).png', () => {
+    t.fail('regex match')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/aa.png' }, null)
+})
