@@ -154,6 +154,7 @@ Router.prototype.lookup = function (req, res) {
 Router.prototype.find = function (method, path) {
   var currentNode = this.tree
   var node = null
+  var kind = 0
   var decoded = null
   var pindex = 0
   var params = []
@@ -194,16 +195,18 @@ Router.prototype.find = function (method, path) {
 
     if (len === prefixLen) path = path.slice(len)
 
+    node = currentNode.find(path[0])
+    if (!node) return null
+    kind = node.kind
+
     // static route
-    node = currentNode.find(path[0], 0)
-    if (node) {
+    if (kind === 0) {
       currentNode = node
       continue
     }
 
     // parametric route
-    node = currentNode.findByKind(1)
-    if (node) {
+    if (kind === 1) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
@@ -217,8 +220,7 @@ Router.prototype.find = function (method, path) {
     }
 
     // wildcard route
-    node = currentNode.findByKind(2)
-    if (node) {
+    if (kind === 2) {
       decoded = fastDecode(path)
       if (errored) {
         return null
@@ -230,8 +232,7 @@ Router.prototype.find = function (method, path) {
     }
 
     // parametric(regex) route
-    node = currentNode.findByKind(3)
-    if (node) {
+    if (kind === 3) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++

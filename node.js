@@ -23,16 +23,6 @@ Node.prototype.add = function (node) {
   this.numberOfChildren++
 }
 
-Node.prototype.find = function (label, kind) {
-  for (var i = 0; i < this.numberOfChildren; i++) {
-    var child = this.children[i]
-    if (child.label === label && child.kind === kind && (child.map || child.children.length)) {
-      return child
-    }
-  }
-  return null
-}
-
 Node.prototype.findByLabel = function (label) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
@@ -43,11 +33,16 @@ Node.prototype.findByLabel = function (label) {
   return null
 }
 
-Node.prototype.findByKind = function (kind) {
+Node.prototype.find = function (label) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
-    if (child.kind === kind && (child.map || child.children.length)) {
-      return child
+    if (child.map || child.children.length) {
+      if (child.label === label && child.kind === 0) {
+        return child
+      }
+      if (child.kind > 0) {
+        return child
+      }
     }
   }
   return null
