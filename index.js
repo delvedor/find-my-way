@@ -193,7 +193,10 @@ Router.prototype.find = function (method, path) {
     i = pathLen < prefixLen ? pathLen : prefixLen
     while (len < i && path[len] === prefix[len]) len++
 
-    if (len === prefixLen) path = path.slice(len)
+    if (len === prefixLen) {
+      path = path.slice(len)
+      pathLen = path.length
+    }
 
     node = currentNode.find(path[0])
     if (!node) return null
