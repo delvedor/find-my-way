@@ -154,6 +154,7 @@ Router.prototype.lookup = function (req, res) {
 Router.prototype.find = function (method, path) {
   var currentNode = this.tree
   var node = null
+  var kind = 0
   var decoded = null
   var pindex = 0
   var params = []
@@ -172,7 +173,7 @@ Router.prototype.find = function (method, path) {
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.getHandler(method)
-      if (!handle) return null
+      if (handle === null) break
 
       var paramNames = handle.params
       var paramsObj = {}
@@ -192,62 +193,51 @@ Router.prototype.find = function (method, path) {
     i = pathLen < prefixLen ? pathLen : prefixLen
     while (len < i && path[len] === prefix[len]) len++
 
-    if (len === prefixLen) path = path.slice(len)
+    if (len === prefixLen) {
+      path = path.slice(len)
+      pathLen = path.length
+    }
+
+    node = currentNode.find(path[0])
+    if (!node) return null
+    kind = node.kind
 
     // static route
-    node = currentNode.find(path[0], 0)
-    if (node) {
+    if (kind === 0) {
       currentNode = node
-      continue
-    }
-
-    // parametric route
-    node = currentNode.findByKind(1)
-    if (node) {
+    } else if (kind === 1) { // parametric route
       currentNode = node
       i = 0
-      while (i < pathLen && path.charCodeAt(i) !== 47) i++
-      decoded = fastDecode(path.slice(0, i))
+      for (; i < pathLen && path.charCodeAt(i) !== 47; i++) {}
+      decoded = fastDecode(path.substring(0, i))
       if (errored) {
-        return null
+        break
       }
       params[pindex++] = decoded
-      path = path.slice(i)
-      continue
-    }
-
-    // wildcard route
-    node = currentNode.findByKind(2)
-    if (node) {
+      path = path.substring(i)
+    } else if (kind === 2) { // wildcard route
       decoded = fastDecode(path)
       if (errored) {
-        return null
+        break
       }
       params[pindex] = decoded
       currentNode = node
       path = ''
-      continue
-    }
-
-    // parametric(regex) route
-    node = currentNode.findByKind(3)
-    if (node) {
+    } else if (kind === 3) { // parametric(regex) route
       currentNode = node
       i = 0
-      while (i < pathLen && path.charCodeAt(i) !== 47) i++
+      for (; i < pathLen && path.charCodeAt(i) !== 47; i++) {}
       decoded = fastDecode(path.slice(0, i))
       if (errored) {
-        return null
+        break
       }
-      if (!node.regex.test(decoded)) return
+      if (!node.regex.test(decoded)) break
       params[pindex++] = decoded
       path = path.slice(i)
-      continue
-    }
-
-    // route not found
-    if (len !== prefixLen) return null
+    } else if (len !== prefixLen) break // route not found
   }
+
+  return null
 }
 
 Router.prototype._defaultRoute = function (req, res) {
