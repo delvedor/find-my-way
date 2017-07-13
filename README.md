@@ -68,6 +68,12 @@ router.on('GET', '/example/:name', () => {}))
 router.on('GET', '/other-example/*', () => {}))
 ```
 
+Regex routes are supported as well, but pay attention, regex are very expensive!
+```js
+// parametric with regex
+router.on('GET', '/test/:file(^\\d+).png', () => {}))
+```
+
 <a name="shorthand-methods"></a>
 ##### Shorthand methods
 If you want an even nicer api, you can also use the shorthand methods to declare your routes.
