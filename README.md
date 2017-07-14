@@ -1,9 +1,11 @@
 # find-my-way
 
-[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](http://standardjs.com/)  [![Build Status](https://travis-ci.org/delvedor/find-my-way.svg?branch=master)](https://travis-ci.org/delvedor/find-my-way) [![Coverage Status](https://coveralls.io/repos/github/delvedor/find-my-way/badge.svg?branch=master)](https://coveralls.io/github/delvedor/find-my-way?branch=master)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](http://standardjs.com/)  [![Build Status](https://travis-ci.org/delvedor/find-my-way.svg?branch=master)](https://travis-ci.org/delvedor/find-my-way) [![Coverage Status](https://coveralls.io/repos/github/delvedor/find-my-way/badge.svg?branch=master)](https://coveralls.io/github/delvedor/find-my-way?branch=master) [![NPM downloads](https://img.shields.io/npm/dm/find-my-way.svg?style=flat)](https://www.npmjs.com/package/find-my-way)
 
-A crazy fast HTTP router, internally uses an highly performant [Radix Tree](https://en.wikipedia.org/wiki/Radix_tree) (aka compact [Prefix Tree](https://en.wikipedia.org/wiki/Trie)), supports route params, wildcards, and it's framework independent.  
-It is inspired by the [echo](https://github.com/labstack/echo) router, some parts have been extracted from [trekjs](https://github.com/trekjs) router.
+A crazy fast HTTP router, internally uses an highly performant [Radix Tree](https://en.wikipedia.org/wiki/Radix_tree) (aka compact [Prefix Tree](https://en.wikipedia.org/wiki/Trie)), supports route params, wildcards, and it's framework independent.
+
+If you want to see a benchmark comparison with the most commonly used routers, see [here](https://github.com/delvedor/router-benchmark).  
+Do you need a real-world example that uses this router? Check out [Fastify](https://github.com/fastify/fastify).
 
 <a name="install"></a>
 ## Install
@@ -126,13 +128,12 @@ console.log(findMyWay.prettyPrint())
 <a name="acknowledgements"></a>
 ## Acknowledgements
 
-This project is kindly sponsored by [LetzDoIt](http://www.letzdoitapp.com/).
+This project is kindly sponsored by [LetzDoIt](http://www.letzdoitapp.com/).  
+It is inspired by the [echo](https://github.com/labstack/echo) router, some parts have been extracted from [trekjs](https://github.com/trekjs) router.
 
 <a name="license"></a>
 ## License
 **[find-my-way - MIT](https://github.com/delvedor/find-my-way/blob/master/LICENSE)**  
 **[trekjs/router - MIT](https://github.com/trekjs/router/blob/master/LICENSE)**
-
-*The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and non infringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.*
 
 Copyright © 2017 Tomas Della Vedova
