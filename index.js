@@ -173,7 +173,7 @@ Router.prototype.find = function (method, path) {
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.getHandler(method)
-      if (handle === null) break
+      if (!handle) return null
 
       var paramNames = handle.params
       var paramsObj = {}
@@ -205,39 +205,53 @@ Router.prototype.find = function (method, path) {
     // static route
     if (kind === 0) {
       currentNode = node
-    } else if (kind === 1) { // parametric route
+      continue
+    }
+
+    // parametric route
+    if (kind === 1) {
       currentNode = node
       i = 0
-      for (; i < pathLen && path.charCodeAt(i) !== 47; i++) {}
-      decoded = fastDecode(path.substring(0, i))
+      while (i < pathLen && path.charCodeAt(i) !== 47) i++
+      decoded = fastDecode(path.slice(0, i))
       if (errored) {
-        break
+        return null
       }
       params[pindex++] = decoded
-      path = path.substring(i)
-    } else if (kind === 2) { // wildcard route
+      path = path.slice(i)
+      continue
+    }
+
+    // wildcard route
+    if (kind === 2) {
       decoded = fastDecode(path)
       if (errored) {
-        break
+        return null
       }
       params[pindex] = decoded
       currentNode = node
       path = ''
-    } else if (kind === 3) { // parametric(regex) route
+      continue
+    }
+
+    // parametric(regex) route
+    if (kind === 3) {
       currentNode = node
       i = 0
-      for (; i < pathLen && path.charCodeAt(i) !== 47; i++) {}
+      while (i < pathLen && path.charCodeAt(i) !== 47) i++
       decoded = fastDecode(path.slice(0, i))
       if (errored) {
-        break
+        return null
       }
-      if (!node.regex.test(decoded)) break
+      if (!node.regex.test(decoded)) return
       params[pindex++] = decoded
       path = path.slice(i)
-    } else if (len !== prefixLen) break // route not found
-  }
+      continue
+    }
 
-  return null
+    // route not found
+    if (len !== prefixLen) return null
+  }
 }
 
 Router.prototype._defaultRoute = function (req, res) {
