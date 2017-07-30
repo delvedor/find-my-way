@@ -326,3 +326,81 @@ test('safe decodeURIComponent - wildcard', t => {
     null
   )
 })
+
+test('static routes should be inserted before parametric / 1', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test/hello', () => {
+    t.pass('inside correct handler')
+  })
+
+  findMyWay.on('GET', '/test/:id', () => {
+    t.fail('wrong handler')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+})
+
+test('static routes should be inserted before parametric / 2', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test/:id', () => {
+    t.fail('wrong handler')
+  })
+
+  findMyWay.on('GET', '/test/hello', () => {
+    t.pass('inside correct handler')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+})
+
+test('static routes should be inserted before parametric / 3', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/:id', () => {
+    t.fail('wrong handler')
+  })
+
+  findMyWay.on('GET', '/test', () => {
+    t.ok('inside correct handler')
+  })
+
+  findMyWay.on('GET', '/test/:id', () => {
+    t.fail('wrong handler')
+  })
+
+  findMyWay.on('GET', '/test/hello', () => {
+    t.ok('inside correct handler')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+})
+
+test('static routes should be inserted before parametric / 4', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/:id', () => {
+    t.ok('inside correct handler')
+  })
+
+  findMyWay.on('GET', '/test', () => {
+    t.fail('wrong handler')
+  })
+
+  findMyWay.on('GET', '/test/:id', () => {
+    t.ok('inside correct handler')
+  })
+
+  findMyWay.on('GET', '/test/hello', () => {
+    t.fail('wrong handler')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/id' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/id' }, null)
+})
