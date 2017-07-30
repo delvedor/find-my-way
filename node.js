@@ -19,6 +19,15 @@ function Node (prefix, children, kind, map, regex) {
 }
 
 Node.prototype.add = function (node) {
+  if (node.kind === 0) {
+    for (var i = 0; i < this.numberOfChildren; i++) {
+      if (this.children[i].kind > 0) {
+        this.children.splice(i, 0, node)
+        this.numberOfChildren++
+        return
+      }
+    }
+  }
   this.children.push(node)
   this.numberOfChildren++
 }
