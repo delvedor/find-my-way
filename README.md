@@ -62,7 +62,8 @@ router.on('GET', '/store', (req, res, params, store) => {
   assert.equal(store, { hello: 'world' })
 }, { hello: 'world' })
 ```
-If you want to register a **parametric** path, just use the *colon* before the parameter name, if you need a **wildcard** use the *star*.
+If you want to register a **parametric** path, just use the *colon* before the parameter name, if you need a **wildcard** use the *star*.  
+*Remember that static routes are always inserted before parametric and wildcard.*
 ```js
 // parametric
 router.on('GET', '/example/:name', () => {}))
