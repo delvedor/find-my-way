@@ -58,6 +58,7 @@ Node.prototype.find = function (label) {
 }
 
 Node.prototype.setHandler = function (method, handler, params, store) {
+  if (!handler) return
   this.map = this.map || {}
   this.map[method] = {
     handler: handler,
