@@ -208,6 +208,8 @@ Router.prototype.find = function (method, path) {
       continue
     }
 
+    if (len !== prefixLen) return null
+
     // parametric route
     if (kind === 1) {
       currentNode = node
