@@ -77,6 +77,13 @@ Regex routes are supported as well, but pay attention, regex are very expensive!
 router.on('GET', '/test/:file(^\\d+).png', () => {}))
 ```
 
+You can also pass an array of methods if you need to declare multiple routes with the same handler but different method.
+```js
+router.on(['GET', 'POST'], '/', (req, res, params) => {
+  // your code
+})
+```
+
 <a name="shorthand-methods"></a>
 ##### Shorthand methods
 If you want an even nicer api, you can also use the shorthand methods to declare your routes.
@@ -90,6 +97,11 @@ router.put(path, handler [, store])
 router.options(path, handler [, store])
 router.trace(path, handler [, store])
 router.connect(path, handler [, store])
+```
+
+If you need a route that supports *all* methods you can use the `all` api.
+```js
+router.all(path, handler [, store])
 ```
 
 <a name="lookup"></a>
