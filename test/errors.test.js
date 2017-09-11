@@ -16,6 +16,18 @@ test('Method should be a string', t => {
   }
 })
 
+test('Method should be a string (array)', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  try {
+    findMyWay.on(['GET', 0], '/test', () => {})
+    t.fail('method shoukd be a string')
+  } catch (e) {
+    t.is(e.message, 'Method should be a string')
+  }
+})
+
 test('Path should be a string', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
@@ -46,6 +58,18 @@ test('Method is not an http method.', t => {
 
   try {
     findMyWay.on('GETT', '/test', () => {})
+    t.fail('method is not a valid http method')
+  } catch (e) {
+    t.is(e.message, 'Method \'GETT\' is not an http method.')
+  }
+})
+
+test('Method is not an http method. (array)', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  try {
+    findMyWay.on(['POST', 'GETT'], '/test', () => {})
     t.fail('method is not a valid http method')
   } catch (e) {
     t.is(e.message, 'Method \'GETT\' is not an http method.')

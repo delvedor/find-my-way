@@ -102,3 +102,22 @@ test('should support `.connect` shorthand', t => {
 
   findMyWay.lookup({ method: 'CONNECT', url: '/test' }, null)
 })
+
+test('should support `.connect` shorthand', t => {
+  t.plan(9)
+  const findMyWay = FindMyWay()
+
+  findMyWay.all('/test', () => {
+    t.ok('inside the handler')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+  findMyWay.lookup({ method: 'DELETE', url: '/test' }, null)
+  findMyWay.lookup({ method: 'HEAD', url: '/test' }, null)
+  findMyWay.lookup({ method: 'PATCH', url: '/test' }, null)
+  findMyWay.lookup({ method: 'POST', url: '/test' }, null)
+  findMyWay.lookup({ method: 'PUT', url: '/test' }, null)
+  findMyWay.lookup({ method: 'OPTIONS', url: '/test' }, null)
+  findMyWay.lookup({ method: 'TRACE', url: '/test' }, null)
+  findMyWay.lookup({ method: 'CONNECT', url: '/test' }, null)
+})
