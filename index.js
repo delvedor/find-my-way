@@ -45,7 +45,7 @@ Router.prototype.on = function (method, path, handler, store) {
   assert.equal(typeof method, 'string', 'Method should be a string')
   assert.equal(typeof path, 'string', 'Path should be a string')
   assert.equal(typeof handler, 'function', 'Handler should be a function')
-  assert.notEqual(httpMethods.indexOf(method), -1, `Method '${method}' is not an http method.`)
+  assert.notEqual(httpMethods.indexOf(method), -1, "Method '" + method + "' is not an http method.")
 
   const params = []
   var j = 0
@@ -120,7 +120,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store,
 
       if (len === pathLen) {
         // add the handler to the parent node
-        assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${path}'`)
+        assert(!currentNode.getHandler(method), "Method '" + method + "' already declared for route '" + path + "'")
         currentNode.setHandler(method, handler, params, store)
         currentNode.kind = kind
       } else {
@@ -145,7 +145,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store,
       currentNode.add(node)
     } else if (handler) {
       // the node already exist
-      assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${path}'`)
+      assert(!currentNode.getHandler(method), "Method '" + method + "' already declared for route '" + path + "'")
       currentNode.setHandler(method, handler, params, store)
     }
     return
