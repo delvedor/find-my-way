@@ -35,6 +35,13 @@ function Router (opts) {
 }
 
 Router.prototype.on = function (method, path, handler, store) {
+  if (Array.isArray(method)) {
+    for (var k = 0; k < method.length; k++) {
+      this.on(method[k], path, handler, store)
+    }
+    return
+  }
+
   assert.equal(typeof method, 'string', 'Method should be a string')
   assert.equal(typeof path, 'string', 'Path should be a string')
   assert.equal(typeof handler, 'function', 'Handler should be a function')
@@ -303,6 +310,10 @@ Router.prototype.trace = function (path, handler, store) {
 
 Router.prototype.connect = function (path, handler, store) {
   return this.on('CONNECT', path, handler, store)
+}
+
+Router.prototype.all = function (path, handler, store) {
+  this.on(httpMethods, path, handler, store)
 }
 
 module.exports = Router

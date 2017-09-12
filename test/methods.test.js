@@ -25,6 +25,18 @@ test('register a route', t => {
   findMyWay.lookup({ method: 'GET', url: '/test' }, null)
 })
 
+test('register a route with multiple methods', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on(['GET', 'POST'], '/test', () => {
+    t.ok('inside the handler')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+  findMyWay.lookup({ method: 'POST', url: '/test' }, null)
+})
+
 test('default route', t => {
   t.plan(1)
 
