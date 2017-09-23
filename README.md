@@ -20,7 +20,7 @@ const http = require('http')
 const router = require('find-my-way')()
 
 router.on('GET', '/', (req, res, params) => {
-  res.end('{"hello":"world"}')
+  res.end('{"message":"hello world"}')
 })
 
 const server = http.createServer((req, res) => {
@@ -50,39 +50,61 @@ const router = require('find-my-way')({
 
 <a name="on"></a>
 #### on(method, path, handler, [store])
-Register a new route, `store` is an object that you can access later inside the handler function.  
+Register a new route.
 ```js
-router.on('GET', '/', (req, res, params) => {
+router.on('GET', '/example', (req, res, params) => {
   // your code
 })
-
-// with store
-router.on('GET', '/store', (req, res, params, store) => {
-  // the store can be updated
-  assert.equal(store, { hello: 'world' })
-}, { hello: 'world' })
 ```
-If you want to register a **parametric** path, just use the *colon* before the parameter name, if you need a **wildcard** use the *star*.  
+Last argument, `store` is used to pass an object that you can access later inside the handler function. If needed, `store` can be updated.
+```js
+router.on('GET', '/example', (req, res, params, store) => {
+  assert.equal(store, { message: 'hello world' })
+}, { message: 'hello world' })
+```
+
+##### on(methods[], path, handler, [store])
+Register a new route for each method specified in the `methods` array.
+It comes handy when you need to declare multiple routes with the same handler but different methods.
+```js
+router.on(['GET', 'POST'], '/example', (req, res, params) => {
+  // your code
+})
+```
+
+<a name="supported-path-formats"></a>
+##### Supported path formats
+To register a **parametric** path, use the *colon* before the parameter name. For **wildcard** use the *star*.
 *Remember that static routes are always inserted before parametric and wildcard.*
+
 ```js
 // parametric
-router.on('GET', '/example/:name', () => {}))
+router.on('GET', '/example/:userId', (req, res, params) => {}))
+router.on('GET', '/example/:userId/:secretToken', (req, res, params) => {}))
+
 // wildcard
-router.on('GET', '/other-example/*', () => {}))
+router.on('GET', '/example/*', (req, res, params) => {}))
 ```
 
-Regex routes are supported as well, but pay attention, regex are very expensive!
+Regular expression routes are supported as well, but pay attention, RegExp are very expensive in term of performance!
 ```js
-// parametric with regex
-router.on('GET', '/test/:file(^\\d+).png', () => {}))
+// parametric with regexp
+router.on('GET', '/example/:file(^\\d+).png', () => {}))
 ```
 
-You can also pass an array of methods if you need to declare multiple routes with the same handler but different method.
+It's possible to define more than one parameter within the same couple of slash ("/"). Such as:
 ```js
-router.on(['GET', 'POST'], '/', (req, res, params) => {
-  // your code
-})
+router.on('GET', '/example/near/:lat-:lng/radius/:r', (req, res, params) => {}))
 ```
+*Remember in this case to use the dash ("-") as parameters separator.*
+
+Finally it's possible to have multiple parameters with RegExp.
+```js
+router.on('GET', '/example/at/:hour(^\\d{2})h:minute(^\\d{2})m', (req, res, params) => {}))
+```
+In this case as parameter separator it's possible to use whatever character is not matched by the regular expression.
+
+Having a route with multiple parameters may affect negatively the performance, so prefer single parameter approach whenever possible, especially on routes which are on the hot path of your application.
 
 <a name="shorthand-methods"></a>
 ##### Shorthand methods
