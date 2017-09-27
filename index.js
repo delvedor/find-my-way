@@ -6,13 +6,17 @@
     param: 1,
     matchAll: 2,
     regex: 3
+    multi-param: 4
+      It's used for a parameter, that is followed by another parameter in the same part
 
   Char codes:
+    '#': 35
+    '*': 42
+    '-': 45
     '/': 47
     ':': 58
-    '*': 42
     '?': 63
-    '#': 35
+
 */
 
 const assert = require('assert')
@@ -54,13 +58,31 @@ Router.prototype.on = function (method, path, handler, store) {
     // search for parametric or wildcard routes
     // parametric route
     if (path.charCodeAt(i) === 58) {
+      var nodeType = 1
       j = i + 1
       this._insert(method, path.slice(0, i), 0, null, null, null)
 
       // isolate the parameter name
-      while (i < len && path.charCodeAt(i) !== 47) i++
+      var isRegex = false
+      while (i < len && path.charCodeAt(i) !== 47) {
+        isRegex = isRegex || path[i] === '('
+        if (isRegex) {
+          i = path.indexOf(')', i) + 1
+          break
+        } else if (path.charCodeAt(i) !== 45) {
+          i++
+        } else {
+          break
+        }
+      }
+
+      if (isRegex && (i === len || path.charCodeAt(i) === 47)) {
+        nodeType = 3
+      } else if (i < len) {
+        nodeType = 4
+      }
+
       var parameter = path.slice(j, i)
-      var isRegex = parameter.indexOf('(') > -1
       var regex = isRegex ? parameter.slice(parameter.indexOf('('), i) : null
       if (isRegex) regex = new RegExp(regex)
       params.push(parameter.slice(0, isRegex ? parameter.indexOf('(') : i))
@@ -71,10 +93,11 @@ Router.prototype.on = function (method, path, handler, store) {
 
       // if the path is ended
       if (i === len) {
-        return this._insert(method, path.slice(0, i), regex ? 3 : 1, params, handler, store, regex)
+        return this._insert(method, path.slice(0, i), nodeType, params, handler, store, regex)
       }
-      this._insert(method, path.slice(0, i), regex ? 3 : 1, params, null, null, regex)
+      this._insert(method, path.slice(0, i), nodeType, params, null, null, regex)
 
+      i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
       this._insert(method, path.slice(0, i), 0, null, null, null)
@@ -253,6 +276,26 @@ Router.prototype.find = function (method, path) {
         return null
       }
       if (!node.regex.test(decoded)) return
+      params[pindex++] = decoded
+      path = path.slice(i)
+      continue
+    }
+
+    // multiparametric route
+    if (kind === 4) {
+      currentNode = node
+      i = 0
+      if (node.regex) {
+        var matchedParameter = path.match(node.regex)
+        if (!matchedParameter) return
+        i = matchedParameter[1].length
+      } else {
+        while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
+      }
+      decoded = fastDecode(path.slice(0, i))
+      if (errored) {
+        return null
+      }
       params[pindex++] = decoded
       path = path.slice(i)
       continue
