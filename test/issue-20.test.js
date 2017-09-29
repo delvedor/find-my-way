@@ -61,20 +61,20 @@ test('Should be 404 / 3', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a//' }, null)
 })
 
-test('Should be 404 / 4', t => {
+test('Should get an empty parameter', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.pass('Everything good')
+      t.fail('We should not be here')
     }
   })
 
   findMyWay.on('GET', '/a/:param', (req, res, params) => {
-    t.fail('We should not be here')
+    t.equal(params.param, '')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a//' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/' }, null)
 })

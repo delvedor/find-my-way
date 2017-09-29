@@ -42,10 +42,21 @@ Node.prototype.findByLabel = function (label) {
   return null
 }
 
-Node.prototype.find = function (label) {
+// Check in two different places the numberOfChildren and the map object
+// gives us around ~5% more speed
+Node.prototype.find = function (label, method) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
-    if (child.map || child.children.length) {
+    if (child.numberOfChildren !== 0) {
+      if (child.label === label && child.kind === 0) {
+        return child
+      }
+      if (child.kind > 0) {
+        return child
+      }
+    }
+
+    if (child.map && child.map[method]) {
       if (child.label === label && child.kind === 0) {
         return child
       }

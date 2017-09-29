@@ -203,19 +203,19 @@ Router.prototype.find = function (method, path) {
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.getHandler(method)
-      if (!handle) return null
+      if (handle) {
+        var paramNames = handle.params
+        var paramsObj = {}
 
-      var paramNames = handle.params
-      var paramsObj = {}
+        for (i = 0; i < paramNames.length; i++) {
+          paramsObj[paramNames[i]] = params[i]
+        }
 
-      for (i = 0; i < paramNames.length; i++) {
-        paramsObj[paramNames[i]] = params[i]
-      }
-
-      return {
-        handler: handle.handler,
-        params: paramsObj,
-        store: handle.store
+        return {
+          handler: handle.handler,
+          params: paramsObj,
+          store: handle.store
+        }
       }
     }
 
@@ -228,7 +228,7 @@ Router.prototype.find = function (method, path) {
       pathLen = path.length
     }
 
-    node = currentNode.find(path[0])
+    node = currentNode.find(path[0], method)
     if (!node) return null
     kind = node.kind
 
