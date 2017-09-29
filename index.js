@@ -16,7 +16,6 @@
     '/': 47
     ':': 58
     '?': 63
-
 */
 
 const assert = require('assert')
@@ -31,7 +30,7 @@ function Router (opts) {
   opts = opts || {}
 
   if (opts.defaultRoute) {
-    assert.equal(typeof opts.defaultRoute, 'function', 'The default route must be a function')
+    assert(typeof opts.defaultRoute === 'function', 'The default route must be a function')
     this.defaultRoute = opts.defaultRoute
   }
 
@@ -46,10 +45,15 @@ Router.prototype.on = function (method, path, handler, store) {
     return
   }
 
-  assert.equal(typeof method, 'string', 'Method should be a string')
-  assert.equal(typeof path, 'string', 'Path should be a string')
-  assert.equal(typeof handler, 'function', 'Handler should be a function')
-  assert.notEqual(httpMethods.indexOf(method), -1, `Method '${method}' is not an http method.`)
+  // method validation
+  assert(typeof method === 'string', 'Method should be a string')
+  assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
+  // path validation
+  assert(typeof path === 'string', 'Path should be a string')
+  assert(path.length > 0, 'The path could not be empty')
+  assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
+  // handler validation
+  assert(typeof handler === 'function', 'Handler should be a function')
 
   const params = []
   var j = 0
