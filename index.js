@@ -304,9 +304,6 @@ Router.prototype.find = function (method, path) {
       path = path.slice(i)
       continue
     }
-
-    // route not found
-    if (len !== prefixLen) return null
   }
 }
 
