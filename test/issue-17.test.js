@@ -4,6 +4,21 @@ const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
 
+test('Parametric route, request.url contains dash', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/a/:param/b', (req, res, params) => {
+    t.equal(params.param, 'foo-bar')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/b' }, null)
+})
+
 test('Parametric route with fixed suffix', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
@@ -144,6 +159,28 @@ test('Multi parametric route with regexp / 1', t => {
   })
 
   findMyWay.lookup({ method: 'GET', url: '/at/0h42m' }, null)
+})
+
+test('Multi parametric route with regexp / 2', t => {
+  t.plan(4)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/a/:uuid(^[\\d-]{19})-:user(^\\w+)', (req, res, params) => {
+    t.equal(params.uuid, '1111-2222-3333-4444')
+    t.equal(params.user, 'foo')
+  })
+
+  findMyWay.on('GET', '/a/:uuid(^[\\d-]{19})-:user(^\\w+)/account', (req, res, params) => {
+    t.equal(params.uuid, '1111-2222-3333-4445')
+    t.equal(params.user, 'bar')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/a/1111-2222-3333-4444-foo' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/1111-2222-3333-4445-bar/account' }, null)
 })
 
 test('Multi parametric route with fixed suffix', t => {
