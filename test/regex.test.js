@@ -125,3 +125,21 @@ test('route with an extension regex - no match', t => {
 
   findMyWay.lookup({ method: 'GET', url: '/test/aa.png' }, null)
 })
+
+test('safe decodeURIComponent', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: () => {
+      t.ok('route not matched')
+    }
+  })
+
+  findMyWay.on('GET', '/test/:id(^\\d+$)', () => {
+    t.fail('we should not be here')
+  })
+
+  t.deepEqual(
+    findMyWay.find('GET', '/test/hel%"Flo'),
+    null
+  )
+})

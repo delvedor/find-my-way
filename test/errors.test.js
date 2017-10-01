@@ -40,6 +40,30 @@ test('Path should be a string', t => {
   }
 })
 
+test('The path could not be empty', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  try {
+    findMyWay.on('GET', '', () => {})
+    t.fail('The path could not be empty')
+  } catch (e) {
+    t.is(e.message, 'The path could not be empty')
+  }
+})
+
+test('The first character of a path should be `/` or `*`', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  try {
+    findMyWay.on('GET', 'a', () => {})
+    t.fail('The first character of a path should be `/` or `*`')
+  } catch (e) {
+    t.is(e.message, 'The first character of a path should be `/` or `*`')
+  }
+})
+
 test('Handler should be a function', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
