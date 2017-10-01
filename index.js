@@ -78,7 +78,7 @@ Router.prototype.on = function (method, path, handler, store) {
 
       if (isRegex && (i === len || path.charCodeAt(i) === 47)) {
         nodeType = 3
-      } else if (i < len) {
+      } else if (i < len && path.charCodeAt(i) !== 47) {
         nodeType = 4
       }
 
