@@ -35,6 +35,18 @@ function Router (opts) {
   }
 
   this.tree = new Node()
+  this.wildcard = new Node()
+  this.shouldCheckWildcard = {
+    GET: false,
+    DELETE: false,
+    HEAD: false,
+    PATCH: false,
+    POST: false,
+    PUT: false,
+    OPTIONS: false,
+    TRACE: false,
+    CONNECT: false
+  }
 }
 
 Router.prototype.on = function (method, path, handler, store) {
@@ -57,6 +69,12 @@ Router.prototype.on = function (method, path, handler, store) {
 
   const params = []
   var j = 0
+  var currentNode = this.tree
+
+  if (path.indexOf('*') > -1) {
+    this.shouldCheckWildcard[method] = true
+    currentNode = this.wildcard
+  }
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
@@ -64,7 +82,7 @@ Router.prototype.on = function (method, path, handler, store) {
     if (path.charCodeAt(i) === 58) {
       var nodeType = 1
       j = i + 1
-      this._insert(method, path.slice(0, i), 0, null, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null, null, currentNode)
 
       // isolate the parameter name
       var isRegex = false
@@ -97,30 +115,30 @@ Router.prototype.on = function (method, path, handler, store) {
 
       // if the path is ended
       if (i === len) {
-        return this._insert(method, path.slice(0, i), nodeType, params, handler, store, regex)
+        return this._insert(method, path.slice(0, i), nodeType, params, handler, store, regex, currentNode)
       }
-      this._insert(method, path.slice(0, i), nodeType, params, null, null, regex)
+      this._insert(method, path.slice(0, i), nodeType, params, null, null, regex, currentNode)
 
       i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
-      this._insert(method, path.slice(0, i), 0, null, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null, null, currentNode)
       params.push('*')
-      return this._insert(method, path.slice(0, len), 2, params, handler, store)
+      return this._insert(method, path.slice(0, len), 2, params, handler, store, null, currentNode)
     }
   }
   // static route
-  this._insert(method, path, 0, params, handler, store)
+  this._insert(method, path, 0, params, handler, store, null, currentNode)
 }
 
-Router.prototype._insert = function (method, path, kind, params, handler, store, regex) {
+Router.prototype._insert = function (method, path, kind, params, handler, store, regex, currentNode) {
   var prefix = ''
   var pathLen = 0
   var prefixLen = 0
   var len = 0
   var max = 0
   var node = null
-  var currentNode = this.tree
+  // currentNode = this.tree
 
   while (true) {
     prefix = currentNode.prefix
@@ -180,15 +198,134 @@ Router.prototype._insert = function (method, path, kind, params, handler, store,
 }
 
 Router.prototype.lookup = function (req, res) {
-  var handle = this.find(req.method, sanitizeUrl(req.url))
+  var handle = this.find(req.method, sanitizeUrl(req.url), this.tree, 0, [])
   if (!handle) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
+Router.prototype.find2 = function (method, path, currentNode, pindex, params) {
+  currentNode = currentNode || this.tree
+  pindex = pindex || 0
+  params = params || []
+  var decoded = null
+  var pathLen = path.length
+  var prefix = currentNode.prefix
+  var prefixLen = prefix.length
+  var len = 0
+  var i = 0
+  var result = null
+
+  // found the route
+  if (pathLen === 0 || path === prefix) {
+    var handle = currentNode.getHandler(method)
+    if (handle) {
+      var paramNames = handle.params
+      var paramsObj = {}
+
+      for (i = 0; i < paramNames.length; i++) {
+        paramsObj[paramNames[i]] = params[i]
+      }
+
+      return {
+        handler: handle.handler,
+        params: paramsObj,
+        store: handle.store
+      }
+    }
+  }
+
+  // search for the longest common prefix
+  i = pathLen < prefixLen ? pathLen : prefixLen
+  while (len < i && path[len] === prefix[len]) len++
+
+  if (len === prefixLen) {
+    path = path.slice(len)
+    pathLen = path.length
+  }
+
+  // static route
+  var node = currentNode.find(path[0], method)
+  if (node) {
+    result = this.find(method, path, node, pindex, params)
+    if (result) return result
+  }
+
+  if (len !== prefixLen) return null
+
+  // parametric route
+  node = currentNode.findByKind(1, method)
+  if (node) {
+    i = 0
+    while (i < pathLen && path.charCodeAt(i) !== 47) i++
+    decoded = fastDecode(path.slice(0, i))
+    if (errored) {
+      return null
+    }
+    params[pindex++] = decoded
+    result = this.find(method, path.slice(i), node, pindex, params)
+    if (result) return result
+    params.pop()
+    pindex--
+  }
+
+  // wildcard route
+  node = currentNode.findByKind(2, method)
+  if (node) {
+    decoded = fastDecode(path)
+    if (errored) {
+      return null
+    }
+    params[pindex] = decoded
+    result = this.find(method, '', node, pindex, params)
+    if (result) return result
+    params.pop()
+  }
+
+  // parametric(regex) route
+  node = currentNode.findByKind(3, method)
+  if (node) {
+    i = 0
+    while (i < pathLen && path.charCodeAt(i) !== 47) i++
+    decoded = fastDecode(path.slice(0, i))
+    if (errored) {
+      return null
+    }
+    if (!node.regex.test(decoded)) return
+    params[pindex++] = decoded
+    result = this.find(method, path.slice(i), node, pindex, params)
+    if (result) return result
+    params.pop()
+    pindex--
+  }
+
+  // multiparametric route
+  node = currentNode.findByKind(4, method)
+  if (node) {
+    i = 0
+    if (node.regex) {
+      var matchedParameter = path.match(node.regex)
+      if (!matchedParameter) return
+      i = matchedParameter[1].length
+    } else {
+      while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
+    }
+    decoded = fastDecode(path.slice(0, i))
+    if (errored) {
+      return null
+    }
+    params[pindex++] = decoded
+    result = this.find(method, path.slice(i), node, pindex, params)
+    if (result) return result
+    params.pop()
+    pindex--
+  }
+}
+
 Router.prototype.find = function (method, path) {
   var currentNode = this.tree
+  var shouldCheckWildcard = this.shouldCheckWildcard[method]
+  var originalPath = path
   var node = null
-  var kind = 0
   var decoded = null
   var pindex = 0
   var params = []
@@ -232,20 +369,26 @@ Router.prototype.find = function (method, path) {
       pathLen = path.length
     }
 
-    node = currentNode.find(path[0], method)
-    if (!node) return null
-    kind = node.kind
-
     // static route
-    if (kind === 0) {
+    node = currentNode.find(path[0], method)
+    if (node !== null) {
       currentNode = node
       continue
     }
 
-    if (len !== prefixLen) return null
+    if (len !== prefixLen) {
+      if (!shouldCheckWildcard) return null
+      shouldCheckWildcard = false
+      path = originalPath
+      pindex = 0
+      params = []
+      currentNode = this.wildcard
+      continue
+    }
 
     // parametric route
-    if (kind === 1) {
+    node = currentNode.findByKind(1, method)
+    if (node !== null) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
@@ -259,7 +402,8 @@ Router.prototype.find = function (method, path) {
     }
 
     // wildcard route
-    if (kind === 2) {
+    node = currentNode.findByKind(2, method)
+    if (node !== null) {
       decoded = fastDecode(path)
       if (errored) {
         return null
@@ -271,7 +415,8 @@ Router.prototype.find = function (method, path) {
     }
 
     // parametric(regex) route
-    if (kind === 3) {
+    node = currentNode.findByKind(3, method)
+    if (node !== null) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
@@ -286,7 +431,8 @@ Router.prototype.find = function (method, path) {
     }
 
     // multiparametric route
-    if (kind === 4) {
+    node = currentNode.findByKind(4, method)
+    if (node !== null) {
       currentNode = node
       i = 0
       if (node.regex) {

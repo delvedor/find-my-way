@@ -19,16 +19,8 @@ function Node (prefix, children, kind, map, regex) {
 }
 
 Node.prototype.add = function (node) {
-  if (node.kind === 0) {
-    for (var i = 0; i < this.numberOfChildren; i++) {
-      if (this.children[i].kind > 0) {
-        this.children.splice(i, 0, node)
-        this.numberOfChildren++
-        return
-      }
-    }
-  }
   this.children.push(node)
+  this.children.sort((n1, n2) => n1.kind - n2.kind)
   this.numberOfChildren++
 }
 
@@ -51,18 +43,26 @@ Node.prototype.find = function (label, method) {
       if (child.label === label && child.kind === 0) {
         return child
       }
-      if (child.kind > 0) {
-        return child
-      }
     }
 
     if (child.map && child.map[method]) {
       if (child.label === label && child.kind === 0) {
         return child
       }
-      if (child.kind > 0) {
-        return child
-      }
+    }
+  }
+  return null
+}
+
+Node.prototype.findByKind = function (kind, method) {
+  for (var i = 0; i < this.numberOfChildren; i++) {
+    var child = this.children[i]
+    if (child.numberOfChildren !== 0 && child.kind === kind) {
+      return child
+    }
+
+    if (child.map && child.map[method] && child.kind === kind) {
+      return child
     }
   }
   return null
