@@ -499,3 +499,79 @@ test('Nested wildcards with parametric and static - 6', t => {
     null
   )
 })
+
+test('Nested wildcards with parametric and static - 7', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('we should not be here, the url is: ' + req.url)
+    }
+  })
+
+  findMyWay.on('GET', '*', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo1/*', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo2/*', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
+    t.is(req.url, '/foo3/hello')
+  })
+
+  findMyWay.on('GET', '/foo3/*', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo4/param/hello/test/long/route', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.lookup(
+    { method: 'GET', url: '/foo3/hello' },
+    null
+  )
+})
+
+test('Nested wildcards with parametric and static - 8', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('we should not be here, the url is: ' + req.url)
+    }
+  })
+
+  findMyWay.on('GET', '*', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo1/*', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo2/*', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo3/*', (req, res, params) => {
+    t.is(req.url, '/foo3/hello/world')
+  })
+
+  findMyWay.on('GET', '/foo4/param/hello/test/long/route', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.lookup(
+    { method: 'GET', url: '/foo3/hello/world' },
+    null
+  )
+})
