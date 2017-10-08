@@ -6,6 +6,8 @@
     param: 1,
     matchAll: 2,
     regex: 3
+    multi-param: 4
+      It's used for a parameter, that is followed by another parameter in the same part
 */
 
 function Node (prefix, children, kind, map, regex) {
@@ -16,9 +18,13 @@ function Node (prefix, children, kind, map, regex) {
   this.kind = kind || 0
   this.map = map || null
   this.regex = regex || null
+  this.wildcardChild = null
 }
 
 Node.prototype.add = function (node) {
+  if (node.kind === 2) {
+    this.wildcardChild = node
+  }
   this.children.push(node)
   this.children.sort((n1, n2) => n1.kind - n2.kind)
   this.numberOfChildren++
