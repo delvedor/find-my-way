@@ -400,7 +400,7 @@ function fastDecode (path) {
 
 function getWildcardNode (node, method, path, len) {
   if (node === null) return null
-  var decoded = fastDecode(path.slice(len))
+  var decoded = fastDecode(path.slice(-len))
   if (errored) {
     return null
   }
