@@ -134,7 +134,7 @@ test('Wildcard edge cases', t => {
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
-    t.is(req.method, 'OPTIONS')
+    t.is(params['*'], 'test1/foo')
   })
 
   findMyWay.lookup(
@@ -160,7 +160,7 @@ test('Wildcard edge cases same method', t => {
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
-    t.is(req.url, '/test/foo')
+    t.is(params['*'], 'test/foo')
   })
 
   findMyWay.lookup(
@@ -191,11 +191,11 @@ test('Wildcard and parametric edge cases', t => {
   })
 
   findMyWay.on('GET', '/:test/foo', (req, res, params) => {
-    t.is(req.url, '/example/foo')
+    t.is(params.test, 'example')
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
-    t.is(req.url, '/test/foo/hey')
+    t.is(params['*'], 'test/foo/hey')
   })
 
   findMyWay.lookup(
@@ -235,7 +235,7 @@ test('Mixed wildcard and static with same method', t => {
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.is(req.url, '/foo1/bar1/kuux')
+    t.is(params['*'], '/foo1/bar1/kuux')
   })
 
   findMyWay.lookup(
@@ -257,7 +257,7 @@ test('Nested wildcards case - 1', t => {
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.is(req.url, '/foo1/bar1/kuux')
+    t.is(params['*'], 'bar1/kuux')
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
@@ -283,7 +283,7 @@ test('Nested wildcards case - 2', t => {
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.is(req.url, '/foo1/bar1/kuux')
+    t.is(params['*'], 'bar1/kuux')
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
@@ -309,7 +309,7 @@ test('Nested wildcards with parametric and static - 1', t => {
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.is(req.url, '/foo1/bar1/kuux')
+    t.is(params['*'], 'bar1/kuux')
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
@@ -351,7 +351,7 @@ test('Nested wildcards with parametric and static - 2', t => {
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
-    t.is(req.url, '/foo3/bar1')
+    t.is(params.param, 'bar1')
   })
 
   findMyWay.on('GET', '/foo4/param', (req, res, params) => {
@@ -445,7 +445,7 @@ test('Nested wildcards with parametric and static - 5', t => {
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.is(req.url, '/foo1/param/hello/test/long/routee')
+    t.is(params['*'], 'param/hello/test/long/routee')
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
@@ -475,7 +475,7 @@ test('Nested wildcards with parametric and static - 6', t => {
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.is(req.url, '/foo4/param/hello/test/long/routee')
+    t.is(params['*'], '/foo4/param/hello/test/long/routee')
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
@@ -521,7 +521,7 @@ test('Nested wildcards with parametric and static - 7', t => {
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
-    t.is(req.url, '/foo3/hello')
+    t.is(params.param, 'hello')
   })
 
   findMyWay.on('GET', '/foo3/*', (req, res, params) => {
@@ -563,7 +563,7 @@ test('Nested wildcards with parametric and static - 8', t => {
   })
 
   findMyWay.on('GET', '/foo3/*', (req, res, params) => {
-    t.is(req.url, '/foo3/hello/world')
+    t.is(params['*'], 'hello/world')
   })
 
   findMyWay.on('GET', '/foo4/param/hello/test/long/route', (req, res, params) => {

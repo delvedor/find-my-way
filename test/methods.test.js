@@ -416,3 +416,24 @@ test('static routes should be inserted before parametric / 4', t => {
   findMyWay.lookup({ method: 'GET', url: '/test/id' }, null)
   findMyWay.lookup({ method: 'GET', url: '/id' }, null)
 })
+
+test('Static parametric with shared part of the path', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.is(req.url, '/example/shared/nested/oops')
+    }
+  })
+
+  findMyWay.on('GET', '/example/shared/nested/test', (req, res, params) => {
+    t.fail('We should not be here')
+  })
+
+  findMyWay.on('GET', '/example/:param/nested/test', (req, res, params) => {
+    t.is(params.param, 'other')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/example/other/nested/test' }, null)
+})
