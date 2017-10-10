@@ -37,7 +37,7 @@ function Router (opts) {
   this.tree = new Node()
 }
 
-Router.prototype.on = function (method, path, handler, store) {
+Router.prototype.on = function on (method, path, handler, store) {
   if (Array.isArray(method)) {
     for (var k = 0; k < method.length; k++) {
       this.on(method[k], path, handler, store)
@@ -113,7 +113,7 @@ Router.prototype.on = function (method, path, handler, store) {
   this._insert(method, path, 0, params, handler, store, null)
 }
 
-Router.prototype._insert = function (method, path, kind, params, handler, store, regex) {
+Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex) {
   var currentNode = this.tree
   var prefix = ''
   var pathLen = 0
@@ -134,7 +134,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store,
 
     if (len < prefixLen) {
       // split the node in the radix tree and add it to the parent
-      node = new Node(prefix.slice(len), currentNode.children, currentNode.kind, currentNode.map, currentNode.regex)
+      node = new Node(prefix.slice(len), currentNode.children, currentNode.kind, Object.assign({}, currentNode.map), currentNode.regex)
       if (currentNode.wildcardChild !== null) {
         node.wildcardChild = currentNode.wildcardChild
       }
@@ -144,7 +144,7 @@ Router.prototype._insert = function (method, path, kind, params, handler, store,
       currentNode.numberOfChildren = 1
       currentNode.prefix = prefix.slice(0, len)
       currentNode.label = currentNode.prefix[0]
-      currentNode.map = null
+      currentNode.map = {}
       currentNode.kind = 0
       currentNode.regex = null
       currentNode.wildcardChild = null
@@ -183,48 +183,43 @@ Router.prototype._insert = function (method, path, kind, params, handler, store,
   }
 }
 
-Router.prototype.lookup = function (req, res) {
+Router.prototype.lookup = function lookup (req, res) {
   var handle = this.find(req.method, sanitizeUrl(req.url))
   if (!handle) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
-Router.prototype.find = function (method, path) {
+Router.prototype.find = function find (method, path) {
   var currentNode = this.tree
   var wildcardNode = null
   var pathLenWildcard = 0
   var originalPath = path
-  var node = null
   var decoded = null
   var pindex = 0
   var params = []
-  var pathLen = 0
-  var prefix = ''
-  var prefixLen = 0
-  var len = 0
   var i = 0
-  var kind = 0
 
   while (true) {
-    pathLen = path.length
-    prefix = currentNode.prefix
-    prefixLen = prefix.length
-    len = 0
+    var pathLen = path.length
+    var prefix = currentNode.prefix
+    var prefixLen = prefix.length
+    var len = 0
 
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.getHandler(method)
-      if (handle) {
-        var paramNames = handle.params
-        var paramsObj = {}
+      if (handle !== undefined) {
+        if (handle.paramsLength > 0) {
+          var paramNames = handle.params
 
-        for (i = 0; i < paramNames.length; i++) {
-          paramsObj[paramNames[i]] = params[i]
+          for (i = 0; i < handle.paramsLength; i++) {
+            handle.paramsObj[paramNames[i]] = params[i]
+          }
         }
 
         return {
           handler: handle.handler,
-          params: paramsObj,
+          params: handle.paramsObj,
           store: handle.store
         }
       }
@@ -245,11 +240,11 @@ Router.prototype.find = function (method, path) {
       pathLenWildcard = pathLen
     }
 
-    node = currentNode.find(path[0], method)
+    var node = currentNode.find(path[0], method)
     if (node === null) {
       return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
     }
-    kind = node.kind
+    var kind = node.kind
 
     // static route
     if (kind === 0) {
@@ -405,7 +400,7 @@ function getWildcardNode (node, method, path, len) {
     return null
   }
   var handle = node.getHandler(method)
-  if (handle) {
+  if (handle !== undefined) {
     return {
       handler: handle.handler,
       params: { '*': decoded },

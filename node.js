@@ -16,7 +16,7 @@ function Node (prefix, children, kind, map, regex) {
   this.children = children || []
   this.numberOfChildren = this.children.length
   this.kind = kind || 0
-  this.map = map || null
+  this.map = map || {}
   this.regex = regex || null
   this.wildcardChild = null
 }
@@ -43,7 +43,7 @@ Node.prototype.findByLabel = function (label) {
 Node.prototype.find = function (label, method) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
-    if (child.numberOfChildren !== 0 || (child.map && child.map[method])) {
+    if (child.numberOfChildren !== 0 || child.map[method]) {
       if (child.label === label && child.kind === 0) {
         return child
       }
@@ -55,16 +55,23 @@ Node.prototype.find = function (label, method) {
 
 Node.prototype.setHandler = function (method, handler, params, store) {
   if (!handler) return
-  this.map = this.map || {}
+
+  var paramsObj = {}
+  for (var i = 0; i < params.length; i++) {
+    paramsObj[params[i]] = ''
+  }
+
   this.map[method] = {
     handler: handler,
     params: params,
-    store: store || null
+    store: store || null,
+    paramsLength: params.length,
+    paramsObj: paramsObj
   }
 }
 
 Node.prototype.getHandler = function (method) {
-  return this.map ? this.map[method] : null
+  return this.map[method]
 }
 
 Node.prototype.prettyPrint = function (prefix, tail) {
