@@ -130,11 +130,11 @@ router.on('GET', '/example/shared/nested/test', (req, res, params) => {
   assert.fail('We should not be here')
 })
 
-router.on('GET', '/example/:param/nested/test', (req, res, params) => {
+router.on('GET', '/example/:param/nested/oops', (req, res, params) => {
   assert.fail('We should not be here')
 })
 
-router.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, res)
+router.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, null)
 ```
 
 <a name="shorthand-methods"></a>
