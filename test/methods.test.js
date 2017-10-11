@@ -430,12 +430,12 @@ test('Static parametric with shared part of the path', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.on('GET', '/example/:param/nested/test', (req, res, params) => {
+  findMyWay.on('GET', '/example/:param/nested/oops', (req, res, params) => {
     t.is(params.param, 'other')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/example/other/nested/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/example/other/nested/oops' }, null)
 })
 
 test('parametric route with different method', t => {

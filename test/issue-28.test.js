@@ -528,7 +528,7 @@ test('Nested wildcards with parametric and static - 7', t => {
     t.fail('we should not be here, the url is: ' + req.url)
   })
 
-  findMyWay.on('GET', '/foo4/param/hello/test/long/route', (req, res, params) => {
+  findMyWay.on('GET', '/foo4/example/hello/test/long/route', (req, res, params) => {
     t.fail('we should not be here, the url is: ' + req.url)
   })
 
