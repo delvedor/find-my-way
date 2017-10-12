@@ -106,6 +106,37 @@ In this case as parameter separator it's possible to use whatever character is n
 
 Having a route with multiple parameters may affect negatively the performance, so prefer single parameter approach whenever possible, especially on routes which are on the hot path of your application.
 
+<a name="match-order"></a>
+##### Match order
+The routes are matched in the following order:
+```
+static
+parametric
+wildcards
+parametric(regex)
+multi parametric(regex)
+```
+This means that if you register two routes, the first static and the second dynamic with a shared part of the path, the static route will always take precedence.
+For example:
+```js
+const assert = require('assert')
+const router = require('find-my-way')({
+  defaultRoute: (req, res) => {
+    assert(req.url === '/example/shared/nested/oops')
+  }
+})
+
+router.on('GET', '/example/shared/nested/test', (req, res, params) => {
+  assert.fail('We should not be here')
+})
+
+router.on('GET', '/example/:param/nested/oops', (req, res, params) => {
+  assert.fail('We should not be here')
+})
+
+router.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, null)
+```
+
 <a name="shorthand-methods"></a>
 ##### Shorthand methods
 If you want an even nicer api, you can also use the shorthand methods to declare your routes.

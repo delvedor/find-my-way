@@ -6,6 +6,8 @@
     param: 1,
     matchAll: 2,
     regex: 3
+    multi-param: 4
+      It's used for a parameter, that is followed by another parameter in the same part
 */
 
 function Node (prefix, children, kind, map, regex) {
@@ -14,21 +16,17 @@ function Node (prefix, children, kind, map, regex) {
   this.children = children || []
   this.numberOfChildren = this.children.length
   this.kind = kind || 0
-  this.map = map || null
+  this.map = map || {}
   this.regex = regex || null
+  this.wildcardChild = null
 }
 
 Node.prototype.add = function (node) {
-  if (node.kind === 0) {
-    for (var i = 0; i < this.numberOfChildren; i++) {
-      if (this.children[i].kind > 0) {
-        this.children.splice(i, 0, node)
-        this.numberOfChildren++
-        return
-      }
-    }
+  if (node.kind === 2) {
+    this.wildcardChild = node
   }
   this.children.push(node)
+  this.children.sort((n1, n2) => n1.kind - n2.kind)
   this.numberOfChildren++
 }
 
@@ -42,27 +40,14 @@ Node.prototype.findByLabel = function (label) {
   return null
 }
 
-// Check in two different places the numberOfChildren and the map object
-// gives us around ~5% more speed
 Node.prototype.find = function (label, method) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
-    if (child.numberOfChildren !== 0) {
+    if (child.numberOfChildren !== 0 || child.map[method]) {
       if (child.label === label && child.kind === 0) {
         return child
       }
-      if (child.kind > 0) {
-        return child
-      }
-    }
-
-    if (child.map && child.map[method]) {
-      if (child.label === label && child.kind === 0) {
-        return child
-      }
-      if (child.kind > 0) {
-        return child
-      }
+      if (child.kind !== 0) return child
     }
   }
   return null
@@ -70,16 +55,23 @@ Node.prototype.find = function (label, method) {
 
 Node.prototype.setHandler = function (method, handler, params, store) {
   if (!handler) return
-  this.map = this.map || {}
+
+  var paramsObj = {}
+  for (var i = 0; i < params.length; i++) {
+    paramsObj[params[i]] = ''
+  }
+
   this.map[method] = {
     handler: handler,
     params: params,
-    store: store || null
+    store: store || null,
+    paramsLength: params.length,
+    paramsObj: paramsObj
   }
 }
 
 Node.prototype.getHandler = function (method) {
-  return this.map ? this.map[method] : null
+  return this.map[method]
 }
 
 Node.prototype.prettyPrint = function (prefix, tail) {

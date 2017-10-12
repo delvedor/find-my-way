@@ -37,7 +37,7 @@ function Router (opts) {
   this.tree = new Node()
 }
 
-Router.prototype.on = function (method, path, handler, store) {
+Router.prototype.on = function on (method, path, handler, store) {
   if (Array.isArray(method)) {
     for (var k = 0; k < method.length; k++) {
       this.on(method[k], path, handler, store)
@@ -64,7 +64,7 @@ Router.prototype.on = function (method, path, handler, store) {
     if (path.charCodeAt(i) === 58) {
       var nodeType = 1
       j = i + 1
-      this._insert(method, path.slice(0, i), 0, null, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null, null)
 
       // isolate the parameter name
       var isRegex = false
@@ -104,23 +104,23 @@ Router.prototype.on = function (method, path, handler, store) {
       i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
-      this._insert(method, path.slice(0, i), 0, null, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null, null)
       params.push('*')
-      return this._insert(method, path.slice(0, len), 2, params, handler, store)
+      return this._insert(method, path.slice(0, len), 2, params, handler, store, null)
     }
   }
   // static route
-  this._insert(method, path, 0, params, handler, store)
+  this._insert(method, path, 0, params, handler, store, null)
 }
 
-Router.prototype._insert = function (method, path, kind, params, handler, store, regex) {
+Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex) {
+  var currentNode = this.tree
   var prefix = ''
   var pathLen = 0
   var prefixLen = 0
   var len = 0
   var max = 0
   var node = null
-  var currentNode = this.tree
 
   while (true) {
     prefix = currentNode.prefix
@@ -134,16 +134,20 @@ Router.prototype._insert = function (method, path, kind, params, handler, store,
 
     if (len < prefixLen) {
       // split the node in the radix tree and add it to the parent
-      node = new Node(prefix.slice(len), currentNode.children, currentNode.kind, currentNode.map, currentNode.regex)
+      node = new Node(prefix.slice(len), currentNode.children, currentNode.kind, Object.assign({}, currentNode.map), currentNode.regex)
+      if (currentNode.wildcardChild !== null) {
+        node.wildcardChild = currentNode.wildcardChild
+      }
 
       // reset the parent
       currentNode.children = [node]
       currentNode.numberOfChildren = 1
       currentNode.prefix = prefix.slice(0, len)
       currentNode.label = currentNode.prefix[0]
-      currentNode.map = null
+      currentNode.map = {}
       currentNode.kind = 0
       currentNode.regex = null
+      currentNode.wildcardChild = null
 
       if (len === pathLen) {
         // add the handler to the parent node
@@ -179,45 +183,43 @@ Router.prototype._insert = function (method, path, kind, params, handler, store,
   }
 }
 
-Router.prototype.lookup = function (req, res) {
+Router.prototype.lookup = function lookup (req, res) {
   var handle = this.find(req.method, sanitizeUrl(req.url))
   if (!handle) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
-Router.prototype.find = function (method, path) {
+Router.prototype.find = function find (method, path) {
   var currentNode = this.tree
-  var node = null
-  var kind = 0
+  var wildcardNode = null
+  var pathLenWildcard = 0
+  var originalPath = path
   var decoded = null
   var pindex = 0
   var params = []
-  var pathLen = 0
-  var prefix = ''
-  var prefixLen = 0
-  var len = 0
   var i = 0
 
   while (true) {
-    pathLen = path.length
-    prefix = currentNode.prefix
-    prefixLen = prefix.length
-    len = 0
+    var pathLen = path.length
+    var prefix = currentNode.prefix
+    var prefixLen = prefix.length
+    var len = 0
 
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.getHandler(method)
-      if (handle) {
-        var paramNames = handle.params
-        var paramsObj = {}
+      if (handle !== undefined) {
+        if (handle.paramsLength > 0) {
+          var paramNames = handle.params
 
-        for (i = 0; i < paramNames.length; i++) {
-          paramsObj[paramNames[i]] = params[i]
+          for (i = 0; i < handle.paramsLength; i++) {
+            handle.paramsObj[paramNames[i]] = params[i]
+          }
         }
 
         return {
           handler: handle.handler,
-          params: paramsObj,
+          params: handle.paramsObj,
           store: handle.store
         }
       }
@@ -232,9 +234,17 @@ Router.prototype.find = function (method, path) {
       pathLen = path.length
     }
 
-    node = currentNode.find(path[0], method)
-    if (!node) return null
-    kind = node.kind
+    // if exist, save the wildcard child
+    if (currentNode.wildcardChild !== null) {
+      wildcardNode = currentNode.wildcardChild
+      pathLenWildcard = pathLen
+    }
+
+    var node = currentNode.find(path[0], method)
+    if (node === null) {
+      return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+    }
+    var kind = node.kind
 
     // static route
     if (kind === 0) {
@@ -242,7 +252,9 @@ Router.prototype.find = function (method, path) {
       continue
     }
 
-    if (len !== prefixLen) return null
+    if (len !== prefixLen) {
+      return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+    }
 
     // parametric route
     if (kind === 1) {
@@ -279,7 +291,7 @@ Router.prototype.find = function (method, path) {
       if (errored) {
         return null
       }
-      if (!node.regex.test(decoded)) return
+      if (!node.regex.test(decoded)) return null
       params[pindex++] = decoded
       path = path.slice(i)
       continue
@@ -291,7 +303,7 @@ Router.prototype.find = function (method, path) {
       i = 0
       if (node.regex) {
         var matchedParameter = path.match(node.regex)
-        if (!matchedParameter) return
+        if (!matchedParameter) return null
         i = matchedParameter[1].length
       } else {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
@@ -379,4 +391,21 @@ function fastDecode (path) {
   } catch (err) {
     errored = true
   }
+}
+
+function getWildcardNode (node, method, path, len) {
+  if (node === null) return null
+  var decoded = fastDecode(path.slice(-len))
+  if (errored) {
+    return null
+  }
+  var handle = node.getHandler(method)
+  if (handle !== undefined) {
+    return {
+      handler: handle.handler,
+      params: { '*': decoded },
+      store: handle.store
+    }
+  }
+  return null
 }

@@ -416,3 +416,40 @@ test('static routes should be inserted before parametric / 4', t => {
   findMyWay.lookup({ method: 'GET', url: '/test/id' }, null)
   findMyWay.lookup({ method: 'GET', url: '/id' }, null)
 })
+
+test('Static parametric with shared part of the path', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.is(req.url, '/example/shared/nested/oops')
+    }
+  })
+
+  findMyWay.on('GET', '/example/shared/nested/test', (req, res, params) => {
+    t.fail('We should not be here')
+  })
+
+  findMyWay.on('GET', '/example/:param/nested/oops', (req, res, params) => {
+    t.is(params.param, 'other')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/example/other/nested/oops' }, null)
+})
+
+test('parametric route with different method', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test/:id', (req, res, params) => {
+    t.is(params.id, 'hello')
+  })
+
+  findMyWay.on('POST', '/test/:other', (req, res, params) => {
+    t.is(params.other, 'world')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+  findMyWay.lookup({ method: 'POST', url: '/test/world' }, null)
+})
