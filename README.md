@@ -116,8 +116,9 @@ wildcards
 parametric(regex)
 multi parametric(regex)
 ```
-This means that if you register two routes, the first static and the second dynamic with a shared part of the path, the static route will always take precedence.
-For example:
+
+##### Caveats
+* Since *static* routes have greater priority than *parametric* routes, when you register a static route and a dynamic route, which have part of their path equal, the static route shadows the parametric route, that becomes not accessible. For example:
 ```js
 const assert = require('assert')
 const router = require('find-my-way')({
@@ -135,6 +136,18 @@ router.on('GET', '/example/:param/nested/oops', (req, res, params) => {
 })
 
 router.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, null)
+```
+
+* It's not possible to register two routes which differs only for their parameters, because internally they would be seen as the same route. In a such case you'll get an early error during the route registration phase. An example is worth thousand words:
+```js
+const findMyWay = FindMyWay({
+  defaultRoute: (req, res) => {}
+})
+
+findMyWay.on('GET', '/user/:userId(^\\d+)', (req, res, params) => {})
+
+findMyWay.on('GET', '/user/:username(^[a-z]+)', (req, res, params) => {})
+// Method 'GET' already declared for route ':'
 ```
 
 <a name="shorthand-methods"></a>
