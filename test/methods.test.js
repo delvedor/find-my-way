@@ -453,3 +453,25 @@ test('parametric route with different method', t => {
   findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
   findMyWay.lookup({ method: 'POST', url: '/test/world' }, null)
 })
+
+test('params does not keep the object reference', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+  var first = true
+
+  findMyWay.on('GET', '/test/:id', (req, res, params) => {
+    if (first) {
+      setTimeout(() => {
+        t.is(params.id, 'hello')
+      }, 10)
+    } else {
+      setTimeout(() => {
+        t.is(params.id, 'world')
+      }, 10)
+    }
+    first = false
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/world' }, null)
+})

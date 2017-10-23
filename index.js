@@ -209,17 +209,18 @@ Router.prototype.find = function find (method, path) {
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.getHandler(method)
       if (handle !== undefined) {
+        var paramsObj = {}
         if (handle.paramsLength > 0) {
           var paramNames = handle.params
 
           for (i = 0; i < handle.paramsLength; i++) {
-            handle.paramsObj[paramNames[i]] = params[i]
+            paramsObj[paramNames[i]] = params[i]
           }
         }
 
         return {
           handler: handle.handler,
-          params: handle.paramsObj,
+          params: paramsObj,
           store: handle.store
         }
       }

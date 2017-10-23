@@ -56,17 +56,11 @@ Node.prototype.find = function (label, method) {
 Node.prototype.setHandler = function (method, handler, params, store) {
   if (!handler) return
 
-  var paramsObj = {}
-  for (var i = 0; i < params.length; i++) {
-    paramsObj[params[i]] = ''
-  }
-
   this.map[method] = {
     handler: handler,
     params: params,
     store: store || null,
-    paramsLength: params.length,
-    paramsObj: paramsObj
+    paramsLength: params.length
   }
 }
 
