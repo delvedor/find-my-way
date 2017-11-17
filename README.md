@@ -117,6 +117,31 @@ parametric(regex)
 multi parametric(regex)
 ```
 
+<a name="off"></a>
+#### off(method, path)
+Deregister a route.
+```js
+router.off('GET', '/example')
+// => { handler: Function, params: Object, store: Object}
+// => null
+```
+
+##### off(methods[], path, handler, [store])
+Deregister a route for each method specified in the `methods` array.
+It comes handy when you need to deregister multiple routes with the same path but different methods.
+```js
+router.off(['GET', 'POST'], '/example')
+// => [{ handler: Function, params: Object, store: Object}]
+// => null
+```
+
+<a name="reset"></a>
+#### reset()
+Empty router.
+```js
+router.reset()
+```
+
 ##### Caveats
 * Since *static* routes have greater priority than *parametric* routes, when you register a static route and a dynamic route, which have part of their path equal, the static route shadows the parametric route, that becomes not accessible. For example:
 ```js

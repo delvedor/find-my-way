@@ -35,6 +35,7 @@ function Router (opts) {
   }
 
   this.tree = new Node()
+  this.routes = []
 }
 
 Router.prototype.on = function on (method, path, handler, store) {
@@ -57,6 +58,13 @@ Router.prototype.on = function on (method, path, handler, store) {
 
   const params = []
   var j = 0
+
+  this.routes.push({
+    method: method,
+    path: path,
+    handler: handler,
+    store: store
+  })
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
@@ -181,6 +189,38 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
     }
     return
   }
+}
+
+Router.prototype.reset = function reset () {
+  this.tree = new Node()
+  this.routes = []
+}
+
+Router.prototype.off = function off (method, path) {
+  var self = this
+
+  if (Array.isArray(method)) {
+    return method.map(function (method) {
+      return self.off(method, path)
+    })
+  }
+
+  // method validation
+  assert(typeof method === 'string', 'Method should be a string')
+  assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
+  // path validation
+  assert(typeof path === 'string', 'Path should be a string')
+  assert(path.length > 0, 'The path could not be empty')
+  assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
+
+  // Rebuild tree without the specific route
+  var newRoutes = self.routes.filter(function (route) {
+    return !(method === route.method && path === route.path)
+  })
+  self.reset()
+  newRoutes.forEach(function (route) {
+    self.on(route.method, route.path, route.handler, route.store)
+  })
 }
 
 Router.prototype.lookup = function lookup (req, res) {
