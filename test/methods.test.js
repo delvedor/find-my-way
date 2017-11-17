@@ -15,6 +15,35 @@ test('the router is an object with methods', t => {
   t.is(typeof findMyWay.find, 'function')
 })
 
+test('on throws for invalid method', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  t.throws(() => {
+    findMyWay.on('INVALID', '/a/b')
+  })
+})
+
+test('on throws for invalid path', t => {
+  t.plan(3)
+  const findMyWay = FindMyWay()
+
+  // Non string
+  t.throws(() => {
+    findMyWay.on('GET', 1)
+  })
+
+  // Empty
+  t.throws(() => {
+    findMyWay.on('GET', '')
+  })
+
+  // Doesn't start with / or *
+  t.throws(() => {
+    findMyWay.on('GET', 'invalid')
+  })
+})
+
 test('register a route', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
@@ -140,6 +169,17 @@ test('deregister a route with multiple methods', t => {
 
   findMyWay.on(['GET', 'POST'], '/a', () => {})
   findMyWay.off(['GET', 'POST'], '/a')
+
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.notOk(findMyWay.find('POST', '/a'))
+})
+
+test('reset a router', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on(['GET', 'POST'], '/a', () => {})
+  findMyWay.reset()
 
   t.notOk(findMyWay.find('GET', '/a'))
   t.notOk(findMyWay.find('POST', '/a'))
