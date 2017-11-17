@@ -5,13 +5,43 @@ const test = t.test
 const FindMyWay = require('../')
 
 test('the router is an object with methods', t => {
-  t.plan(3)
+  t.plan(4)
 
   const findMyWay = FindMyWay()
 
   t.is(typeof findMyWay.on, 'function')
+  t.is(typeof findMyWay.off, 'function')
   t.is(typeof findMyWay.lookup, 'function')
   t.is(typeof findMyWay.find, 'function')
+})
+
+test('on throws for invalid method', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  t.throws(() => {
+    findMyWay.on('INVALID', '/a/b')
+  })
+})
+
+test('on throws for invalid path', t => {
+  t.plan(3)
+  const findMyWay = FindMyWay()
+
+  // Non string
+  t.throws(() => {
+    findMyWay.on('GET', 1)
+  })
+
+  // Empty
+  t.throws(() => {
+    findMyWay.on('GET', '')
+  })
+
+  // Doesn't start with / or *
+  t.throws(() => {
+    findMyWay.on('GET', 'invalid')
+  })
 })
 
 test('register a route', t => {
@@ -35,6 +65,124 @@ test('register a route with multiple methods', t => {
 
   findMyWay.lookup({ method: 'GET', url: '/test' }, null)
   findMyWay.lookup({ method: 'POST', url: '/test' }, null)
+})
+
+test('off throws for invalid method', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  t.throws(() => {
+    findMyWay.off('INVALID', '/a/b')
+  })
+})
+
+test('off throws for invalid path', t => {
+  t.plan(3)
+  const findMyWay = FindMyWay()
+
+  // Non string
+  t.throws(() => {
+    findMyWay.off('GET', 1)
+  })
+
+  // Empty
+  t.throws(() => {
+    findMyWay.off('GET', '')
+  })
+
+  // Doesn't start with / or *
+  t.throws(() => {
+    findMyWay.off('GET', 'invalid')
+  })
+})
+
+test('off with nested wildcards with parametric and static', t => {
+  t.plan(3)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('we should not be here, the url is: ' + req.url)
+    }
+  })
+
+  findMyWay.on('GET', '*', (req, res, params) => {
+    t.is(params['*'], '/foo2/first/second')
+  })
+  findMyWay.on('GET', '/foo1/*', () => {})
+  findMyWay.on('GET', '/foo2/*', () => {})
+  findMyWay.on('GET', '/foo3/:param', () => {})
+  findMyWay.on('GET', '/foo3/*', () => {})
+  findMyWay.on('GET', '/foo4/param/hello/test/long/route', () => {})
+
+  var route1 = findMyWay.find('GET', '/foo3/first/second')
+  t.is(route1.params['*'], 'first/second')
+
+  findMyWay.off('GET', '/foo3/*')
+
+  var route2 = findMyWay.find('GET', '/foo3/first/second')
+  t.is(route2.params['*'], '/foo3/first/second')
+
+  findMyWay.off('GET', '/foo2/*')
+  findMyWay.lookup(
+    { method: 'GET', url: '/foo2/first/second' },
+    null
+  )
+})
+
+test('deregister a route without children', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/a', () => {})
+  findMyWay.on('GET', '/a/b', () => {})
+  findMyWay.off('GET', '/a/b')
+
+  t.ok(findMyWay.find('GET', '/a'))
+  t.notOk(findMyWay.find('GET', '/a/b'))
+})
+
+test('deregister a route with children', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/a', () => {})
+  findMyWay.on('GET', '/a/b', () => {})
+  findMyWay.off('GET', '/a')
+
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.ok(findMyWay.find('GET', '/a/b'))
+})
+
+test('deregister a route by method', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on(['GET', 'POST'], '/a', () => {})
+  findMyWay.off('GET', '/a')
+
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.ok(findMyWay.find('POST', '/a'))
+})
+
+test('deregister a route with multiple methods', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on(['GET', 'POST'], '/a', () => {})
+  findMyWay.off(['GET', 'POST'], '/a')
+
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.notOk(findMyWay.find('POST', '/a'))
+})
+
+test('reset a router', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on(['GET', 'POST'], '/a', () => {})
+  findMyWay.reset()
+
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.notOk(findMyWay.find('POST', '/a'))
 })
 
 test('default route', t => {
