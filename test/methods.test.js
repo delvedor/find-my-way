@@ -570,7 +570,7 @@ test('Static parametric with shared part of the path', t => {
 
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.is(req.url, '/example/shared/nested/oops')
+      t.is(req.url, '/example/shared/nested/oopss')
     }
   })
 
@@ -582,7 +582,7 @@ test('Static parametric with shared part of the path', t => {
     t.is(params.param, 'other')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/oopss' }, null)
   findMyWay.lookup({ method: 'GET', url: '/example/other/nested/oops' }, null)
 })
 
