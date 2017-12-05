@@ -244,6 +244,7 @@ Router.prototype.find = function find (method, path) {
     var prefix = currentNode.prefix
     var prefixLen = prefix.length
     var len = 0
+    var previousPath = path
 
     // found the route
     if (pathLen === 0 || path === prefix) {
@@ -283,7 +284,13 @@ Router.prototype.find = function find (method, path) {
 
     var node = currentNode.find(path[0], method)
     if (node === null) {
-      return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+      node = currentNode.parametricBrother
+      if (node === null) {
+        return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+      }
+      path = previousPath
+      pathLen = previousPath.length
+      len = prefixLen
     }
     var kind = node.kind
 

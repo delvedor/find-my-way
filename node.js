@@ -19,12 +19,22 @@ function Node (prefix, children, kind, map, regex) {
   this.map = map || {}
   this.regex = regex || null
   this.wildcardChild = null
+  this.parametricBrother = null
 }
 
 Node.prototype.add = function (node) {
   if (node.kind === 2) {
     this.wildcardChild = node
   }
+
+  if (node.kind === 1 || node.kind === 3 || node.kind === 4) {
+    for (var i = 0; i < this.numberOfChildren; i++) {
+      if (this.children[i].kind === 0) {
+        this.children[i].parametricBrother = node
+      }
+    }
+  }
+
   this.children.push(node)
   this.children.sort((n1, n2) => n1.kind - n2.kind)
   this.numberOfChildren++
