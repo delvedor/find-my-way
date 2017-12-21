@@ -276,12 +276,6 @@ Router.prototype.find = function find (method, path) {
       pathLen = path.length
     }
 
-    // if exist, save the wildcard child
-    if (currentNode.wildcardChild !== null) {
-      wildcardNode = currentNode.wildcardChild
-      pathLenWildcard = pathLen
-    }
-
     var node = currentNode.find(path[0], method)
     if (node === null) {
       node = currentNode.parametricBrother
@@ -296,12 +290,23 @@ Router.prototype.find = function find (method, path) {
 
     // static route
     if (kind === 0) {
+      // if exist, save the wildcard child
+      if (currentNode.wildcardChild !== null) {
+        wildcardNode = currentNode.wildcardChild
+        pathLenWildcard = pathLen
+      }
       currentNode = node
       continue
     }
 
     if (len !== prefixLen) {
       return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+    }
+
+    // if exist, save the wildcard child
+    if (currentNode.wildcardChild !== null) {
+      wildcardNode = currentNode.wildcardChild
+      pathLenWildcard = pathLen
     }
 
     // parametric route
@@ -364,6 +369,8 @@ Router.prototype.find = function find (method, path) {
       path = path.slice(i)
       continue
     }
+
+    wildcardNode = null
   }
 }
 
