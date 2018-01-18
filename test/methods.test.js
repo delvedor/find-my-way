@@ -128,6 +128,33 @@ test('off with nested wildcards with parametric and static', t => {
   )
 })
 
+test('off removes all routes when trimTrailingSlash is true', t => {
+  t.plan(6)
+  const findMyWay = FindMyWay({
+    trimTrailingSlash: true
+  })
+
+  findMyWay.on('GET', '/test1/', () => {})
+  t.is(findMyWay.routes.length, 2)
+
+  findMyWay.on('GET', '/test2', () => {})
+  t.is(findMyWay.routes.length, 4)
+
+  findMyWay.off('GET', '/test1')
+  t.is(findMyWay.routes.length, 2)
+  t.is(
+    findMyWay.routes.filter((r) => r.path === '/test2').length,
+    1
+  )
+  t.is(
+    findMyWay.routes.filter((r) => r.path === '/test2/').length,
+    1
+  )
+
+  findMyWay.off('GET', '/test2/')
+  t.is(findMyWay.routes.length, 0)
+})
+
 test('deregister a route without children', t => {
   t.plan(2)
   const findMyWay = FindMyWay()

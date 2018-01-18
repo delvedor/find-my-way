@@ -34,18 +34,33 @@ function Router (opts) {
     this.defaultRoute = opts.defaultRoute
   }
 
+  this.trimTrailingSlash = opts.trimTrailingSlash || false
   this.tree = new Node()
   this.routes = []
 }
 
 Router.prototype.on = function on (method, path, handler, store) {
+  const register = (m, p, h, s) => {
+    if (this.trimTrailingSlash && p.endsWith('/')) {
+      this._on(m, p, h, s)
+      this._on(m, p.slice(0, -1), h, s)
+    } else if (this.trimTrailingSlash && p.endsWith('/') === false) {
+      this._on(m, p, h, s)
+      this._on(m, p + '/', h, s)
+    } else if (!this.trimTrailingSlash) {
+      this._on(m, p, h, s)
+    }
+  }
   if (Array.isArray(method)) {
     for (var k = 0; k < method.length; k++) {
-      this.on(method[k], path, handler, store)
+      register(method[k], path, handler, store)
     }
     return
   }
+  register(method, path, handler, store)
+}
 
+Router.prototype._on = function _on (method, path, handler, store) {
   // method validation
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
@@ -214,9 +229,28 @@ Router.prototype.off = function off (method, path) {
   assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
 
   // Rebuild tree without the specific route
+  const trimTrailingSlash = this.trimTrailingSlash
   var newRoutes = self.routes.filter(function (route) {
-    return !(method === route.method && path === route.path)
+    if (!trimTrailingSlash) {
+      return !(method === route.method && path === route.path)
+    }
+    if (path.endsWith('/')) {
+      const routeMatches = path === route.path || path.slice(0, -1) === route.path
+      return !(method === route.method && routeMatches)
+    }
+    const routeMatches = path === route.path || (path + '/') === route.path
+    return !(method === route.method && routeMatches)
   })
+  if (trimTrailingSlash) {
+    newRoutes = newRoutes.filter(function (route, i, ar) {
+      if (route.path.endsWith('/') && i < ar.length - 1) {
+        return route.path.slice(0, -1) !== ar[i + 1].path
+      } else if (route.path.endsWith('/') === false && i < ar.length - 1) {
+        return (route.path + '/') !== ar[i + 1].path
+      }
+      return true
+    })
+  }
   self.reset()
   newRoutes.forEach(function (route) {
     self.on(route.method, route.path, route.handler, route.store)

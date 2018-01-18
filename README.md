@@ -4,7 +4,7 @@
 
 A crazy fast HTTP router, internally uses an highly performant [Radix Tree](https://en.wikipedia.org/wiki/Radix_tree) (aka compact [Prefix Tree](https://en.wikipedia.org/wiki/Trie)), supports route params, wildcards, and it's framework independent.
 
-If you want to see a benchmark comparison with the most commonly used routers, see [here](https://github.com/delvedor/router-benchmark).  
+If you want to see a benchmark comparison with the most commonly used routers, see [here](https://github.com/delvedor/router-benchmark).<br>
 Do you need a real-world example that uses this router? Check out [Fastify](https://github.com/fastify/fastify).
 
 <a name="install"></a>
@@ -37,7 +37,7 @@ server.listen(3000, err => {
 ## API
 <a name="constructor"></a>
 #### FindMyway([options])
-Instance a new router.  
+Instance a new router.<br>
 You can pass a default route with the option `defaultRoute`.
 ```js
 const router = require('find-my-way')({
@@ -46,6 +46,18 @@ const router = require('find-my-way')({
     res.end()
   }
 })
+```
+
+Trailing slashes can be ignored by supplying the `trimeTrailingSlash` option:
+```js
+const router = require('find-my-way')({
+  trimTrailingSlash: true
+})
+function handler (req, res, params) {
+  res.send('foo')
+}
+// maps "/foo/" and "/foo" to `handler`
+router.on('GET', '/foo/', handler)
 ```
 
 <a name="on"></a>
@@ -197,8 +209,8 @@ router.all(path, handler [, store])
 
 <a name="lookup"></a>
 #### lookup(request, response)
-Start a new search, `request` and `response` are the server req/res objects.  
-If a route is found it will automatically called the handler, otherwise the default route will be called.  
+Start a new search, `request` and `response` are the server req/res objects.<br>
+If a route is found it will automatically called the handler, otherwise the default route will be called.<br>
 The url is sanitized internally, all the parameters and wildcards are decoded automatically.
 ```js
 router.lookup(req, res)
@@ -206,7 +218,7 @@ router.lookup(req, res)
 
 <a name="find"></a>
 #### find(method, path)
-Return (if present) the route registered in *method:path*.  
+Return (if present) the route registered in *method:path*.<br>
 The path must be sanitized, all the parameters and wildcards are decoded automatically.
 ```js
 router.find('GET', '/example')
@@ -232,12 +244,12 @@ console.log(findMyWay.prettyPrint())
 <a name="acknowledgements"></a>
 ## Acknowledgements
 
-This project is kindly sponsored by [LetzDoIt](http://www.letzdoitapp.com/).  
+This project is kindly sponsored by [LetzDoIt](http://www.letzdoitapp.com/).<br>
 It is inspired by the [echo](https://github.com/labstack/echo) router, some parts have been extracted from [trekjs](https://github.com/trekjs) router.
 
 <a name="license"></a>
 ## License
-**[find-my-way - MIT](https://github.com/delvedor/find-my-way/blob/master/LICENSE)**  
+**[find-my-way - MIT](https://github.com/delvedor/find-my-way/blob/master/LICENSE)**<br>
 **[trekjs/router - MIT](https://github.com/trekjs/router/blob/master/LICENSE)**
 
 Copyright © 2017 Tomas Della Vedova

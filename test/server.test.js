@@ -112,3 +112,113 @@ test('automatic default route', t => {
     })
   })
 })
+
+test('maps two routes when trailing slash should be trimmed', t => {
+  t.plan(25)
+  const findMyWay = FindMyWay({
+    trimTrailingSlash: true
+  })
+
+  findMyWay.on('GET', '/test/', (req, res, params) => {
+    t.ok(req)
+    t.ok(res)
+    t.ok(params)
+    res.end('test')
+  })
+
+  findMyWay.on('GET', '/othertest', (req, res, params) => {
+    t.ok(req)
+    t.ok(res)
+    t.ok(params)
+    res.end('othertest')
+  })
+
+  const server = http.createServer((req, res) => {
+    findMyWay.lookup(req, res)
+  })
+
+  server.listen(0, err => {
+    t.error(err)
+    server.unref()
+
+    const baseURL = 'http://localhost:' + server.address().port
+
+    request({
+      method: 'GET',
+      uri: baseURL + '/test/'
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+      t.strictEqual(body, 'test')
+    })
+
+    request({
+      method: 'GET',
+      uri: baseURL + '/test'
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+      t.strictEqual(body, 'test')
+    })
+
+    request({
+      method: 'GET',
+      uri: baseURL + '/othertest'
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+      t.strictEqual(body, 'othertest')
+    })
+
+    request({
+      method: 'GET',
+      uri: baseURL + '/othertest/'
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+      t.strictEqual(body, 'othertest')
+    })
+  })
+})
+
+test('does not trim trailing slash when trimTrailingSlash is false', t => {
+  t.plan(9)
+  const findMyWay = FindMyWay({
+    trimTrailingSlash: false
+  })
+
+  findMyWay.on('GET', '/test/', (req, res, params) => {
+    t.ok(req)
+    t.ok(res)
+    t.ok(params)
+    res.end('test')
+  })
+
+  const server = http.createServer((req, res) => {
+    findMyWay.lookup(req, res)
+  })
+
+  server.listen(0, err => {
+    t.error(err)
+    server.unref()
+
+    const baseURL = 'http://localhost:' + server.address().port
+
+    request({
+      method: 'GET',
+      uri: baseURL + '/test/'
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+      t.strictEqual(body, 'test')
+    })
+
+    request({
+      method: 'GET',
+      uri: baseURL + '/test'
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 404)
+    })
+  })
+})
