@@ -116,7 +116,7 @@ test('automatic default route', t => {
 test('maps two routes when trailing slash should be trimmed', t => {
   t.plan(25)
   const findMyWay = FindMyWay({
-    trimTrailingSlash: true
+    ignoreTrailingSlash: true
   })
 
   findMyWay.on('GET', '/test/', (req, res, params) => {
@@ -181,10 +181,10 @@ test('maps two routes when trailing slash should be trimmed', t => {
   })
 })
 
-test('does not trim trailing slash when trimTrailingSlash is false', t => {
+test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
   t.plan(9)
   const findMyWay = FindMyWay({
-    trimTrailingSlash: false
+    ignoreTrailingSlash: false
   })
 
   findMyWay.on('GET', '/test/', (req, res, params) => {

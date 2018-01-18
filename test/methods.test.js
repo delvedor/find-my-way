@@ -128,10 +128,10 @@ test('off with nested wildcards with parametric and static', t => {
   )
 })
 
-test('off removes all routes when trimTrailingSlash is true', t => {
+test('off removes all routes when ignoreTrailingSlash is true', t => {
   t.plan(6)
   const findMyWay = FindMyWay({
-    trimTrailingSlash: true
+    ignoreTrailingSlash: true
   })
 
   findMyWay.on('GET', '/test1/', () => {})

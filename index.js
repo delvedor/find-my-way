@@ -34,20 +34,20 @@ function Router (opts) {
     this.defaultRoute = opts.defaultRoute
   }
 
-  this.trimTrailingSlash = opts.trimTrailingSlash || false
+  this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.tree = new Node()
   this.routes = []
 }
 
 Router.prototype.on = function on (method, path, handler, store) {
   const register = (m, p, h, s) => {
-    if (this.trimTrailingSlash && p.endsWith('/')) {
+    if (this.ignoreTrailingSlash && p.endsWith('/')) {
       this._on(m, p, h, s)
       this._on(m, p.slice(0, -1), h, s)
-    } else if (this.trimTrailingSlash && p.endsWith('/') === false) {
+    } else if (this.ignoreTrailingSlash && p.endsWith('/') === false) {
       this._on(m, p, h, s)
       this._on(m, p + '/', h, s)
-    } else if (!this.trimTrailingSlash) {
+    } else if (!this.ignoreTrailingSlash) {
       this._on(m, p, h, s)
     }
   }
@@ -229,9 +229,9 @@ Router.prototype.off = function off (method, path) {
   assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
 
   // Rebuild tree without the specific route
-  const trimTrailingSlash = this.trimTrailingSlash
+  const ignoreTrailingSlash = this.ignoreTrailingSlash
   var newRoutes = self.routes.filter(function (route) {
-    if (!trimTrailingSlash) {
+    if (!ignoreTrailingSlash) {
       return !(method === route.method && path === route.path)
     }
     if (path.endsWith('/')) {
@@ -241,7 +241,7 @@ Router.prototype.off = function off (method, path) {
     const routeMatches = path === route.path || (path + '/') === route.path
     return !(method === route.method && routeMatches)
   })
-  if (trimTrailingSlash) {
+  if (ignoreTrailingSlash) {
     newRoutes = newRoutes.filter(function (route, i, ar) {
       if (route.path.endsWith('/') && i < ar.length - 1) {
         return route.path.slice(0, -1) !== ar[i + 1].path

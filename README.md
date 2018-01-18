@@ -48,10 +48,10 @@ const router = require('find-my-way')({
 })
 ```
 
-Trailing slashes can be ignored by supplying the `trimeTrailingSlash` option:
+Trailing slashes can be ignored by supplying the `ignoreTrailingSlash` option:
 ```js
 const router = require('find-my-way')({
-  trimTrailingSlash: true
+  ignoreTrailingSlash: true
 })
 function handler (req, res, params) {
   res.send('foo')
