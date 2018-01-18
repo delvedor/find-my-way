@@ -41,15 +41,16 @@ function Router (opts) {
 
 Router.prototype.on = function on (method, path, handler, store) {
   const register = (m, p, h, s) => {
+    if (!this.ignoreTrailingSlash || path === '/' || path.endsWith('*')) {
+      return this._on(m, p, h, s)
+    }
     if (this.ignoreTrailingSlash && p.endsWith('/')) {
       this._on(m, p, h, s)
       this._on(m, p.slice(0, -1), h, s)
-    } else if (this.ignoreTrailingSlash && p.endsWith('/') === false) {
-      this._on(m, p, h, s)
-      this._on(m, p + '/', h, s)
-    } else if (!this.ignoreTrailingSlash) {
-      this._on(m, p, h, s)
+      return
     }
+    this._on(m, p, h, s)
+    this._on(m, p + '/', h, s)
   }
   if (Array.isArray(method)) {
     for (var k = 0; k < method.length; k++) {

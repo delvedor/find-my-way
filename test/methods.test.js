@@ -67,6 +67,19 @@ test('register a route with multiple methods', t => {
   findMyWay.lookup({ method: 'POST', url: '/test' }, null)
 })
 
+test('does not register /test/*/ when ignoreTrailingSlash is true', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    ignoreTrailingSlash: true
+  })
+
+  findMyWay.on('GET', '/test/*', () => {})
+  t.is(
+    findMyWay.routes.filter((r) => r.path.includes('/test')).length,
+    1
+  )
+})
+
 test('off throws for invalid method', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
