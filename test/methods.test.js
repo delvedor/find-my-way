@@ -67,6 +67,19 @@ test('register a route with multiple methods', t => {
   findMyWay.lookup({ method: 'POST', url: '/test' }, null)
 })
 
+test('does not register /test/*/ when ignoreTrailingSlash is true', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    ignoreTrailingSlash: true
+  })
+
+  findMyWay.on('GET', '/test/*', () => {})
+  t.is(
+    findMyWay.routes.filter((r) => r.path.includes('/test')).length,
+    1
+  )
+})
+
 test('off throws for invalid method', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
@@ -126,6 +139,33 @@ test('off with nested wildcards with parametric and static', t => {
     { method: 'GET', url: '/foo2/first/second' },
     null
   )
+})
+
+test('off removes all routes when ignoreTrailingSlash is true', t => {
+  t.plan(6)
+  const findMyWay = FindMyWay({
+    ignoreTrailingSlash: true
+  })
+
+  findMyWay.on('GET', '/test1/', () => {})
+  t.is(findMyWay.routes.length, 2)
+
+  findMyWay.on('GET', '/test2', () => {})
+  t.is(findMyWay.routes.length, 4)
+
+  findMyWay.off('GET', '/test1')
+  t.is(findMyWay.routes.length, 2)
+  t.is(
+    findMyWay.routes.filter((r) => r.path === '/test2').length,
+    1
+  )
+  t.is(
+    findMyWay.routes.filter((r) => r.path === '/test2/').length,
+    1
+  )
+
+  findMyWay.off('GET', '/test2/')
+  t.is(findMyWay.routes.length, 0)
 })
 
 test('deregister a route without children', t => {
