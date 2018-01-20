@@ -30,7 +30,7 @@ Node.prototype.add = function (node) {
     this.wildcardChild = node
   }
 
-  if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].includes(node.kind)) {
+  if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].indexOf(node.kind) > -1) {
     for (var i = 0; i < this.numberOfChildren; i++) {
       if (this.children[i].kind === 0) {
         this.children[i].parametricBrother = node
