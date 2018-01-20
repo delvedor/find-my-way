@@ -138,6 +138,7 @@ Router.prototype._on = function _on (method, path, handler, store) {
 }
 
 Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex) {
+  const route = path
   var currentNode = this.tree
   var prefix = ''
   var pathLen = 0
@@ -175,7 +176,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 
       if (len === pathLen) {
         // add the handler to the parent node
-        assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${path}'`)
+        assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
         currentNode.setHandler(method, handler, params, store)
         currentNode.kind = kind
       } else {
@@ -200,7 +201,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       currentNode.add(node)
     } else if (handler) {
       // the node already exist
-      assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${path}'`)
+      assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
       currentNode.setHandler(method, handler, params, store)
     }
     return
