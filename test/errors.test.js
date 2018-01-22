@@ -16,9 +16,33 @@ test('Method should be a string', t => {
   }
 })
 
+test('Method should be a string [ignoreTrailingSlash=true]', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
+
+  try {
+    findMyWay.on(0, '/test', () => {})
+    t.fail('method shoukd be a string')
+  } catch (e) {
+    t.is(e.message, 'Method should be a string')
+  }
+})
+
 test('Method should be a string (array)', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
+
+  try {
+    findMyWay.on(['GET', 0], '/test', () => {})
+    t.fail('method shoukd be a string')
+  } catch (e) {
+    t.is(e.message, 'Method should be a string')
+  }
+})
+
+test('Method should be a string (array) [ignoreTrailingSlash=true]', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
 
   try {
     findMyWay.on(['GET', 0], '/test', () => {})
@@ -40,6 +64,18 @@ test('Path should be a string', t => {
   }
 })
 
+test('Path should be a string [ignoreTrailingSlash=true]', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
+
+  try {
+    findMyWay.on('GET', 0, () => {})
+    t.fail('path should be a string')
+  } catch (e) {
+    t.is(e.message, 'Path should be a string')
+  }
+})
+
 test('The path could not be empty', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
@@ -52,9 +88,33 @@ test('The path could not be empty', t => {
   }
 })
 
+test('The path could not be empty [ignoreTrailingSlash=true]', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
+
+  try {
+    findMyWay.on('GET', '', () => {})
+    t.fail('The path could not be empty')
+  } catch (e) {
+    t.is(e.message, 'The path could not be empty')
+  }
+})
+
 test('The first character of a path should be `/` or `*`', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
+
+  try {
+    findMyWay.on('GET', 'a', () => {})
+    t.fail('The first character of a path should be `/` or `*`')
+  } catch (e) {
+    t.is(e.message, 'The first character of a path should be `/` or `*`')
+  }
+})
+
+test('The first character of a path should be `/` or `*` [ignoreTrailingSlash=true]', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
 
   try {
     findMyWay.on('GET', 'a', () => {})
@@ -125,6 +185,52 @@ test('Method already declared', t => {
   }
 })
 
+test('Method already declared [ignoreTrailingSlash=true]', t => {
+  t.plan(2)
+
+  t.test('without trailing slash', t => {
+    t.plan(2)
+    const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
+
+    findMyWay.on('GET', '/test', () => {})
+
+    try {
+      findMyWay.on('GET', '/test', () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, `Method 'GET' already declared for route '/test'`)
+    }
+
+    try {
+      findMyWay.on('GET', '/test/', () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, `Method 'GET' already declared for route '/test/'`)
+    }
+  })
+
+  t.test('with trailing slash', t => {
+    t.plan(2)
+    const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
+
+    findMyWay.on('GET', '/test/', () => {})
+
+    try {
+      findMyWay.on('GET', '/test', () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, `Method 'GET' already declared for route '/test'`)
+    }
+
+    try {
+      findMyWay.on('GET', '/test/', () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, `Method 'GET' already declared for route '/test/'`)
+    }
+  })
+})
+
 test('Method already declared nested route', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
@@ -139,4 +245,54 @@ test('Method already declared nested route', t => {
   } catch (e) {
     t.is(e.message, `Method 'GET' already declared for route '/test/hello'`)
   }
+})
+
+test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
+  t.plan(2)
+
+  t.test('without trailing slash', t => {
+    t.plan(2)
+    const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
+
+    findMyWay.on('GET', '/test', () => {})
+    findMyWay.on('GET', '/test/hello', () => {})
+    findMyWay.on('GET', '/test/world', () => {})
+
+    try {
+      findMyWay.on('GET', '/test/hello', () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, `Method 'GET' already declared for route '/test/hello'`)
+    }
+
+    try {
+      findMyWay.on('GET', '/test/hello/', () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, `Method 'GET' already declared for route '/test/hello/'`)
+    }
+  })
+
+  t.test('with trailing slash', t => {
+    t.plan(2)
+    const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
+
+    findMyWay.on('GET', '/test/', () => {})
+    findMyWay.on('GET', '/test/hello/', () => {})
+    findMyWay.on('GET', '/test/world/', () => {})
+
+    try {
+      findMyWay.on('GET', '/test/hello', () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, `Method 'GET' already declared for route '/test/hello'`)
+    }
+
+    try {
+      findMyWay.on('GET', '/test/hello/', () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, `Method 'GET' already declared for route '/test/hello/'`)
+    }
+  })
 })

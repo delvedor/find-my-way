@@ -40,37 +40,35 @@ function Router (opts) {
 }
 
 Router.prototype.on = function on (method, path, handler, store) {
-  const register = (m, p, h, s) => {
-    if (!this.ignoreTrailingSlash || path === '/' || path.endsWith('*')) {
-      return this._on(m, p, h, s)
-    }
-    if (this.ignoreTrailingSlash && p.endsWith('/')) {
-      this._on(m, p, h, s)
-      this._on(m, p.slice(0, -1), h, s)
-      return
-    }
-    this._on(m, p, h, s)
-    this._on(m, p + '/', h, s)
-  }
-  if (Array.isArray(method)) {
-    for (var k = 0; k < method.length; k++) {
-      register(method[k], path, handler, store)
-    }
-    return
-  }
-  register(method, path, handler, store)
-}
-
-Router.prototype._on = function _on (method, path, handler, store) {
-  // method validation
-  assert(typeof method === 'string', 'Method should be a string')
-  assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
   // path validation
   assert(typeof path === 'string', 'Path should be a string')
   assert(path.length > 0, 'The path could not be empty')
   assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
   // handler validation
   assert(typeof handler === 'function', 'Handler should be a function')
+
+  this._on(method, path, handler, store)
+
+  if (this.ignoreTrailingSlash && path !== '/' && !path.endsWith('*')) {
+    if (path.endsWith('/')) {
+      this._on(method, path.slice(0, -1), handler, store)
+    } else {
+      this._on(method, path + '/', handler, store)
+    }
+  }
+}
+
+Router.prototype._on = function _on (method, path, handler, store) {
+  if (Array.isArray(method)) {
+    for (var k = 0; k < method.length; k++) {
+      this._on(method[k], path, handler, store)
+    }
+    return
+  }
+
+  // method validation
+  assert(typeof method === 'string', 'Method should be a string')
+  assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
 
   const params = []
   var j = 0
