@@ -121,7 +121,7 @@ test('Method already declared', t => {
     findMyWay.on('GET', '/test', () => {})
     t.fail('method already declared')
   } catch (e) {
-    t.is(e.message, `Method 'GET' already declared for route 'test'`)
+    t.is(e.message, `Method 'GET' already declared for route '/test'`)
   }
 })
 
@@ -137,6 +137,6 @@ test('Method already declared nested route', t => {
     findMyWay.on('GET', '/test/hello', () => {})
     t.fail('method already delcared in nested route')
   } catch (e) {
-    t.is(e.message, `Method 'GET' already declared for route 'hello'`)
+    t.is(e.message, `Method 'GET' already declared for route '/test/hello'`)
   }
 })
