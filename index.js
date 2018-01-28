@@ -35,6 +35,7 @@ function Router (opts) {
   }
 
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
+  this.maxParamLength = opts.maxParamLength || 100
   this.tree = new Node()
   this.routes = []
 }
@@ -264,6 +265,7 @@ Router.prototype.lookup = function lookup (req, res) {
 }
 
 Router.prototype.find = function find (method, path) {
+  var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null
   var pathLenWildcard = 0
@@ -348,6 +350,7 @@ Router.prototype.find = function find (method, path) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
+      if (i > maxParamLength) return null
       decoded = fastDecode(path.slice(0, i))
       if (errored) {
         return null
@@ -374,6 +377,7 @@ Router.prototype.find = function find (method, path) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
+      if (i > maxParamLength) return null
       decoded = fastDecode(path.slice(0, i))
       if (errored) {
         return null
@@ -394,6 +398,7 @@ Router.prototype.find = function find (method, path) {
         i = matchedParameter[1].length
       } else {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
+        if (i > maxParamLength) return null
       }
       decoded = fastDecode(path.slice(0, i))
       if (errored) {

@@ -60,6 +60,13 @@ function handler (req, res, params) {
 router.on('GET', '/foo/', handler)
 ```
 
+You can set a custom length for parameters in parametric *(standard, regex and multi)* routes by using `maxParamLength` option, the default value is 100 characters.<br/>
+*If the maximum length limit is reached, the default route will be invoked.*
+```js
+const router = require('find-my-way')({
+  maxParamLength: 500
+})
+```
 <a name="on"></a>
 #### on(method, path, handler, [store])
 Register a new route.
