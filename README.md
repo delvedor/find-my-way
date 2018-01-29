@@ -105,7 +105,8 @@ router.on('GET', '/example/:userId/:secretToken', (req, res, params) => {}))
 router.on('GET', '/example/*', (req, res, params) => {}))
 ```
 
-Regular expression routes are supported as well, but pay attention, RegExp are very expensive in term of performance!
+Regular expression routes are supported as well, but pay attention, RegExp are very expensive in term of performance!<br>
+If you want to declare a regular expression route, you must put the regular expression inside round parenthesis after the parameter name.
 ```js
 // parametric with regexp
 router.on('GET', '/example/:file(^\\d+).png', () => {}))
