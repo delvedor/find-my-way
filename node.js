@@ -30,17 +30,26 @@ Node.prototype.add = function (node) {
     this.wildcardChild = node
   }
 
-  if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].indexOf(node.kind) > -1) {
-    for (var i = 0; i < this.numberOfChildren; i++) {
-      if (this.children[i].kind === 0) {
-        this.children[i].parametricBrother = node
-      }
-    }
-  }
-
   this.children.push(node)
   this.children.sort((n1, n2) => n1.kind - n2.kind)
   this.numberOfChildren++
+
+  // Search for a parametric brother and store it in a variable
+  var parametricBrother = null
+  for (var i = 0; i < this.numberOfChildren; i++) {
+    const child = this.children[i]
+    if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].indexOf(child.kind) > -1) {
+      parametricBrother = child
+      break
+    }
+  }
+
+  // Save the parametric brother inside a static child
+  for (i = 0; i < this.numberOfChildren; i++) {
+    if (this.children[i].kind === this.types.STATIC && parametricBrother) {
+      this.children[i].parametricBrother = parametricBrother
+    }
+  }
 }
 
 Node.prototype.findByLabel = function (label) {
