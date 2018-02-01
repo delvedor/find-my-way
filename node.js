@@ -38,7 +38,7 @@ Node.prototype.add = function (node) {
   var parametricBrother = null
   for (var i = 0; i < this.numberOfChildren; i++) {
     const child = this.children[i]
-    if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].indexOf(node.kind) > -1) {
+    if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].indexOf(child.kind) > -1) {
       parametricBrother = child
       break
     }
