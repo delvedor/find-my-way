@@ -1,29 +1,32 @@
 'use strict'
 
-/*
-  Node type
-    static: 0,
-    param: 1,
-    matchAll: 2,
-    regex: 3
-    multi-param: 4
-      It's used for a parameter, that is followed by another parameter in the same part
-*/
+const types = {
+  STATIC: 0,
+  PARAM: 1,
+  MATCH_ALL: 2,
+  REGEX: 3,
+  // It's used for a parameter, that is followed by another parameter in the same part
+  MULTI_PARAM: 4
+}
 
 function Node (prefix, children, kind, map, regex) {
   this.prefix = prefix || '/'
   this.label = this.prefix[0]
   this.children = children || []
   this.numberOfChildren = this.children.length
-  this.kind = kind || 0
+  this.kind = kind || this.types.STATIC
   this.map = map || {}
   this.regex = regex || null
   this.wildcardChild = null
   this.parametricBrother = null
 }
 
+Object.defineProperty(Node.prototype, 'types', {
+  value: types
+})
+
 Node.prototype.add = function (node) {
-  if (node.kind === 2) {
+  if (node.kind === this.types.MATCH_ALL) {
     this.wildcardChild = node
   }
 
@@ -34,7 +37,7 @@ Node.prototype.add = function (node) {
   // Search for a parametric brother and store it in a variable
   for (var i = 0; i < this.numberOfChildren; i++) {
     const child = this.children[i]
-    if (child.kind === 1 || child.kind === 3 || child.kind === 4) {
+    if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].indexOf(node.kind) > -1) {
       var parametricBrother = child
       break
     }
@@ -42,7 +45,7 @@ Node.prototype.add = function (node) {
 
   // Save the parametric brother inside a static child
   for (i = 0; i < this.numberOfChildren; i++) {
-    if (this.children[i].kind === 0 && parametricBrother) {
+    if (this.children[i].kind === thid.types.STATIC && parametricBrother) {
       this.children[i].parametricBrother = parametricBrother
     }
   }

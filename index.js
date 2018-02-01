@@ -1,14 +1,6 @@
 'use strict'
 
 /*
-  Node type
-    static: 0,
-    param: 1,
-    matchAll: 2,
-    regex: 3
-    multi-param: 4
-      It's used for a parameter, that is followed by another parameter in the same part
-
   Char codes:
     '#': 35
     '*': 42
@@ -20,6 +12,7 @@
 
 const assert = require('assert')
 const Node = require('./node')
+const NODE_TYPES = Node.prototype.types
 const httpMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE', 'CONNECT']
 var errored = false
 
@@ -85,7 +78,7 @@ Router.prototype._on = function _on (method, path, handler, store) {
     // search for parametric or wildcard routes
     // parametric route
     if (path.charCodeAt(i) === 58) {
-      var nodeType = 1
+      var nodeType = NODE_TYPES.PARAM
       j = i + 1
       this._insert(method, path.slice(0, i), 0, null, null, null, null)
 
@@ -104,9 +97,9 @@ Router.prototype._on = function _on (method, path, handler, store) {
       }
 
       if (isRegex && (i === len || path.charCodeAt(i) === 47)) {
-        nodeType = 3
+        nodeType = NODE_TYPES.REGEX
       } else if (i < len && path.charCodeAt(i) !== 47) {
-        nodeType = 4
+        nodeType = NODE_TYPES.MULTI_PARAM
       }
 
       var parameter = path.slice(j, i)
@@ -169,7 +162,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       currentNode.prefix = prefix.slice(0, len)
       currentNode.label = currentNode.prefix[0]
       currentNode.map = {}
-      currentNode.kind = 0
+      currentNode.kind = NODE_TYPES.STATIC
       currentNode.regex = null
       currentNode.wildcardChild = null
 
@@ -325,7 +318,7 @@ Router.prototype.find = function find (method, path) {
     var kind = node.kind
 
     // static route
-    if (kind === 0) {
+    if (kind === NODE_TYPES.STATIC) {
       // if exist, save the wildcard child
       if (currentNode.wildcardChild !== null) {
         wildcardNode = currentNode.wildcardChild
@@ -346,7 +339,7 @@ Router.prototype.find = function find (method, path) {
     }
 
     // parametric route
-    if (kind === 1) {
+    if (kind === NODE_TYPES.PARAM) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
@@ -361,7 +354,7 @@ Router.prototype.find = function find (method, path) {
     }
 
     // wildcard route
-    if (kind === 2) {
+    if (kind === NODE_TYPES.MATCH_ALL) {
       decoded = fastDecode(path)
       if (errored) {
         return null
@@ -373,7 +366,7 @@ Router.prototype.find = function find (method, path) {
     }
 
     // parametric(regex) route
-    if (kind === 3) {
+    if (kind === NODE_TYPES.REGEX) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
@@ -389,7 +382,7 @@ Router.prototype.find = function find (method, path) {
     }
 
     // multiparametric route
-    if (kind === 4) {
+    if (kind === NODE_TYPES.MULTI_PARAM) {
       currentNode = node
       i = 0
       if (node.regex) {
