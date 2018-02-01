@@ -35,17 +35,18 @@ Node.prototype.add = function (node) {
   this.numberOfChildren++
 
   // Search for a parametric brother and store it in a variable
+  var parametricBrother = null
   for (var i = 0; i < this.numberOfChildren; i++) {
     const child = this.children[i]
     if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].indexOf(node.kind) > -1) {
-      var parametricBrother = child
+      parametricBrother = child
       break
     }
   }
 
   // Save the parametric brother inside a static child
   for (i = 0; i < this.numberOfChildren; i++) {
-    if (this.children[i].kind === thid.types.STATIC && parametricBrother) {
+    if (this.children[i].kind === this.types.STATIC && parametricBrother) {
       this.children[i].parametricBrother = parametricBrother
     }
   }
