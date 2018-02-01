@@ -27,17 +27,25 @@ Node.prototype.add = function (node) {
     this.wildcardChild = node
   }
 
-  if (node.kind === 1 || node.kind === 3 || node.kind === 4) {
-    for (var i = 0; i < this.numberOfChildren; i++) {
-      if (this.children[i].kind === 0) {
-        this.children[i].parametricBrother = node
-      }
-    }
-  }
-
   this.children.push(node)
   this.children.sort((n1, n2) => n1.kind - n2.kind)
   this.numberOfChildren++
+
+  // Search for a parametric brother and store it in a variable
+  for (var i = 0; i < this.numberOfChildren; i++) {
+    const child = this.children[i]
+    if (child.kind === 1 || child.kind === 3 || child.kind === 4) {
+      var parametricBrother = child
+      break
+    }
+  }
+
+  // Save the parametric brother inside a static child
+  for (i = 0; i < this.numberOfChildren; i++) {
+    if (this.children[i].kind === 0 && parametricBrother) {
+      this.children[i].parametricBrother = parametricBrother
+    }
+  }
 }
 
 Node.prototype.findByLabel = function (label) {
