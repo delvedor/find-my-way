@@ -61,6 +61,25 @@ test('Parametric and static with shared prefix (nested)', t => {
   findMyWay.lookup({ method: 'GET', url: '/winter/coming' }, null)
 })
 
+test('Parametric and static with shared prefix and different suffix', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('We should not be here')
+    }
+  })
+
+  findMyWay.on('GET', '/example/shared/nested/test', (req, res, params) => {
+    t.fail('We should not be here')
+  })
+
+  findMyWay.on('GET', '/example/:param/nested/other', (req, res, params) => {
+    t.ok('We should be here')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/other' }, null)
+})
+
 test('Parametric and static with shared prefix (with wildcard)', t => {
   t.plan(1)
   const findMyWay = FindMyWay({

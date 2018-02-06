@@ -163,26 +163,6 @@ router.reset()
 ```
 
 ##### Caveats
-* Since *static* routes have greater priority than *parametric* routes, when you register a static route and a dynamic route, which have part of their path equal, the static route shadows the parametric route, that becomes not accessible. For example:
-```js
-const assert = require('assert')
-const router = require('find-my-way')({
-  defaultRoute: (req, res) => {
-    assert(req.url === '/example/shared/nested/oops')
-  }
-})
-
-router.on('GET', '/example/shared/nested/test', (req, res, params) => {
-  assert.fail('We should not be here')
-})
-
-router.on('GET', '/example/:param/nested/oops', (req, res, params) => {
-  assert.fail('We should not be here')
-})
-
-router.lookup({ method: 'GET', url: '/example/shared/nested/oops' }, null)
-```
-
 * It's not possible to register two routes which differs only for their parameters, because internally they would be seen as the same route. In a such case you'll get an early error during the route registration phase. An example is worth thousand words:
 ```js
 const findMyWay = FindMyWay({
