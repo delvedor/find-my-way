@@ -90,7 +90,7 @@ Router.prototype._on = function _on (method, path, handler, store) {
           i = path.indexOf(')', i) + 1
           if (i) break
 
-          throw new TypeError("Invalid parameter regexp expression")
+          throw new TypeError('Invalid parameter regexp expression')
         } else if (path.charCodeAt(i) !== 45) {
           i++
         } else {
