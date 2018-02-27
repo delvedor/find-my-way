@@ -1,12 +1,11 @@
 'use strict'
 
-const {test} = require('tap')
-const FindMyWay = require('../')
-const noop = () => {}
+const t = require('tap')
+const factory = require('../')
 
-test('issue-63', (t) => {
+t.test('issue-63', (t) => {
   t.plan(1)
-  const findMyWay = FindMyWay()
+  const fmw = factory()
 
-  find.on('GET', '/foo/:id(a', noop)
+  fmw.on('GET', '/foo/:id(a', function () {})
 })
