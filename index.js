@@ -291,7 +291,7 @@ Router.prototype.find = function find (method, path) {
             paramsObj[paramNames[i]] = params[i]
           }
         }
-        if (isStatic && ((previousPrefix + previousPath) !== originalPath)) {
+        if (isStatic === true && ((previousPrefix + previousPath) !== originalPath)) {
           return ROUTE_NOT_FOUND
         }
         return {
@@ -323,7 +323,7 @@ Router.prototype.find = function find (method, path) {
     }
     var kind = node.kind
 
-    previousPrefix = previousPrefix + currentNode.prefix
+    previousPrefix += currentNode.prefix
 
     // static route
     if (kind === NODE_TYPES.STATIC) {
