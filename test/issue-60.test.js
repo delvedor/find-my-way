@@ -78,6 +78,29 @@ test('issue-60', t => {
     t.equal(findMyWay.find('GET', '/bulk'), null)
   })
 
+  t.test('with parameter / 5', t => {
+    t.plan(2)
+    const findMyWay = FindMyWay()
+
+    findMyWay.on('GET', '/bb/:foo/aa/', noop)
+    findMyWay.on('GET', '/bb/:foo/aa/bulk', noop)
+
+    t.equal(findMyWay.find('GET', '/bulk'), null)
+    t.equal(findMyWay.find('GET', '/bb/foo/bulk'), null)
+  })
+
+  t.test('with parameter / 6', t => {
+    t.plan(3)
+    const findMyWay = FindMyWay()
+
+    findMyWay.on('GET', '/static/:parametric/static/:parametric', noop)
+    findMyWay.on('GET', '/static/:parametric/static/:parametric/bulk', noop)
+
+    t.equal(findMyWay.find('GET', '/bulk'), null)
+    t.equal(findMyWay.find('GET', '/static/foo/bulk'), null)
+    t.notEqual(findMyWay.find('GET', '/static/foo/static/bulk'), null)
+  })
+
   t.test('wildcard / 1', t => {
     t.plan(1)
     const findMyWay = FindMyWay()
