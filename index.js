@@ -267,6 +267,8 @@ Router.prototype.find = function find (method, path) {
   var pindex = 0
   var params = []
   var i = 0
+  var previousPrefix = ''
+  var isStatic = true
 
   while (true) {
     var pathLen = path.length
@@ -287,7 +289,9 @@ Router.prototype.find = function find (method, path) {
             paramsObj[paramNames[i]] = params[i]
           }
         }
-
+        if (isStatic && ((previousPrefix + previousPath) !== originalPath)) {
+          return null
+        }
         return {
           handler: handle.handler,
           params: paramsObj,
@@ -317,6 +321,8 @@ Router.prototype.find = function find (method, path) {
     }
     var kind = node.kind
 
+    previousPrefix = previousPrefix + currentNode.prefix
+
     // static route
     if (kind === NODE_TYPES.STATIC) {
       // if exist, save the wildcard child
@@ -327,6 +333,8 @@ Router.prototype.find = function find (method, path) {
       currentNode = node
       continue
     }
+
+    isStatic = false
 
     if (len !== prefixLen) {
       return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
