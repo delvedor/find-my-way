@@ -78,5 +78,15 @@ test('issue-60', t => {
     t.equal(findMyWay.find('GET', '/bulk'), null)
   })
 
+  t.test('wildcard / 1', t => {
+    t.plan(1)
+    const findMyWay = FindMyWay()
+
+    findMyWay.on('GET', '/bb/', noop)
+    findMyWay.on('GET', '/bb/*', noop)
+
+    t.equal(findMyWay.find('GET', '/bulk'), null)
+  })
+
   t.end()
 })
