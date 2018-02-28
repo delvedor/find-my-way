@@ -16,6 +16,8 @@ const NODE_TYPES = Node.prototype.types
 const httpMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE', 'CONNECT']
 var errored = false
 
+const ROUTE_NOT_FOUND = null
+
 function Router (opts) {
   if (!(this instanceof Router)) {
     return new Router(opts)
@@ -253,7 +255,7 @@ Router.prototype.off = function off (method, path) {
 
 Router.prototype.lookup = function lookup (req, res) {
   var handle = this.find(req.method, sanitizeUrl(req.url))
-  if (!handle) return this._defaultRoute(req, res)
+  if (handle === ROUTE_NOT_FOUND) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
@@ -290,7 +292,7 @@ Router.prototype.find = function find (method, path) {
           }
         }
         if (isStatic && ((previousPrefix + previousPath) !== originalPath)) {
-          return null
+          return ROUTE_NOT_FOUND
         }
         return {
           handler: handle.handler,
@@ -403,7 +405,7 @@ Router.prototype.find = function find (method, path) {
       }
       decoded = fastDecode(path.slice(0, i))
       if (errored) {
-        return null
+        return ROUTE_NOT_FOUND
       }
       params[pindex++] = decoded
       path = path.slice(i)
@@ -489,10 +491,10 @@ function fastDecode (path) {
 }
 
 function getWildcardNode (node, method, path, len) {
-  if (node === null) return null
+  if (node === null) return ROUTE_NOT_FOUND
   var decoded = fastDecode(path.slice(-len))
   if (errored) {
-    return null
+    return ROUTE_NOT_FOUND
   }
   var handle = node.getHandler(method)
   if (handle !== undefined) {
@@ -502,5 +504,5 @@ function getWildcardNode (node, method, path, len) {
       store: handle.store
     }
   }
-  return null
+  return ROUTE_NOT_FOUND
 }
