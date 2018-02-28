@@ -16,6 +16,8 @@ const NODE_TYPES = Node.prototype.types
 const httpMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE', 'CONNECT']
 var errored = false
 
+const ROUTE_NOT_FOUND = null
+
 function Router (opts) {
   if (!(this instanceof Router)) {
     return new Router(opts)
@@ -253,7 +255,7 @@ Router.prototype.off = function off (method, path) {
 
 Router.prototype.lookup = function lookup (req, res) {
   var handle = this.find(req.method, sanitizeUrl(req.url))
-  if (!handle) return this._defaultRoute(req, res)
+  if (handle === ROUTE_NOT_FOUND) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
@@ -267,6 +269,8 @@ Router.prototype.find = function find (method, path) {
   var pindex = 0
   var params = []
   var i = 0
+  var previousPrefix = ''
+  var isStatic = true
 
   while (true) {
     var pathLen = path.length
@@ -287,7 +291,9 @@ Router.prototype.find = function find (method, path) {
             paramsObj[paramNames[i]] = params[i]
           }
         }
-
+        if (isStatic === true && ((previousPrefix + previousPath) !== originalPath)) {
+          return ROUTE_NOT_FOUND
+        }
         return {
           handler: handle.handler,
           params: paramsObj,
@@ -306,9 +312,9 @@ Router.prototype.find = function find (method, path) {
     }
 
     var node = currentNode.find(path[0], method)
-    if (node === null) {
+    if (node === ROUTE_NOT_FOUND) {
       node = currentNode.parametricBrother
-      if (node === null) {
+      if (node === ROUTE_NOT_FOUND) {
         return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
       }
       path = previousPath
@@ -317,10 +323,12 @@ Router.prototype.find = function find (method, path) {
     }
     var kind = node.kind
 
+    previousPrefix += currentNode.prefix
+
     // static route
     if (kind === NODE_TYPES.STATIC) {
       // if exist, save the wildcard child
-      if (currentNode.wildcardChild !== null) {
+      if (currentNode.wildcardChild !== ROUTE_NOT_FOUND) {
         wildcardNode = currentNode.wildcardChild
         pathLenWildcard = pathLen
       }
@@ -328,12 +336,14 @@ Router.prototype.find = function find (method, path) {
       continue
     }
 
+    isStatic = false
+
     if (len !== prefixLen) {
       return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
     }
 
     // if exist, save the wildcard child
-    if (currentNode.wildcardChild !== null) {
+    if (currentNode.wildcardChild !== ROUTE_NOT_FOUND) {
       wildcardNode = currentNode.wildcardChild
       pathLenWildcard = pathLen
     }
@@ -343,10 +353,10 @@ Router.prototype.find = function find (method, path) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
-      if (i > maxParamLength) return null
+      if (i > maxParamLength) return ROUTE_NOT_FOUND
       decoded = fastDecode(path.slice(0, i))
       if (errored) {
-        return null
+        return ROUTE_NOT_FOUND
       }
       params[pindex++] = decoded
       path = path.slice(i)
@@ -357,7 +367,7 @@ Router.prototype.find = function find (method, path) {
     if (kind === NODE_TYPES.MATCH_ALL) {
       decoded = fastDecode(path)
       if (errored) {
-        return null
+        return ROUTE_NOT_FOUND
       }
       params[pindex] = decoded
       currentNode = node
@@ -370,12 +380,12 @@ Router.prototype.find = function find (method, path) {
       currentNode = node
       i = 0
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
-      if (i > maxParamLength) return null
+      if (i > maxParamLength) return ROUTE_NOT_FOUND
       decoded = fastDecode(path.slice(0, i))
       if (errored) {
-        return null
+        return ROUTE_NOT_FOUND
       }
-      if (!node.regex.test(decoded)) return null
+      if (!node.regex.test(decoded)) return ROUTE_NOT_FOUND
       params[pindex++] = decoded
       path = path.slice(i)
       continue
@@ -387,22 +397,22 @@ Router.prototype.find = function find (method, path) {
       i = 0
       if (node.regex) {
         var matchedParameter = path.match(node.regex)
-        if (!matchedParameter) return null
+        if (!matchedParameter) return ROUTE_NOT_FOUND
         i = matchedParameter[1].length
       } else {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
-        if (i > maxParamLength) return null
+        if (i > maxParamLength) return ROUTE_NOT_FOUND
       }
       decoded = fastDecode(path.slice(0, i))
       if (errored) {
-        return null
+        return ROUTE_NOT_FOUND
       }
       params[pindex++] = decoded
       path = path.slice(i)
       continue
     }
 
-    wildcardNode = null
+    wildcardNode = ROUTE_NOT_FOUND
   }
 }
 
@@ -481,10 +491,10 @@ function fastDecode (path) {
 }
 
 function getWildcardNode (node, method, path, len) {
-  if (node === null) return null
+  if (node === null) return ROUTE_NOT_FOUND
   var decoded = fastDecode(path.slice(-len))
   if (errored) {
-    return null
+    return ROUTE_NOT_FOUND
   }
   var handle = node.getHandler(method)
   if (handle !== undefined) {
@@ -494,5 +504,5 @@ function getWildcardNode (node, method, path, len) {
       store: handle.store
     }
   }
-  return null
+  return ROUTE_NOT_FOUND
 }
