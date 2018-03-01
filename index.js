@@ -300,7 +300,7 @@ Router.prototype.find = function find (method, path) {
     i = pathLen < prefixLen ? pathLen : prefixLen
     while (len < i && path[len] === prefix[len]) len++
 
-    if (len === prefixLen) {
+    if (len > 0) {
       path = path.slice(len)
       pathLen = path.length
     }
