@@ -25,6 +25,8 @@ function Router (opts) {
   if (opts.defaultRoute) {
     assert(typeof opts.defaultRoute === 'function', 'The default route must be a function')
     this.defaultRoute = opts.defaultRoute
+  } else {
+    this.defaultRoute = null
   }
 
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
@@ -151,7 +153,13 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 
     if (len < prefixLen) {
       // split the node in the radix tree and add it to the parent
-      node = new Node(prefix.slice(len), currentNode.children, currentNode.kind, Object.assign({}, currentNode.map), currentNode.regex)
+      node = new Node(
+        prefix.slice(len),
+        currentNode.children,
+        currentNode.kind,
+        new Node.Handlers(currentNode.handlers),
+        currentNode.regex
+      )
       if (currentNode.wildcardChild !== null) {
         node.wildcardChild = currentNode.wildcardChild
       }
@@ -161,7 +169,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       currentNode.numberOfChildren = 1
       currentNode.prefix = prefix.slice(0, len)
       currentNode.label = currentNode.prefix[0]
-      currentNode.map = {}
+      currentNode.handlers = new Node.Handlers()
       currentNode.kind = NODE_TYPES.STATIC
       currentNode.regex = null
       currentNode.wildcardChild = null
@@ -253,7 +261,7 @@ Router.prototype.off = function off (method, path) {
 
 Router.prototype.lookup = function lookup (req, res) {
   var handle = this.find(req.method, sanitizeUrl(req.url))
-  if (!handle) return this._defaultRoute(req, res)
+  if (handle === null) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
@@ -278,8 +286,8 @@ Router.prototype.find = function find (method, path) {
 
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = currentNode.getHandler(method)
-      if (handle !== undefined) {
+      var handle = currentNode.handlers[method]
+      if (handle !== null) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
           var paramNames = handle.params
@@ -348,7 +356,7 @@ Router.prototype.find = function find (method, path) {
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
       if (i > maxParamLength) return null
       decoded = fastDecode(path.slice(0, i))
-      if (errored) {
+      if (errored === true) {
         return null
       }
       params[pindex++] = decoded
@@ -359,7 +367,7 @@ Router.prototype.find = function find (method, path) {
     // wildcard route
     if (kind === NODE_TYPES.MATCH_ALL) {
       decoded = fastDecode(path)
-      if (errored) {
+      if (errored === true) {
         return null
       }
       params[pindex] = decoded
@@ -375,7 +383,7 @@ Router.prototype.find = function find (method, path) {
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
       if (i > maxParamLength) return null
       decoded = fastDecode(path.slice(0, i))
-      if (errored) {
+      if (errored === true) {
         return null
       }
       if (!node.regex.test(decoded)) return null
@@ -388,16 +396,16 @@ Router.prototype.find = function find (method, path) {
     if (kind === NODE_TYPES.MULTI_PARAM) {
       currentNode = node
       i = 0
-      if (node.regex) {
+      if (node.regex !== null) {
         var matchedParameter = path.match(node.regex)
-        if (!matchedParameter) return null
+        if (matchedParameter === null) return null
         i = matchedParameter[1].length
       } else {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
         if (i > maxParamLength) return null
       }
       decoded = fastDecode(path.slice(0, i))
-      if (errored) {
+      if (errored === true) {
         return null
       }
       params[pindex++] = decoded
@@ -410,7 +418,7 @@ Router.prototype.find = function find (method, path) {
 }
 
 Router.prototype._defaultRoute = function (req, res) {
-  if (this.defaultRoute) {
+  if (this.defaultRoute !== null) {
     this.defaultRoute(req, res)
   } else {
     res.statusCode = 404
@@ -486,11 +494,11 @@ function fastDecode (path) {
 function getWildcardNode (node, method, path, len) {
   if (node === null) return null
   var decoded = fastDecode(path.slice(-len))
-  if (errored) {
+  if (errored === true) {
     return null
   }
-  var handle = node.getHandler(method)
-  if (handle !== undefined) {
+  var handle = node.handlers[method]
+  if (handle !== null) {
     return {
       handler: handle.handler,
       params: { '*': decoded },
