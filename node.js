@@ -9,13 +9,13 @@ const types = {
   MULTI_PARAM: 4
 }
 
-function Node (prefix, children, kind, map, regex) {
+function Node (prefix, children, kind, handlers, regex) {
   this.prefix = prefix || '/'
   this.label = this.prefix[0]
   this.children = children || []
   this.numberOfChildren = this.children.length
   this.kind = kind || this.types.STATIC
-  this.map = map || {}
+  this.handlers = handlers || new Handlers()
   this.regex = regex || null
   this.wildcardChild = null
   this.parametricBrother = null
@@ -65,7 +65,7 @@ Node.prototype.findByLabel = function (label) {
 Node.prototype.find = function (label, method) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
-    if (child.numberOfChildren !== 0 || child.map[method]) {
+    if (child.numberOfChildren !== 0 || child.handlers[method] !== null) {
       if (child.label === label && child.kind === 0) {
         return child
       }
@@ -78,7 +78,7 @@ Node.prototype.find = function (label, method) {
 Node.prototype.setHandler = function (method, handler, params, store) {
   if (!handler) return
 
-  this.map[method] = {
+  this.handlers[method] = {
     handler: handler,
     params: params,
     store: store || null,
@@ -87,17 +87,17 @@ Node.prototype.setHandler = function (method, handler, params, store) {
 }
 
 Node.prototype.getHandler = function (method) {
-  return this.map[method]
+  return this.handlers[method]
 }
 
 Node.prototype.prettyPrint = function (prefix, tail) {
   var paramName = ''
-  var map = this.map || {}
-  var methods = Object.keys(map).filter(method => map[method].handler)
+  var handlers = this.handlers || {}
+  var methods = Object.keys(handlers).filter(method => handlers[method] && handlers[method].handler)
 
   if (this.prefix === ':') {
     methods.forEach((method, index) => {
-      var params = this.map[method].params
+      var params = this.handlers[method].params
       var param = params[params.length - 1]
       if (methods.length > 1) {
         if (index === 0) {
@@ -126,4 +126,18 @@ Node.prototype.prettyPrint = function (prefix, tail) {
   return tree
 }
 
+function Handlers (handlers) {
+  handlers = handlers || {}
+  this.DELETE = handlers.DELETE || null
+  this.GET = handlers.GET || null
+  this.HEAD = handlers.HEAD || null
+  this.PATCH = handlers.PATCH || null
+  this.POST = handlers.POST || null
+  this.PUT = handlers.PUT || null
+  this.OPTIONS = handlers.OPTIONS || null
+  this.TRACE = handlers.TRACE || null
+  this.CONNECT = handlers.CONNECT || null
+}
+
 module.exports = Node
+module.exports.Handlers = Handlers
