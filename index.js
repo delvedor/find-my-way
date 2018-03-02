@@ -267,6 +267,7 @@ Router.prototype.find = function find (method, path) {
   var pindex = 0
   var params = []
   var i = 0
+  var isStatic = true
 
   while (true) {
     var pathLen = path.length
@@ -300,7 +301,7 @@ Router.prototype.find = function find (method, path) {
     i = pathLen < prefixLen ? pathLen : prefixLen
     while (len < i && path[len] === prefix[len]) len++
 
-    if (len === prefixLen) {
+    if ((isStatic === true && len > 0) || len === prefixLen) {
       path = path.slice(len)
       pathLen = path.length
     }
@@ -331,6 +332,8 @@ Router.prototype.find = function find (method, path) {
     if (len !== prefixLen) {
       return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
     }
+
+    isStatic = false
 
     // if exist, save the wildcard child
     if (currentNode.wildcardChild !== null) {
