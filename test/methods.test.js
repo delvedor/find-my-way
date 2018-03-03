@@ -663,3 +663,51 @@ test('params does not keep the object reference', t => {
   findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
   findMyWay.lookup({ method: 'GET', url: '/test/world' }, null)
 })
+
+test('Unsupported method (static)', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.pass('Everything ok')
+    }
+  })
+
+  findMyWay.on('GET', '/', (req, res, params) => {
+    t.fail('We should not be here')
+  })
+
+  findMyWay.lookup({ method: 'PROPFIND', url: '/' }, null)
+})
+
+test('Unsupported method (wildcard)', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.pass('Everything ok')
+    }
+  })
+
+  findMyWay.on('GET', '*', (req, res, params) => {
+    t.fail('We should not be here')
+  })
+
+  findMyWay.lookup({ method: 'PROPFIND', url: '/hello/world' }, null)
+})
+
+test('Unsupported method (static find)', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/', () => {})
+
+  t.deepEqual(findMyWay.find('PROPFIND', '/'), null)
+})
+
+test('Unsupported method (wildcard find)', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '*', () => {})
+
+  t.deepEqual(findMyWay.find('PROPFIND', '/hello/world'), null)
+})
