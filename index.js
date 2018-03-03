@@ -261,7 +261,7 @@ Router.prototype.off = function off (method, path) {
 
 Router.prototype.lookup = function lookup (req, res) {
   var handle = this.find(req.method, sanitizeUrl(req.url))
-  if (handle === null) return this._defaultRoute(req, res)
+  if (handle == null) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
@@ -287,7 +287,7 @@ Router.prototype.find = function find (method, path) {
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.handlers[method]
-      if (handle !== null) {
+      if (handle != null) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
           var paramNames = handle.params
@@ -498,7 +498,7 @@ function getWildcardNode (node, method, path, len) {
     return null
   }
   var handle = node.handlers[method]
-  if (handle !== null) {
+  if (handle != null) {
     return {
       handler: handle.handler,
       params: { '*': decoded },
