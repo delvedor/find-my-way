@@ -516,6 +516,12 @@ function getClosingParenthensePosition (path, idx) {
   while (idx < path.length) {
     idx++
 
+    // ignore skipped chars
+    if (path[idx] === '\\') {
+      idx++
+      continue
+    }
+
     if (path[idx] === ')') {
       parentheses--
     } else if (path[idx] === '(') {
