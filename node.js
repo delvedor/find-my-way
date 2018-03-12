@@ -67,7 +67,7 @@ Node.prototype.find = function (path, method) {
     var child = this.children[i]
     if (
       (child.numberOfChildren !== 0 || child.handlers[method] !== null) &&
-      (child.kind !== 0 || path.startsWith(child.prefix))
+      (child.kind !== 0 || path.slice(0, child.prefix.length) === child.prefix)
     ) {
       return child
     }
