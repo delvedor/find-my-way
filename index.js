@@ -89,7 +89,7 @@ Router.prototype._on = function _on (method, path, handler, store) {
       while (i < len && path.charCodeAt(i) !== 47) {
         isRegex = isRegex || path[i] === '('
         if (isRegex) {
-          i = path.indexOf(')', i) + 1
+          i = getClosingParenthensePosition(path, i) + 1
           break
         } else if (path.charCodeAt(i) !== 45) {
           i++
@@ -503,4 +503,41 @@ function getWildcardNode (node, method, path, len) {
     }
   }
   return null
+}
+
+/**
+ * Returns the position of the last closing parenthese of the regexp expression.
+ *
+ * @param {String} path
+ * @param {Number} idx
+ * @returns {Number}
+ * @throws {TypeError} when a closing parenthese is missing
+ * @private
+ */
+function getClosingParenthensePosition (path, idx) {
+  // `path.indexOf()` will always return the first position of the closing parenthese,
+  // but it's inefficient for grouped or wrong regexp expressions.
+  // see issues #62 and #63 for more info
+
+  var parentheses = 1
+
+  while (idx < path.length) {
+    idx++
+
+    // ignore skipped chars
+    if (path[idx] === '\\') {
+      idx++
+      continue
+    }
+
+    if (path[idx] === ')') {
+      parentheses--
+    } else if (path[idx] === '(') {
+      parentheses++
+    }
+
+    if (!parentheses) return idx
+  }
+
+  throw new TypeError('Invalid regexp expression in "' + path + '"')
 }
