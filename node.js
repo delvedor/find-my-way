@@ -62,14 +62,14 @@ Node.prototype.findByLabel = function (label) {
   return null
 }
 
-Node.prototype.find = function (label, method) {
+Node.prototype.find = function (path, method) {
   for (var i = 0; i < this.numberOfChildren; i++) {
     var child = this.children[i]
-    if (child.numberOfChildren !== 0 || child.handlers[method] !== null) {
-      if (child.label === label && child.kind === 0) {
-        return child
-      }
-      if (child.kind !== 0) return child
+    if (
+      (child.numberOfChildren !== 0 || child.handlers[method] !== null) &&
+      (child.kind !== 0 || path.slice(0, child.prefix.length) === child.prefix)
+    ) {
+      return child
     }
   }
   return null
