@@ -82,6 +82,7 @@ Router.prototype._on = function _on (method, path, handler, store) {
     if (path.charCodeAt(i) === 58) {
       var nodeType = NODE_TYPES.PARAM
       j = i + 1
+      // add the static part of the route to the tree
       this._insert(method, path.slice(0, i), 0, null, null, null, null)
 
       // isolate the parameter name
@@ -117,12 +118,14 @@ Router.prototype._on = function _on (method, path, handler, store) {
       if (i === len) {
         return this._insert(method, path.slice(0, i), nodeType, params, handler, store, regex)
       }
+      // add the parameter and continue with the search
       this._insert(method, path.slice(0, i), nodeType, params, null, null, regex)
 
       i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
       this._insert(method, path.slice(0, i), 0, null, null, null, null)
+      // add the wildcard parameter
       params.push('*')
       return this._insert(method, path.slice(0, len), 2, params, handler, store, null)
     }
@@ -151,8 +154,9 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
     max = pathLen < prefixLen ? pathLen : prefixLen
     while (len < max && path[len] === prefix[len]) len++
 
+    // the longest common prefix is smaller than the current prefix
+    // let's split the node and add a new child
     if (len < prefixLen) {
-      // split the node in the radix tree and add it to the parent
       node = new Node(
         prefix.slice(len),
         currentNode.children,
@@ -165,42 +169,41 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       }
 
       // reset the parent
-      currentNode.children = [node]
-      currentNode.numberOfChildren = 1
-      currentNode.prefix = prefix.slice(0, len)
-      currentNode.label = currentNode.prefix[0]
-      currentNode.handlers = new Node.Handlers()
-      currentNode.kind = NODE_TYPES.STATIC
-      currentNode.regex = null
-      currentNode.wildcardChild = null
+      currentNode
+        .reset(prefix.slice(0, len))
+        .addChild(node)
 
+      // if the longest common prefix has the same length of the current path
+      // the handler should be added to the current node, to a child otherwise
       if (len === pathLen) {
-        // add the handler to the parent node
         assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
         currentNode.setHandler(method, handler, params, store)
         currentNode.kind = kind
       } else {
-        // create a child node and add an handler to it
-        node = new Node(path.slice(len), [], kind, null, regex)
+        node = new Node(path.slice(len), {}, kind, null, regex)
         node.setHandler(method, handler, params, store)
-        // add the child to the parent
-        currentNode.add(node)
+        currentNode.addChild(node)
       }
+
+    // the longest common prefix is smaller than the path length,
+    // but is higher than the prefix
     } else if (len < pathLen) {
+      // remove the prefix
       path = path.slice(len)
-      node = currentNode.findByLabel(path[0])
+      // check if there is a child with the label extracted from the new path
+      node = currentNode.findByLabel(path)
+      // there is a child within the given label, we must go deepen in the tree
       if (node) {
-        // we must go deeper in the tree
         currentNode = node
         continue
       }
-      // create a new child node
-      node = new Node(path, [], kind, null, regex)
+      // there are not children within the given label, let's create a new one!
+      node = new Node(path, {}, kind, null, regex)
       node.setHandler(method, handler, params, store)
-      // add the child to the parent
-      currentNode.add(node)
+      currentNode.addChild(node)
+
+    // the node already exist
     } else if (handler) {
-      // the node already exist
       assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
       currentNode.setHandler(method, handler, params, store)
     }
@@ -306,17 +309,17 @@ Router.prototype.find = function find (method, path) {
 
     // search for the longest common prefix
     i = pathLen < prefixLen ? pathLen : prefixLen
-    while (len < i && path[len] === prefix[len]) len++
+    while (len < i && path.charCodeAt(len) === prefix.charCodeAt(len)) len++
 
     if (len === prefixLen) {
       path = path.slice(len)
       pathLen = path.length
     }
 
-    var node = currentNode.find(path, method)
-    if (node === null) {
+    var node = currentNode.findChild(path, method)
+    if (node == null) {
       node = currentNode.parametricBrother
-      if (node === null) {
+      if (node == null) {
         return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
       }
       path = previousPath
@@ -328,7 +331,7 @@ Router.prototype.find = function find (method, path) {
     // static route
     if (kind === NODE_TYPES.STATIC) {
       // if exist, save the wildcard child
-      if (currentNode.wildcardChild !== null) {
+      if (currentNode.wildcardChild != null) {
         wildcardNode = currentNode.wildcardChild
         pathLenWildcard = pathLen
       }
@@ -341,7 +344,7 @@ Router.prototype.find = function find (method, path) {
     }
 
     // if exist, save the wildcard child
-    if (currentNode.wildcardChild !== null) {
+    if (currentNode.wildcardChild != null) {
       wildcardNode = currentNode.wildcardChild
       pathLenWildcard = pathLen
     }
@@ -393,9 +396,9 @@ Router.prototype.find = function find (method, path) {
     if (kind === NODE_TYPES.MULTI_PARAM) {
       currentNode = node
       i = 0
-      if (node.regex !== null) {
+      if (node.regex != null) {
         var matchedParameter = path.match(node.regex)
-        if (matchedParameter === null) return null
+        if (matchedParameter == null) return null
         i = matchedParameter[1].length
       } else {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
@@ -415,7 +418,7 @@ Router.prototype.find = function find (method, path) {
 }
 
 Router.prototype._defaultRoute = function (req, res) {
-  if (this.defaultRoute !== null) {
+  if (this.defaultRoute != null) {
     this.defaultRoute(req, res)
   } else {
     res.statusCode = 404
@@ -489,7 +492,7 @@ function fastDecode (path) {
 }
 
 function getWildcardNode (node, method, path, len) {
-  if (node === null) return null
+  if (node == null) return null
   var decoded = fastDecode(path.slice(-len))
   if (errored === true) {
     return null
@@ -505,15 +508,6 @@ function getWildcardNode (node, method, path, len) {
   return null
 }
 
-/**
- * Returns the position of the last closing parenthese of the regexp expression.
- *
- * @param {String} path
- * @param {Number} idx
- * @returns {Number}
- * @throws {TypeError} when a closing parenthese is missing
- * @private
- */
 function getClosingParenthensePosition (path, idx) {
   // `path.indexOf()` will always return the first position of the closing parenthese,
   // but it's inefficient for grouped or wrong regexp expressions.

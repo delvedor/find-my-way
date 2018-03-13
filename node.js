@@ -1,5 +1,7 @@
 'use strict'
 
+const assert = require('assert')
+
 const types = {
   STATIC: 0,
   PARAM: 1,
@@ -12,8 +14,8 @@ const types = {
 function Node (prefix, children, kind, handlers, regex) {
   this.prefix = prefix || '/'
   this.label = this.prefix[0]
-  this.children = children || []
-  this.numberOfChildren = this.children.length
+  this.children = children || {}
+  this.numberOfChildren = Object.keys(this.children).length
   this.kind = kind || this.types.STATIC
   this.handlers = handlers || new Handlers()
   this.regex = regex || null
@@ -25,58 +27,96 @@ Object.defineProperty(Node.prototype, 'types', {
   value: types
 })
 
-Node.prototype.add = function (node) {
-  if (node.kind === this.types.MATCH_ALL) {
-    this.wildcardChild = node
+Node.prototype.getLabel = function () {
+  return this.prefix[0]
+}
+
+Node.prototype.addChild = function (node) {
+  var label = ''
+  switch (node.kind) {
+    case this.types.STATIC:
+      label = node.getLabel()
+      break
+    case this.types.PARAM:
+    case this.types.REGEX:
+    case this.types.MULTI_PARAM:
+      label = ':'
+      break
+    case this.types.MATCH_ALL:
+      this.wildcardChild = node
+      label = '*'
+      break
+    default:
+      throw new Error(`Unknown node kind: ${node.kind}`)
   }
 
-  this.children.push(node)
-  this.children.sort((n1, n2) => n1.kind - n2.kind)
-  this.numberOfChildren++
+  assert(
+    this.children[label] === undefined,
+    `There is already a child with label '${label}'`
+  )
 
-  // Search for a parametric brother and store it in a variable
+  this.children[label] = node
+  this.numberOfChildren = Object.keys(this.children).length
+
+  const labels = Object.keys(this.children)
   var parametricBrother = null
-  for (var i = 0; i < this.numberOfChildren; i++) {
-    const child = this.children[i]
-    if ([this.types.PARAM, this.types.REGEX, this.types.MULTI_PARAM].indexOf(child.kind) > -1) {
+  for (var i = 0; i < labels.length; i++) {
+    const child = this.children[labels[i]]
+    if (child.label === ':') {
       parametricBrother = child
       break
     }
   }
 
-  // Save the parametric brother inside a static child
-  for (i = 0; i < this.numberOfChildren; i++) {
-    if (this.children[i].kind === this.types.STATIC && parametricBrother) {
-      this.children[i].parametricBrother = parametricBrother
+  // Save the parametric brother inside a static children
+  for (i = 0; i < labels.length; i++) {
+    const child = this.children[labels[i]]
+    if (child.kind === this.types.STATIC && parametricBrother) {
+      child.parametricBrother = parametricBrother
     }
   }
+
+  return this
 }
 
-Node.prototype.findByLabel = function (label) {
-  for (var i = 0; i < this.numberOfChildren; i++) {
-    var child = this.children[i]
-    if (child.label === label) {
+Node.prototype.reset = function (prefix) {
+  this.prefix = prefix
+  this.children = {}
+  this.kind = this.types.STATIC
+  this.handlers = new Handlers()
+  this.numberOfChildren = 0
+  this.regex = null
+  this.wildcardChild = null
+  return this
+}
+
+Node.prototype.findByLabel = function (path) {
+  return this.children[path[0]]
+}
+
+Node.prototype.findChild = function (path, method) {
+  var child = this.children[path[0]]
+  if (child != null && (child.numberOfChildren > 0 || child.handlers[method] != null)) {
+    if (path.slice(0, child.prefix.length) === child.prefix) {
       return child
     }
   }
-  return null
-}
 
-Node.prototype.find = function (path, method) {
-  for (var i = 0; i < this.numberOfChildren; i++) {
-    var child = this.children[i]
-    if (
-      (child.numberOfChildren !== 0 || child.handlers[method] !== null) &&
-      (child.kind !== 0 || path.slice(0, child.prefix.length) === child.prefix)
-    ) {
-      return child
-    }
+  child = this.children[':'] || this.children['*']
+  if (child != null && (child.numberOfChildren > 0 || child.handlers[method] != null)) {
+    return child
   }
+
   return null
 }
 
 Node.prototype.setHandler = function (method, handler, params, store) {
   if (!handler) return
+
+  assert(
+    this.handlers[method] !== undefined,
+    `There is already an handler with method '${method}'`
+  )
 
   this.handlers[method] = {
     handler: handler,
@@ -117,11 +157,12 @@ Node.prototype.prettyPrint = function (prefix, tail) {
   var tree = `${prefix}${tail ? '└── ' : '├── '}${this.prefix}${paramName}\n`
 
   prefix = `${prefix}${tail ? '    ' : '│   '}`
-  for (var i = 0; i < this.numberOfChildren - 1; i++) {
-    tree += this.children[i].prettyPrint(prefix, false)
+  const labels = Object.keys(this.children)
+  for (var i = 0; i < labels.length - 1; i++) {
+    tree += this.children[labels[i]].prettyPrint(prefix, false)
   }
-  if (this.numberOfChildren > 0) {
-    tree += this.children[this.numberOfChildren - 1].prettyPrint(prefix, true)
+  if (labels.length > 0) {
+    tree += this.children[labels[labels.length - 1]].prettyPrint(prefix, true)
   }
   return tree
 }
