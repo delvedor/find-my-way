@@ -11,9 +11,10 @@
 */
 
 const assert = require('assert')
+const http = require('http')
 const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
-const httpMethods = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE', 'CONNECT']
+const httpMethods = http.METHODS
 var errored = false
 
 function Router (opts) {
