@@ -137,6 +137,10 @@ parametric(regex)
 multi parametric(regex)
 ```
 
+<a name="supported-methods"></a>
+##### Supported methods
+The router is able to route all HTTP methods defined by [`http` core module](https://nodejs.org/api/http.html#http_http_methods).
+
 <a name="off"></a>
 #### off(method, path)
 Deregister a route.
