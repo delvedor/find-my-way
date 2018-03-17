@@ -428,40 +428,15 @@ Router.prototype.prettyPrint = function () {
   return this.tree.prettyPrint('', true)
 }
 
-Router.prototype.get = function (path, handler, store) {
-  return this.on('GET', path, handler, store)
-}
+for (var i in http.METHODS) {
+  const m = http.METHODS[i]
+  const methodName = m.toLowerCase()
 
-Router.prototype.delete = function (path, handler, store) {
-  return this.on('DELETE', path, handler, store)
-}
+  if (Router.prototype[methodName]) throw new Error('Method already exists: ' + methodName)
 
-Router.prototype.head = function (path, handler, store) {
-  return this.on('HEAD', path, handler, store)
-}
-
-Router.prototype.patch = function (path, handler, store) {
-  return this.on('PATCH', path, handler, store)
-}
-
-Router.prototype.post = function (path, handler, store) {
-  return this.on('POST', path, handler, store)
-}
-
-Router.prototype.put = function (path, handler, store) {
-  return this.on('PUT', path, handler, store)
-}
-
-Router.prototype.options = function (path, handler, store) {
-  return this.on('OPTIONS', path, handler, store)
-}
-
-Router.prototype.trace = function (path, handler, store) {
-  return this.on('TRACE', path, handler, store)
-}
-
-Router.prototype.connect = function (path, handler, store) {
-  return this.on('CONNECT', path, handler, store)
+  Router.prototype[methodName] = function (path, handler, store) {
+    return this.on(m, path, handler, store)
+  }
 }
 
 Router.prototype.all = function (path, handler, store) {

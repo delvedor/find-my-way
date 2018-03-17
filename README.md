@@ -182,6 +182,8 @@ findMyWay.on('GET', '/user/:username(^[a-z]+)', (req, res, params) => {})
 <a name="shorthand-methods"></a>
 ##### Shorthand methods
 If you want an even nicer api, you can also use the shorthand methods to declare your routes.
+
+For each HTTP supported method, there's the shorthand method. For example:
 ```js
 router.get(path, handler [, store])
 router.delete(path, handler [, store])
@@ -190,8 +192,7 @@ router.patch(path, handler [, store])
 router.post(path, handler [, store])
 router.put(path, handler [, store])
 router.options(path, handler [, store])
-router.trace(path, handler [, store])
-router.connect(path, handler [, store])
+// ...
 ```
 
 If you need a route that supports *all* methods you can use the `all` api.
