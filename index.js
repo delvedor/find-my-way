@@ -353,8 +353,8 @@ Router.prototype.find = function find (method, path) {
     // parametric route
     if (kind === NODE_TYPES.PARAM) {
       currentNode = node
-      i = 0
-      while (i < pathLen && path.charCodeAt(i) !== 47) i++
+      i = path.indexOf('/')
+      if (i === -1) i = pathLen
       if (i > maxParamLength) return null
       decoded = fastDecode(path.slice(0, i))
       if (decoded === null) return null
@@ -376,8 +376,8 @@ Router.prototype.find = function find (method, path) {
     // parametric(regex) route
     if (kind === NODE_TYPES.REGEX) {
       currentNode = node
-      i = 0
-      while (i < pathLen && path.charCodeAt(i) !== 47) i++
+      i = path.indexOf('/')
+      if (i === -1) i = pathLen
       if (i > maxParamLength) return null
       decoded = fastDecode(path.slice(0, i))
       if (decoded === null) return null
