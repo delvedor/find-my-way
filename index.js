@@ -12,10 +12,10 @@
 
 const assert = require('assert')
 const http = require('http')
+const fastDecode = require('fast-decode-uri-component')
 const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
-var errored = false
 
 function Router (opts) {
   if (!(this instanceof Router)) {
@@ -357,9 +357,7 @@ Router.prototype.find = function find (method, path) {
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
       if (i > maxParamLength) return null
       decoded = fastDecode(path.slice(0, i))
-      if (errored === true) {
-        return null
-      }
+      if (decoded === null) return null
       params[pindex++] = decoded
       path = path.slice(i)
       continue
@@ -368,9 +366,7 @@ Router.prototype.find = function find (method, path) {
     // wildcard route
     if (kind === NODE_TYPES.MATCH_ALL) {
       decoded = fastDecode(path)
-      if (errored === true) {
-        return null
-      }
+      if (decoded === null) return null
       params[pindex] = decoded
       currentNode = node
       path = ''
@@ -384,9 +380,7 @@ Router.prototype.find = function find (method, path) {
       while (i < pathLen && path.charCodeAt(i) !== 47) i++
       if (i > maxParamLength) return null
       decoded = fastDecode(path.slice(0, i))
-      if (errored === true) {
-        return null
-      }
+      if (decoded === null) return null
       if (!node.regex.test(decoded)) return null
       params[pindex++] = decoded
       path = path.slice(i)
@@ -406,9 +400,7 @@ Router.prototype.find = function find (method, path) {
         if (i > maxParamLength) return null
       }
       decoded = fastDecode(path.slice(0, i))
-      if (errored === true) {
-        return null
-      }
+      if (decoded === null) return null
       params[pindex++] = decoded
       path = path.slice(i)
       continue
@@ -458,21 +450,10 @@ function sanitizeUrl (url) {
   return url
 }
 
-function fastDecode (path) {
-  errored = false
-  try {
-    return decodeURIComponent(path)
-  } catch (err) {
-    errored = true
-  }
-}
-
 function getWildcardNode (node, method, path, len) {
   if (node == null) return null
   var decoded = fastDecode(path.slice(-len))
-  if (errored === true) {
-    return null
-  }
+  if (decoded === null) return null
   var handle = node.handlers[method]
   if (handle != null) {
     return {
