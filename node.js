@@ -1,6 +1,7 @@
 'use strict'
 
 const assert = require('assert')
+const http = require('http')
 
 const types = {
   STATIC: 0,
@@ -169,15 +170,11 @@ Node.prototype.prettyPrint = function (prefix, tail) {
 
 function Handlers (handlers) {
   handlers = handlers || {}
-  this.DELETE = handlers.DELETE || null
-  this.GET = handlers.GET || null
-  this.HEAD = handlers.HEAD || null
-  this.PATCH = handlers.PATCH || null
-  this.POST = handlers.POST || null
-  this.PUT = handlers.PUT || null
-  this.OPTIONS = handlers.OPTIONS || null
-  this.TRACE = handlers.TRACE || null
-  this.CONNECT = handlers.CONNECT || null
+
+  for (var i in http.METHODS) {
+    var m = http.METHODS[i]
+    this[m] = handlers[m] || null
+  }
 }
 
 module.exports = Node

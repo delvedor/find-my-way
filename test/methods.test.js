@@ -711,3 +711,25 @@ test('Unsupported method (wildcard find)', t => {
 
   t.deepEqual(findMyWay.find('PROPFIND', '/hello/world'), null)
 })
+
+test('register all known HTTP methods', t => {
+  t.plan(6)
+  const findMyWay = FindMyWay()
+
+  const http = require('http')
+  const handlers = {}
+  for (var i in http.METHODS) {
+    var m = http.METHODS[i]
+    handlers[m] = function myHandler () {}
+    findMyWay.on(m, '/test', handlers[m])
+  }
+
+  t.ok(findMyWay.find('COPY', '/test'))
+  t.equal(findMyWay.find('COPY', '/test').handler, handlers.COPY)
+
+  t.ok(findMyWay.find('SUBSCRIBE', '/test'))
+  t.equal(findMyWay.find('SUBSCRIBE', '/test').handler, handlers.SUBSCRIBE)
+
+  t.ok(findMyWay.find('M-SEARCH', '/test'))
+  t.equal(findMyWay.find('M-SEARCH', '/test').handler, handlers['M-SEARCH'])
+})
