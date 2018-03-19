@@ -265,7 +265,7 @@ Router.prototype.off = function off (method, path) {
 
 Router.prototype.lookup = function lookup (req, res) {
   var handle = this.find(req.method, sanitizeUrl(req.url))
-  if (handle == null) return this._defaultRoute(req, res)
+  if (handle === null) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
@@ -290,7 +290,7 @@ Router.prototype.find = function find (method, path) {
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.handlers[method]
-      if (handle != null) {
+      if (handle !== null) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
           var paramNames = handle.params
@@ -318,9 +318,9 @@ Router.prototype.find = function find (method, path) {
     }
 
     var node = currentNode.findChild(path, method)
-    if (node == null) {
+    if (node === null) {
       node = currentNode.parametricBrother
-      if (node == null) {
+      if (node === null) {
         return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
       }
       path = previousPath
@@ -332,7 +332,7 @@ Router.prototype.find = function find (method, path) {
     // static route
     if (kind === NODE_TYPES.STATIC) {
       // if exist, save the wildcard child
-      if (currentNode.wildcardChild != null) {
+      if (currentNode.wildcardChild !== null) {
         wildcardNode = currentNode.wildcardChild
         pathLenWildcard = pathLen
       }
@@ -345,7 +345,7 @@ Router.prototype.find = function find (method, path) {
     }
 
     // if exist, save the wildcard child
-    if (currentNode.wildcardChild != null) {
+    if (currentNode.wildcardChild !== null) {
       wildcardNode = currentNode.wildcardChild
       pathLenWildcard = pathLen
     }
@@ -391,9 +391,9 @@ Router.prototype.find = function find (method, path) {
     if (kind === NODE_TYPES.MULTI_PARAM) {
       currentNode = node
       i = 0
-      if (node.regex != null) {
+      if (node.regex !== null) {
         var matchedParameter = path.match(node.regex)
-        if (matchedParameter == null) return null
+        if (matchedParameter === null) return null
         i = matchedParameter[1].length
       } else {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
@@ -411,7 +411,7 @@ Router.prototype.find = function find (method, path) {
 }
 
 Router.prototype._defaultRoute = function (req, res) {
-  if (this.defaultRoute != null) {
+  if (this.defaultRoute !== null) {
     this.defaultRoute(req, res)
   } else {
     res.statusCode = 404
@@ -451,11 +451,11 @@ function sanitizeUrl (url) {
 }
 
 function getWildcardNode (node, method, path, len) {
-  if (node == null) return null
+  if (node === null) return null
   var decoded = fastDecode(path.slice(-len))
   if (decoded === null) return null
   var handle = node.handlers[method]
-  if (handle != null) {
+  if (handle !== null) {
     return {
       handler: handle.handler,
       params: { '*': decoded },

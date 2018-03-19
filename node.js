@@ -98,14 +98,14 @@ Node.prototype.findByLabel = function (path) {
 
 Node.prototype.findChild = function (path, method) {
   var child = this.children[path[0]]
-  if (child != null && (child.numberOfChildren > 0 || child.handlers[method] != null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
     if (path.slice(0, child.prefix.length) === child.prefix) {
       return child
     }
   }
 
   child = this.children[':'] || this.children['*']
-  if (child != null && (child.numberOfChildren > 0 || child.handlers[method] != null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
     return child
   }
 
