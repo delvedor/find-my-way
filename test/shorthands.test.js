@@ -1,110 +1,32 @@
 'use strict'
 
+const http = require('http')
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
 
-test('should support `.get` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
+t.test('should support shorthand', t => {
+  t.plan(http.METHODS.length)
 
-  findMyWay.get('/test', () => {
-    t.ok('inside the handler')
-  })
+  for (var i in http.METHODS) {
+    const m = http.METHODS[i]
+    const methodName = m.toLowerCase()
 
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+    t.test('`.' + methodName + '`', t => {
+      t.plan(1)
+      const findMyWay = FindMyWay()
+
+      findMyWay[methodName]('/test', () => {
+        t.ok('inside the handler')
+      })
+
+      findMyWay.lookup({ method: m, url: '/test' }, null)
+    })
+  }
 })
 
-test('should support `.delete` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
-
-  findMyWay.delete('/test', () => {
-    t.ok('inside the handler')
-  })
-
-  findMyWay.lookup({ method: 'DELETE', url: '/test' }, null)
-})
-
-test('should support `.head` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
-
-  findMyWay.head('/test', () => {
-    t.ok('inside the handler')
-  })
-
-  findMyWay.lookup({ method: 'HEAD', url: '/test' }, null)
-})
-
-test('should support `.patch` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
-
-  findMyWay.patch('/test', () => {
-    t.ok('inside the handler')
-  })
-
-  findMyWay.lookup({ method: 'PATCH', url: '/test' }, null)
-})
-
-test('should support `.post` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
-
-  findMyWay.post('/test', () => {
-    t.ok('inside the handler')
-  })
-
-  findMyWay.lookup({ method: 'POST', url: '/test' }, null)
-})
-
-test('should support `.put` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
-
-  findMyWay.put('/test', () => {
-    t.ok('inside the handler')
-  })
-
-  findMyWay.lookup({ method: 'PUT', url: '/test' }, null)
-})
-
-test('should support `.options` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
-
-  findMyWay.options('/test', () => {
-    t.ok('inside the handler')
-  })
-
-  findMyWay.lookup({ method: 'OPTIONS', url: '/test' }, null)
-})
-
-test('should support `.trace` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
-
-  findMyWay.trace('/test', () => {
-    t.ok('inside the handler')
-  })
-
-  findMyWay.lookup({ method: 'TRACE', url: '/test' }, null)
-})
-
-test('should support `.connect` shorthand', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay()
-
-  findMyWay.connect('/test', () => {
-    t.ok('inside the handler')
-  })
-
-  findMyWay.lookup({ method: 'CONNECT', url: '/test' }, null)
-})
-
-test('should support `.connect` shorthand', t => {
-  t.plan(9)
+test('should support `.all` shorthand', t => {
+  t.plan(11)
   const findMyWay = FindMyWay()
 
   findMyWay.all('/test', () => {
@@ -120,4 +42,6 @@ test('should support `.connect` shorthand', t => {
   findMyWay.lookup({ method: 'OPTIONS', url: '/test' }, null)
   findMyWay.lookup({ method: 'TRACE', url: '/test' }, null)
   findMyWay.lookup({ method: 'CONNECT', url: '/test' }, null)
+  findMyWay.lookup({ method: 'COPY', url: '/test' }, null)
+  findMyWay.lookup({ method: 'SUBSCRIBE', url: '/test' }, null)
 })

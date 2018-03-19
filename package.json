@@ -28,6 +28,7 @@
   "devDependencies": {
     "benchmark": "^2.1.4",
     "coveralls": "^3.0.0",
+    "pre-commit": "^1.2.2",
     "request": "^2.83.0",
     "standard": "^10.0.3",
     "tap": "^11.0.0"
