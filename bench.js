@@ -8,6 +8,7 @@ const FindMyWay = require('./')
 const findMyWay = new FindMyWay()
 findMyWay.on('GET', '/', () => true)
 findMyWay.on('GET', '/user/:id', () => true)
+findMyWay.on('GET', '/user/:id/static', () => true)
 findMyWay.on('GET', '/customer/:name-:surname', () => true)
 findMyWay.on('GET', '/at/:hour(^\\d+)h:minute(^\\d+)m', () => true)
 findMyWay.on('GET', '/abc/def/ghi/lmn/opq/rst/uvz', () => true)
@@ -28,6 +29,9 @@ suite
   .add('lookup long static route', function () {
     findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }, null)
   })
+  .add('lookup long dynamic route', function () {
+    findMyWay.lookup({ method: 'GET', url: '/user/qwertyuiopasdfghjklzxcvbnm/static' }, null)
+  })
   .add('find static route', function () {
     findMyWay.find('GET', '/')
   })
@@ -42,6 +46,9 @@ suite
   })
   .add('find long static route', function () {
     findMyWay.find('GET', '/abc/def/ghi/lmn/opq/rst/uvz')
+  })
+  .add('find long dynamic route', function () {
+    findMyWay.find('GET', '/user/qwertyuiopasdfghjklzxcvbnm/static')
   })
   .on('cycle', function (event) {
     console.log(String(event.target))
