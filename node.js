@@ -2,6 +2,7 @@
 
 const assert = require('assert')
 const http = require('http')
+const Handlers = buildHandlers()
 
 const types = {
   STATIC: 0,
@@ -18,7 +19,7 @@ function Node (prefix, children, kind, handlers, regex) {
   this.children = children || {}
   this.numberOfChildren = Object.keys(this.children).length
   this.kind = kind || this.types.STATIC
-  this.handlers = handlers || new Handlers()
+  this.handlers = new Handlers(handlers)
   this.regex = regex || null
   this.wildcardChild = null
   this.parametricBrother = null
@@ -168,13 +169,15 @@ Node.prototype.prettyPrint = function (prefix, tail) {
   return tree
 }
 
-function Handlers (handlers) {
-  handlers = handlers || {}
-
+function buildHandlers (handlers) {
+  var code = `handlers = handlers || {}
+  `
   for (var i in http.METHODS) {
     var m = http.METHODS[i]
-    this[m] = handlers[m] || null
+    code += `this['${m}'] = handlers['${m}'] || null
+    `
   }
+  return new Function('handlers', code) // eslint-disable-line
 }
 
 module.exports = Node
