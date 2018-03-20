@@ -32,5 +32,8 @@
     "request": "^2.83.0",
     "standard": "^10.0.3",
     "tap": "^11.0.0"
+  },
+  "dependencies": {
+    "fast-decode-uri-component": "^1.0.0"
   }
 }
