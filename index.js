@@ -290,7 +290,7 @@ Router.prototype.find = function find (method, path) {
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = currentNode.handlers[method]
-      if (handle !== null) {
+      if (handle !== null && handle !== undefined) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
           var paramNames = handle.params
@@ -455,7 +455,7 @@ function getWildcardNode (node, method, path, len) {
   var decoded = fastDecode(path.slice(-len))
   if (decoded === null) return null
   var handle = node.handlers[method]
-  if (handle !== null) {
+  if (handle !== null && handle !== undefined) {
     return {
       handler: handle.handler,
       params: { '*': decoded },
