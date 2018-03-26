@@ -33,3 +33,19 @@ test('parametric routes', t => {
   t.equal(findMyWay.find('GET', '/foo/se-prefix').handler, foo)
   t.equal(findMyWay.find('GET', '/foo/sx-prefix').handler, foo)
 })
+
+test('parametric with common prefix', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test', noop)
+  findMyWay.on('GET', '/:test', (req, res, params) => {
+    t.deepEqual(
+      { test: 'text' },
+      params
+    )
+  })
+  findMyWay.on('GET', '/text/hello', noop)
+
+  findMyWay.lookup({ url: '/text', method: 'GET' })
+})

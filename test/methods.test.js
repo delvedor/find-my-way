@@ -676,7 +676,7 @@ test('Unsupported method (static)', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.lookup({ method: 'PROPFIND', url: '/' }, null)
+  findMyWay.lookup({ method: 'TROLL', url: '/' }, null)
 })
 
 test('Unsupported method (wildcard)', t => {
@@ -691,7 +691,7 @@ test('Unsupported method (wildcard)', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.lookup({ method: 'PROPFIND', url: '/hello/world' }, null)
+  findMyWay.lookup({ method: 'TROLL', url: '/hello/world' }, null)
 })
 
 test('Unsupported method (static find)', t => {
@@ -700,7 +700,7 @@ test('Unsupported method (static find)', t => {
 
   findMyWay.on('GET', '/', () => {})
 
-  t.deepEqual(findMyWay.find('PROPFIND', '/'), null)
+  t.deepEqual(findMyWay.find('TROLL', '/'), null)
 })
 
 test('Unsupported method (wildcard find)', t => {
@@ -709,7 +709,7 @@ test('Unsupported method (wildcard find)', t => {
 
   findMyWay.on('GET', '*', () => {})
 
-  t.deepEqual(findMyWay.find('PROPFIND', '/hello/world'), null)
+  t.deepEqual(findMyWay.find('TROLL', '/hello/world'), null)
 })
 
 test('register all known HTTP methods', t => {
