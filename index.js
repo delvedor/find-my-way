@@ -7,6 +7,7 @@
     '-': 45
     '/': 47
     ':': 58
+    ';': 59
     '?': 63
 */
 
@@ -443,7 +444,7 @@ module.exports = Router
 function sanitizeUrl (url) {
   for (var i = 0, len = url.length; i < len; i++) {
     var charCode = url.charCodeAt(i)
-    if (charCode === 63 || charCode === 35) {
+    if (charCode === 63 || charCode === 59 || charCode === 35) {
       return url.slice(0, i)
     }
   }
