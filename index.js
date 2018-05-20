@@ -14,6 +14,7 @@
 const assert = require('assert')
 const http = require('http')
 const fastDecode = require('fast-decode-uri-component')
+const isRegexSafe = require('safe-regex')
 const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
@@ -33,6 +34,7 @@ function Router (opts) {
 
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
+  this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.tree = new Node()
   this.routes = []
 }
@@ -109,7 +111,12 @@ Router.prototype._on = function _on (method, path, handler, store) {
 
       var parameter = path.slice(j, i)
       var regex = isRegex ? parameter.slice(parameter.indexOf('('), i) : null
-      if (isRegex) regex = new RegExp(regex)
+      if (isRegex) {
+        regex = new RegExp(regex)
+        if (!this.allowUnsafeRegex) {
+          assert(isRegexSafe(regex), `The regex '${regex.toString()}' is not safe!`)
+        }
+      }
       params.push(parameter.slice(0, isRegex ? parameter.indexOf('(') : i))
 
       path = path.slice(0, j) + path.slice(i)
