@@ -67,6 +67,14 @@ const router = require('find-my-way')({
   maxParamLength: 500
 })
 ```
+
+If you are using a regex based route, `find-my-way` will throw an error if detects potentially catastrophic exponential-time regular expressions *(internally uses [`safe-regex`](https://github.com/substack/safe-regex))*.<br/>
+If you want to disable this behavior, pass the option `allowUnsafeRegex`.
+```js
+const router = require('find-my-way')({
+  allowUnsafeRegex: true
+})
+```
 <a name="on"></a>
 #### on(method, path, handler, [store])
 Register a new route.
