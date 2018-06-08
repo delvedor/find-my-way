@@ -2,7 +2,7 @@
 
 const assert = require('assert')
 const http = require('http')
-const semver = require('semver')
+const SemVerStore = require('semver-store')
 const Handlers = buildHandlers()
 
 const types = {
@@ -24,8 +24,7 @@ function Node (prefix, children, kind, handlers, regex, versions) {
   this.regex = regex || null
   this.wildcardChild = null
   this.parametricBrother = null
-  this.versions = versions || null
-  this.versionsArray = versions ? Object.keys(versions) : []
+  this.versions = SemVerStore()
 }
 
 Object.defineProperty(Node.prototype, 'types', {
@@ -92,8 +91,7 @@ Node.prototype.reset = function (prefix) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
-  this.versions = null
-  this.versionsArray = []
+  this.versions = SemVerStore()
   return this
 }
 
@@ -152,28 +150,19 @@ Node.prototype.setHandler = function (method, handler, params, store) {
 Node.prototype.setVersionHandler = function (version, method, handler, params, store) {
   if (!handler) return
 
-  if (this.versions !== null && this.versions[version] !== undefined) {
-    assert(
-      this.versions[version][method] !== undefined,
-      `There is already an handler with version '${version}' and method '${method}'`
-    )
-  } else {
-    this.versions = this.versions || {}
-  }
+  const handlers = this.versions.get(version) || new Handlers()
+  assert(
+    handlers[method] === null,
+    `There is already an handler with version '${version}' and method '${method}'`
+  )
 
-  this.versionsArray.push(version)
-  this.versionsArray.sort((a, b) => {
-    if (semver.gt(a, b)) return 1
-    if (semver.lt(a, b)) return -1
-    return 0
-  })
-  this.versions[version] = this.versions[version] || {}
-  this.versions[version][method] = {
+  handlers[method] = {
     handler: handler,
     params: params,
     store: store || null,
     paramsLength: params.length
   }
+  this.versions.set(version, handlers)
 }
 
 Node.prototype.getHandler = function (method) {
@@ -181,14 +170,8 @@ Node.prototype.getHandler = function (method) {
 }
 
 Node.prototype.getVersionHandler = function (version, method) {
-  var handler = null
-  for (var i = 0, len = this.versionsArray.length; i < len; i++) {
-    var v = this.versionsArray[i]
-    if (semver.satisfies(v, version)) {
-      handler = this.versions[v][method]
-    }
-  }
-  return handler
+  var handlers = this.versions.get(version)
+  return handlers === null ? handlers : handlers[method]
 }
 
 Node.prototype.prettyPrint = function (prefix, tail) {
