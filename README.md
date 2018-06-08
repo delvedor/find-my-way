@@ -76,7 +76,7 @@ const router = require('find-my-way')({
 })
 ```
 <a name="on"></a>
-#### on(method, path, handler, [store])
+#### on(method, path, [opts], handler, [store])
 Register a new route.
 ```js
 router.on('GET', '/example', (req, res, params) => {
@@ -90,7 +90,27 @@ router.on('GET', '/example', (req, res, params, store) => {
 }, { message: 'hello world' })
 ```
 
-##### on(methods[], path, handler, [store])
+<a name="semver"></a>
+##### Versioned routes
+If needed you can provide a `version` option, which will allow you to declare multiple versions of the same route. The versioning should follow the [semver](https://semver.org/) specification.<br/>
+When using `lookup`, `find-my-way` will automatically detect the `Accept-Version` header and route the request accordingly.<br/>
+Internally `find-my-way` uses the [`semver`](https://github.com/npm/node-semver) module to validate and compare the provided versions.<br/>
+*Be aware that using this feature will cause a degradation of the overall performances of the router.*
+```js
+router.on('GET', '/example', { version: '1.2.0' }, (req, res, params) => {
+  res.send('Hello from 1.2.0!')
+})
+
+router.on('GET', '/example', { version: '2.4.0' }, (req, res, params) => {
+  res.send('Hello from 2.4.0!')
+})
+
+// The 'Accept-Version' header could be '1.2.0' as well as '2.x'
+// or any other combination supported by semver
+```
+If you declare multiple version with the same *major* or *minor* `find-my-way` will always choose the highest compatible with the `Accept-Version` header value.
+
+##### on(methods[], path, [opts], handler, [store])
 Register a new route for each method specified in the `methods` array.
 It comes handy when you need to declare multiple routes with the same handler but different methods.
 ```js
@@ -218,11 +238,16 @@ router.lookup(req, res)
 ```
 
 <a name="find"></a>
-#### find(method, path)
+#### find(method, path [, version])
 Return (if present) the route registered in *method:path*.<br>
-The path must be sanitized, all the parameters and wildcards are decoded automatically.
+The path must be sanitized, all the parameters and wildcards are decoded automatically.<br/>
+You can also pass an optional version string, which should be conform to the [semver](https://semver.org/) specification.
 ```js
 router.find('GET', '/example')
+// => { handler: Function, params: Object, store: Object}
+// => null
+
+router.find('GET', '/example', '1.x')
 // => { handler: Function, params: Object, store: Object}
 // => null
 ```
