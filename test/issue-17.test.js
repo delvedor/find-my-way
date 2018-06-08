@@ -16,7 +16,7 @@ test('Parametric route, request.url contains dash', t => {
     t.equal(params.param, 'foo-bar')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/b' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/b', headers: {} }, null)
 })
 
 test('Parametric route with fixed suffix', t => {
@@ -31,7 +31,7 @@ test('Parametric route with fixed suffix', t => {
     t.equal(params.param, 'foo')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar', headers: {} }, null)
 })
 
 test('Parametric route with regexp and fixed suffix / 1', t => {
@@ -46,10 +46,10 @@ test('Parametric route with regexp and fixed suffix / 1', t => {
     t.fail('regex match')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/$mebar' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/a/foolol' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/a/foobaz' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/a/foolbar' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/$mebar', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foolol', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foobaz', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foolbar', headers: {} }, null)
 })
 
 test('Parametric route with regexp and fixed suffix / 2', t => {
@@ -64,7 +64,7 @@ test('Parametric route with regexp and fixed suffix / 2', t => {
     t.equal(params.param, 'foo')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foobar' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foobar', headers: {} }, null)
 })
 
 test('Parametric route with regexp and fixed suffix / 3', t => {
@@ -79,7 +79,7 @@ test('Parametric route with regexp and fixed suffix / 3', t => {
     t.equal(params.param, 'abc-def')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/abc-deffoo' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/abc-deffoo', headers: {} }, null)
 })
 
 test('Multi parametric route / 1', t => {
@@ -95,7 +95,7 @@ test('Multi parametric route / 1', t => {
     t.equal(params.p2, 'bar')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar', headers: {} }, null)
 })
 
 test('Multi parametric route / 2', t => {
@@ -111,7 +111,7 @@ test('Multi parametric route / 2', t => {
     t.equal(params.p2, 'bar-baz')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar-baz' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar-baz', headers: {} }, null)
 })
 
 test('Multi parametric route / 3', t => {
@@ -127,7 +127,7 @@ test('Multi parametric route / 3', t => {
     t.equal(params.$p, 'bar')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar', headers: {} }, null)
 })
 
 test('Multi parametric route / 4', t => {
@@ -142,7 +142,7 @@ test('Multi parametric route / 4', t => {
     t.fail('Should not match this route')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo', headers: {} }, null)
 })
 
 test('Multi parametric route with regexp / 1', t => {
@@ -158,7 +158,7 @@ test('Multi parametric route with regexp / 1', t => {
     t.equal(params.minute, '42')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/at/0h42m' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/at/0h42m', headers: {} }, null)
 })
 
 test('Multi parametric route with regexp / 2', t => {
@@ -179,8 +179,8 @@ test('Multi parametric route with regexp / 2', t => {
     t.equal(params.user, 'bar')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/1111-2222-3333-4444-foo' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/a/1111-2222-3333-4445-bar/account' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/1111-2222-3333-4444-foo', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/1111-2222-3333-4445-bar/account', headers: {} }, null)
 })
 
 test('Multi parametric route with fixed suffix', t => {
@@ -196,7 +196,7 @@ test('Multi parametric route with fixed suffix', t => {
     t.equal(params.p2, 'bar')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar-baz' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar-baz', headers: {} }, null)
 })
 
 test('Multi parametric route with regexp and fixed suffix', t => {
@@ -212,7 +212,7 @@ test('Multi parametric route with regexp and fixed suffix', t => {
     t.equal(params.p2, 'barbaz')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-barbaz-kuux' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-barbaz-kuux', headers: {} }, null)
 })
 
 test('Multi parametric route with wildcard', t => {
@@ -228,7 +228,7 @@ test('Multi parametric route with wildcard', t => {
     t.equal(params.p2, 'bar')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/baz' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/baz', headers: {} }, null)
 })
 
 test('Nested multi parametric route', t => {
@@ -245,7 +245,7 @@ test('Nested multi parametric route', t => {
     t.equal(params.p3, 'baz')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/b/baz' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/b/baz', headers: {} }, null)
 })
 
 test('Nested multi parametric route with regexp / 1', t => {
@@ -262,7 +262,7 @@ test('Nested multi parametric route with regexp / 1', t => {
     t.equal(params.p3, 'bar')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-42/b/bar' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-42/b/bar', headers: {} }, null)
 })
 
 test('Nested multi parametric route with regexp / 2', t => {
@@ -279,5 +279,5 @@ test('Nested multi parametric route with regexp / 2', t => {
     t.equal(params.p3, 'bar')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-42/b/bar' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-42/b/bar', headers: {} }, null)
 })

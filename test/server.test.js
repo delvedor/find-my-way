@@ -264,3 +264,40 @@ test('does not map // when ignoreTrailingSlash is true', t => {
     })
   })
 })
+
+test('versioned routes', t => {
+  t.plan(5)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test', { version: '1.2.3' }, (req, res, params) => {
+    res.end('ok')
+  })
+
+  const server = http.createServer((req, res) => {
+    findMyWay.lookup(req, res)
+  })
+
+  server.listen(0, err => {
+    t.error(err)
+    server.unref()
+
+    request({
+      method: 'GET',
+      uri: 'http://localhost:' + server.address().port + '/test',
+      headers: { 'Accept-Version': '1.x' }
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+    })
+
+    request({
+      method: 'GET',
+      uri: 'http://localhost:' + server.address().port + '/test',
+      headers: { 'Accept-Version': '2.x' }
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 404)
+    })
+  })
+})

@@ -47,5 +47,5 @@ test('parametric with common prefix', t => {
   })
   findMyWay.on('GET', '/text/hello', noop)
 
-  findMyWay.lookup({ url: '/text', method: 'GET' })
+  findMyWay.lookup({ url: '/text', method: 'GET', headers: {} })
 })

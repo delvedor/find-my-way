@@ -52,7 +52,7 @@ test('register a route', t => {
     t.ok('inside the handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
 })
 
 test('register a route with multiple methods', t => {
@@ -63,8 +63,8 @@ test('register a route with multiple methods', t => {
     t.ok('inside the handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
-  findMyWay.lookup({ method: 'POST', url: '/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'POST', url: '/test', headers: {} }, null)
 })
 
 test('does not register /test/*/ when ignoreTrailingSlash is true', t => {
@@ -136,7 +136,7 @@ test('off with nested wildcards with parametric and static', t => {
 
   findMyWay.off('GET', '/foo2/*')
   findMyWay.lookup(
-    { method: 'GET', url: '/foo2/first/second' },
+    { method: 'GET', url: '/foo2/first/second', headers: {} },
     null
   )
 })
@@ -234,7 +234,7 @@ test('default route', t => {
     }
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
 })
 
 test('parametric route', t => {
@@ -245,7 +245,7 @@ test('parametric route', t => {
     t.is(params.id, 'hello')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
 })
 
 test('multiple parametric route', t => {
@@ -260,8 +260,8 @@ test('multiple parametric route', t => {
     t.is(params.id, 'world')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/other-test/world' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/other-test/world', headers: {} }, null)
 })
 
 test('multiple parametric route with the same prefix', t => {
@@ -276,8 +276,8 @@ test('multiple parametric route with the same prefix', t => {
     t.is(params.id, 'world')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/test/world/world' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/world/world', headers: {} }, null)
 })
 
 test('nested parametric route', t => {
@@ -289,7 +289,7 @@ test('nested parametric route', t => {
     t.is(params.world, 'world')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello/test/world' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/test/world', headers: {} }, null)
 })
 
 test('nested parametric route with same prefix', t => {
@@ -305,8 +305,8 @@ test('nested parametric route with same prefix', t => {
     t.is(params.world, 'world')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/test/hello/test/world' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/test/world', headers: {} }, null)
 })
 
 test('long route', t => {
@@ -317,7 +317,7 @@ test('long route', t => {
     t.ok('inside long path')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz', headers: {} }, null)
 })
 
 test('long parametric route', t => {
@@ -330,7 +330,7 @@ test('long parametric route', t => {
     t.is(params.rst, 'rst')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz', headers: {} }, null)
 })
 
 test('long parametric route with common prefix', t => {
@@ -366,10 +366,10 @@ test('long parametric route with common prefix', t => {
     t.is(params.rst, 'rst')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/abc/def' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/abc/def', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz', headers: {} }, null)
 })
 
 test('common prefix', t => {
@@ -392,10 +392,10 @@ test('common prefix', t => {
     t.ok('inside route')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/f' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/ff' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/ffa' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/ffb' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/f', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/ff', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/ffa', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/ffb', headers: {} }, null)
 })
 
 test('wildcard', t => {
@@ -407,7 +407,7 @@ test('wildcard', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/test/hello' },
+    { method: 'GET', url: '/test/hello', headers: {} },
     null
   )
 })
@@ -421,7 +421,7 @@ test('catch all wildcard', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/test/hello' },
+    { method: 'GET', url: '/test/hello', headers: {} },
     null
   )
 })
@@ -539,7 +539,7 @@ test('static routes should be inserted before parametric / 1', t => {
     t.fail('wrong handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
 })
 
 test('static routes should be inserted before parametric / 2', t => {
@@ -554,7 +554,7 @@ test('static routes should be inserted before parametric / 2', t => {
     t.pass('inside correct handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
 })
 
 test('static routes should be inserted before parametric / 3', t => {
@@ -577,8 +577,8 @@ test('static routes should be inserted before parametric / 3', t => {
     t.ok('inside correct handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
 })
 
 test('static routes should be inserted before parametric / 4', t => {
@@ -601,8 +601,8 @@ test('static routes should be inserted before parametric / 4', t => {
     t.fail('wrong handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/id' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/id' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/id', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/id', headers: {} }, null)
 })
 
 test('Static parametric with shared part of the path', t => {
@@ -622,8 +622,8 @@ test('Static parametric with shared part of the path', t => {
     t.is(params.param, 'other')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/oopss' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/example/other/nested/oops' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/oopss', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/example/other/nested/oops', headers: {} }, null)
 })
 
 test('parametric route with different method', t => {
@@ -638,8 +638,8 @@ test('parametric route with different method', t => {
     t.is(params.other, 'world')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
-  findMyWay.lookup({ method: 'POST', url: '/test/world' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'POST', url: '/test/world', headers: {} }, null)
 })
 
 test('params does not keep the object reference', t => {
@@ -660,8 +660,8 @@ test('params does not keep the object reference', t => {
     first = false
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/hello' }, null)
-  findMyWay.lookup({ method: 'GET', url: '/test/world' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/world', headers: {} }, null)
 })
 
 test('Unsupported method (static)', t => {
@@ -676,7 +676,7 @@ test('Unsupported method (static)', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.lookup({ method: 'TROLL', url: '/' }, null)
+  findMyWay.lookup({ method: 'TROLL', url: '/', headers: {} }, null)
 })
 
 test('Unsupported method (wildcard)', t => {
@@ -691,7 +691,7 @@ test('Unsupported method (wildcard)', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.lookup({ method: 'TROLL', url: '/hello/world' }, null)
+  findMyWay.lookup({ method: 'TROLL', url: '/hello/world', headers: {} }, null)
 })
 
 test('Unsupported method (static find)', t => {
