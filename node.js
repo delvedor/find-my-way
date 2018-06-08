@@ -2,6 +2,7 @@
 
 const assert = require('assert')
 const http = require('http')
+const semver = require('semver')
 const Handlers = buildHandlers()
 
 const types = {
@@ -13,7 +14,7 @@ const types = {
   MULTI_PARAM: 4
 }
 
-function Node (prefix, children, kind, handlers, regex) {
+function Node (prefix, children, kind, handlers, regex, versions) {
   this.prefix = prefix || '/'
   this.label = this.prefix[0]
   this.children = children || {}
@@ -23,6 +24,8 @@ function Node (prefix, children, kind, handlers, regex) {
   this.regex = regex || null
   this.wildcardChild = null
   this.parametricBrother = null
+  this.versions = versions || null
+  this.versionsArray = versions ? Object.keys(versions) : []
 }
 
 Object.defineProperty(Node.prototype, 'types', {
@@ -89,6 +92,8 @@ Node.prototype.reset = function (prefix) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
+  this.versions = null
+  this.versionsArray = []
   return this
 }
 
@@ -112,6 +117,22 @@ Node.prototype.findChild = function (path, method) {
   return null
 }
 
+Node.prototype.findVersionChild = function (version, path, method) {
+  var child = this.children[path[0]]
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+    if (path.slice(0, child.prefix.length) === child.prefix) {
+      return child
+    }
+  }
+
+  child = this.children[':'] || this.children['*']
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+    return child
+  }
+
+  return null
+}
+
 Node.prototype.setHandler = function (method, handler, params, store) {
   if (!handler) return
 
@@ -128,8 +149,46 @@ Node.prototype.setHandler = function (method, handler, params, store) {
   }
 }
 
+Node.prototype.setVersionHandler = function (version, method, handler, params, store) {
+  if (!handler) return
+
+  if (this.versions !== null && this.versions[version] !== undefined) {
+    assert(
+      this.versions[version][method] !== undefined,
+      `There is already an handler with version '${version}' and method '${method}'`
+    )
+  } else {
+    this.versions = this.versions || {}
+  }
+
+  this.versionsArray.push(version)
+  this.versionsArray.sort((a, b) => {
+    if (semver.gt(a, b)) return 1
+    if (semver.lt(a, b)) return -1
+    return 0
+  })
+  this.versions[version] = this.versions[version] || {}
+  this.versions[version][method] = {
+    handler: handler,
+    params: params,
+    store: store || null,
+    paramsLength: params.length
+  }
+}
+
 Node.prototype.getHandler = function (method) {
   return this.handlers[method]
+}
+
+Node.prototype.getVersionHandler = function (version, method) {
+  var handler = null
+  for (var i = 0, len = this.versionsArray.length; i < len; i++) {
+    var v = this.versionsArray[i]
+    if (semver.satisfies(v, version)) {
+      handler = this.versions[v][method]
+    }
+  }
+  return handler
 }
 
 Node.prototype.prettyPrint = function (prefix, tail) {
