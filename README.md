@@ -94,7 +94,7 @@ router.on('GET', '/example', (req, res, params, store) => {
 ##### Versioned routes
 If needed you can provide a `version` option, which will allow you to declare multiple versions of the same route. The versioning should follow the [semver](https://semver.org/) specification.<br/>
 When using `lookup`, `find-my-way` will automatically detect the `Accept-Version` header and route the request accordingly.<br/>
-Internally `find-my-way` uses the [`semver-store`](https://github.com/delvedor/semver-store) to get the correct version of the route; *advances ranges* and *pre-releases* currently are not supported.<br/>
+Internally `find-my-way` uses the [`semver-store`](https://github.com/delvedor/semver-store) to get the correct version of the route; *advanced ranges* and *pre-releases* currently are not supported.<br/>
 *Be aware that using this feature will cause a degradation of the overall performances of the router.*
 ```js
 router.on('GET', '/example', { version: '1.2.0' }, (req, res, params) => {
@@ -107,7 +107,7 @@ router.on('GET', '/example', { version: '2.4.0' }, (req, res, params) => {
 
 // The 'Accept-Version' header could be '1.2.0' as well as '2.x' or '2.4.x'
 ```
-If you declare multiple version with the same *major* or *minor* `find-my-way` will always choose the highest compatible with the `Accept-Version` header value.
+If you declare multiple versions with the same *major* or *minor* `find-my-way` will always choose the highest compatible with the `Accept-Version` header value.
 
 ##### on(methods[], path, [opts], handler, [store])
 Register a new route for each method specified in the `methods` array.
