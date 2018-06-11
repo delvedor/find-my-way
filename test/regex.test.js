@@ -16,7 +16,7 @@ test('route with matching regex', t => {
     t.ok('regex match')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/12' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/12', headers: {} }, null)
 })
 
 test('route without matching regex', t => {
@@ -31,7 +31,7 @@ test('route without matching regex', t => {
     t.fail('regex match')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/test', headers: {} }, null)
 })
 
 test('nested route with matching regex', t => {
@@ -46,7 +46,7 @@ test('nested route with matching regex', t => {
     t.ok('regex match')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/12/hello' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/12/hello', headers: {} }, null)
 })
 
 test('mixed nested route with matching regex', t => {
@@ -62,7 +62,7 @@ test('mixed nested route with matching regex', t => {
     t.is(params.world, 'world')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/12/hello/world' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/12/hello/world', headers: {} }, null)
 })
 
 test('mixed nested route with double matching regex', t => {
@@ -78,7 +78,7 @@ test('mixed nested route with double matching regex', t => {
     t.is(params.world, '15')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/12/hello/15' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/12/hello/15', headers: {} }, null)
 })
 
 test('mixed nested route without double matching regex', t => {
@@ -93,7 +93,7 @@ test('mixed nested route without double matching regex', t => {
     t.fail('route mathed')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/12/hello/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/12/hello/test', headers: {} }, null)
 })
 
 test('route with an extension regex', t => {
@@ -108,7 +108,7 @@ test('route with an extension regex', t => {
     t.ok('regex match')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/12.png' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/12.png', headers: {} }, null)
 })
 
 test('route with an extension regex - no match', t => {
@@ -123,7 +123,7 @@ test('route with an extension regex - no match', t => {
     t.fail('regex match')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test/aa.png' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/aa.png', headers: {} }, null)
 })
 
 test('safe decodeURIComponent', t => {

@@ -2,6 +2,7 @@
 
 const assert = require('assert')
 const http = require('http')
+const SemVerStore = require('semver-store')
 const Handlers = buildHandlers()
 
 const types = {
@@ -13,7 +14,7 @@ const types = {
   MULTI_PARAM: 4
 }
 
-function Node (prefix, children, kind, handlers, regex) {
+function Node (prefix, children, kind, handlers, regex, versions) {
   this.prefix = prefix || '/'
   this.label = this.prefix[0]
   this.children = children || {}
@@ -23,6 +24,7 @@ function Node (prefix, children, kind, handlers, regex) {
   this.regex = regex || null
   this.wildcardChild = null
   this.parametricBrother = null
+  this.versions = SemVerStore()
 }
 
 Object.defineProperty(Node.prototype, 'types', {
@@ -89,6 +91,7 @@ Node.prototype.reset = function (prefix) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
+  this.versions = SemVerStore()
   return this
 }
 
@@ -112,6 +115,22 @@ Node.prototype.findChild = function (path, method) {
   return null
 }
 
+Node.prototype.findVersionChild = function (version, path, method) {
+  var child = this.children[path[0]]
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+    if (path.slice(0, child.prefix.length) === child.prefix) {
+      return child
+    }
+  }
+
+  child = this.children[':'] || this.children['*']
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+    return child
+  }
+
+  return null
+}
+
 Node.prototype.setHandler = function (method, handler, params, store) {
   if (!handler) return
 
@@ -128,8 +147,31 @@ Node.prototype.setHandler = function (method, handler, params, store) {
   }
 }
 
+Node.prototype.setVersionHandler = function (version, method, handler, params, store) {
+  if (!handler) return
+
+  const handlers = this.versions.get(version) || new Handlers()
+  assert(
+    handlers[method] === null,
+    `There is already an handler with version '${version}' and method '${method}'`
+  )
+
+  handlers[method] = {
+    handler: handler,
+    params: params,
+    store: store || null,
+    paramsLength: params.length
+  }
+  this.versions.set(version, handlers)
+}
+
 Node.prototype.getHandler = function (method) {
   return this.handlers[method]
+}
+
+Node.prototype.getVersionHandler = function (version, method) {
+  var handlers = this.versions.get(version)
+  return handlers === null ? handlers : handlers[method]
 }
 
 Node.prototype.prettyPrint = function (prefix, tail) {

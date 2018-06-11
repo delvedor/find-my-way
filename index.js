@@ -39,7 +39,14 @@ function Router (opts) {
   this.routes = []
 }
 
-Router.prototype.on = function on (method, path, handler, store) {
+Router.prototype.on = function on (method, path, opts, handler, store) {
+  if (typeof opts === 'function') {
+    if (handler !== undefined) {
+      store = handler
+    }
+    handler = opts
+    opts = {}
+  }
   // path validation
   assert(typeof path === 'string', 'Path should be a string')
   assert(path.length > 0, 'The path could not be empty')
@@ -47,21 +54,21 @@ Router.prototype.on = function on (method, path, handler, store) {
   // handler validation
   assert(typeof handler === 'function', 'Handler should be a function')
 
-  this._on(method, path, handler, store)
+  this._on(method, path, opts, handler, store)
 
   if (this.ignoreTrailingSlash && path !== '/' && !path.endsWith('*')) {
     if (path.endsWith('/')) {
-      this._on(method, path.slice(0, -1), handler, store)
+      this._on(method, path.slice(0, -1), opts, handler, store)
     } else {
-      this._on(method, path + '/', handler, store)
+      this._on(method, path + '/', opts, handler, store)
     }
   }
 }
 
-Router.prototype._on = function _on (method, path, handler, store) {
+Router.prototype._on = function _on (method, path, opts, handler, store) {
   if (Array.isArray(method)) {
     for (var k = 0; k < method.length; k++) {
-      this._on(method[k], path, handler, store)
+      this._on(method[k], path, opts, handler, store)
     }
     return
   }
@@ -76,9 +83,12 @@ Router.prototype._on = function _on (method, path, handler, store) {
   this.routes.push({
     method: method,
     path: path,
+    opts: opts,
     handler: handler,
     store: store
   })
+
+  const version = opts.version
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
@@ -87,7 +97,7 @@ Router.prototype._on = function _on (method, path, handler, store) {
       var nodeType = NODE_TYPES.PARAM
       j = i + 1
       // add the static part of the route to the tree
-      this._insert(method, path.slice(0, i), 0, null, null, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null, null, version)
 
       // isolate the parameter name
       var isRegex = false
@@ -125,25 +135,25 @@ Router.prototype._on = function _on (method, path, handler, store) {
 
       // if the path is ended
       if (i === len) {
-        return this._insert(method, path.slice(0, i), nodeType, params, handler, store, regex)
+        return this._insert(method, path.slice(0, i), nodeType, params, handler, store, regex, version)
       }
       // add the parameter and continue with the search
-      this._insert(method, path.slice(0, i), nodeType, params, null, null, regex)
+      this._insert(method, path.slice(0, i), nodeType, params, null, null, regex, version)
 
       i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
-      this._insert(method, path.slice(0, i), 0, null, null, null, null)
+      this._insert(method, path.slice(0, i), 0, null, null, null, null, version)
       // add the wildcard parameter
       params.push('*')
-      return this._insert(method, path.slice(0, len), 2, params, handler, store, null)
+      return this._insert(method, path.slice(0, len), 2, params, handler, store, null, version)
     }
   }
   // static route
-  this._insert(method, path, 0, params, handler, store, null)
+  this._insert(method, path, 0, params, handler, store, null, version)
 }
 
-Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex) {
+Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, version) {
   const route = path
   var currentNode = this.tree
   var prefix = ''
@@ -171,7 +181,8 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         currentNode.children,
         currentNode.kind,
         new Node.Handlers(currentNode.handlers),
-        currentNode.regex
+        currentNode.regex,
+        currentNode.versions
       )
       if (currentNode.wildcardChild !== null) {
         node.wildcardChild = currentNode.wildcardChild
@@ -185,12 +196,21 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       // if the longest common prefix has the same length of the current path
       // the handler should be added to the current node, to a child otherwise
       if (len === pathLen) {
-        assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
-        currentNode.setHandler(method, handler, params, store)
+        if (version) {
+          assert(!currentNode.getVersionHandler(version, method), `Method '${method}' already declared for route '${route}' version '${version}'`)
+          currentNode.setVersionHandler(version, method, handler, params, store)
+        } else {
+          assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
+          currentNode.setHandler(method, handler, params, store)
+        }
         currentNode.kind = kind
       } else {
-        node = new Node(path.slice(len), {}, kind, null, regex)
-        node.setHandler(method, handler, params, store)
+        node = new Node(path.slice(len), {}, kind, null, regex, null)
+        if (version) {
+          node.setVersionHandler(version, method, handler, params, store)
+        } else {
+          node.setHandler(method, handler, params, store)
+        }
         currentNode.addChild(node)
       }
 
@@ -207,14 +227,24 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         continue
       }
       // there are not children within the given label, let's create a new one!
-      node = new Node(path, {}, kind, null, regex)
-      node.setHandler(method, handler, params, store)
+      node = new Node(path, {}, kind, null, regex, null)
+      if (version) {
+        node.setVersionHandler(version, method, handler, params, store)
+      } else {
+        node.setHandler(method, handler, params, store)
+      }
+
       currentNode.addChild(node)
 
     // the node already exist
     } else if (handler) {
-      assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
-      currentNode.setHandler(method, handler, params, store)
+      if (version) {
+        assert(!currentNode.getVersionHandler(version, method), `Method '${method}' already declared for route '${route}' version '${version}'`)
+        currentNode.setVersionHandler(version, method, handler, params, store)
+      } else {
+        assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
+        currentNode.setHandler(method, handler, params, store)
+      }
     }
     return
   }
@@ -267,17 +297,17 @@ Router.prototype.off = function off (method, path) {
   }
   self.reset()
   newRoutes.forEach(function (route) {
-    self.on(route.method, route.path, route.handler, route.store)
+    self.on(route.method, route.path, route.opts, route.handler, route.store)
   })
 }
 
 Router.prototype.lookup = function lookup (req, res) {
-  var handle = this.find(req.method, sanitizeUrl(req.url))
+  var handle = this.find(req.method, sanitizeUrl(req.url), req.headers['accept-version'])
   if (handle === null) return this._defaultRoute(req, res)
   return handle.handler(req, res, handle.params, handle.store)
 }
 
-Router.prototype.find = function find (method, path) {
+Router.prototype.find = function find (method, path, version) {
   var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null
@@ -297,7 +327,9 @@ Router.prototype.find = function find (method, path) {
 
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = currentNode.handlers[method]
+      var handle = version === undefined
+        ? currentNode.handlers[method]
+        : currentNode.getVersionHandler(version, method)
       if (handle !== null && handle !== undefined) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
@@ -325,7 +357,10 @@ Router.prototype.find = function find (method, path) {
       pathLen = path.length
     }
 
-    var node = currentNode.findChild(path, method)
+    var node = version === undefined
+      ? currentNode.findChild(path, method)
+      : currentNode.findVersionChild(version, path, method)
+
     if (node === null) {
       node = currentNode.parametricBrother
       if (node === null) {

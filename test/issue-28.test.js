@@ -29,17 +29,17 @@ test('wildcard (more complex test)', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/test/hello' },
+    { method: 'GET', url: '/test/hello', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'GET', url: '/test/hello/world' },
+    { method: 'GET', url: '/test/hello/world', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'GET', url: '/test/' },
+    { method: 'GET', url: '/test/', headers: {} },
     null
   )
 })
@@ -61,12 +61,12 @@ test('Wildcard inside a node with a static route but different method', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/test/hello' },
+    { method: 'GET', url: '/test/hello', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test/hello' },
+    { method: 'OPTIONS', url: '/test/hello', headers: {} },
     null
   )
 })
@@ -92,27 +92,27 @@ test('Wildcard inside a node with a static route but different method (more comp
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/test/hello' },
+    { method: 'GET', url: '/test/hello', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'GET', url: '/test/helloo' },
+    { method: 'GET', url: '/test/helloo', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test/' },
+    { method: 'OPTIONS', url: '/test/', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test' },
+    { method: 'OPTIONS', url: '/test', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test/helloo' },
+    { method: 'OPTIONS', url: '/test/helloo', headers: {} },
     null
   )
 })
@@ -138,7 +138,7 @@ test('Wildcard edge cases', t => {
   })
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test1/foo' },
+    { method: 'OPTIONS', url: '/test1/foo', headers: {} },
     null
   )
 })
@@ -164,12 +164,12 @@ test('Wildcard edge cases same method', t => {
   })
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test1/foo' },
+    { method: 'OPTIONS', url: '/test1/foo', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test/foo' },
+    { method: 'OPTIONS', url: '/test/foo', headers: {} },
     null
   )
 })
@@ -199,17 +199,17 @@ test('Wildcard and parametric edge cases', t => {
   })
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test1/foo' },
+    { method: 'OPTIONS', url: '/test1/foo', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'OPTIONS', url: '/test/foo/hey' },
+    { method: 'OPTIONS', url: '/test/foo/hey', headers: {} },
     null
   )
 
   findMyWay.lookup(
-    { method: 'GET', url: '/example/foo' },
+    { method: 'GET', url: '/example/foo', headers: {} },
     null
   )
 })
@@ -239,7 +239,7 @@ test('Mixed wildcard and static with same method', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo1/bar1/kuux' },
+    { method: 'GET', url: '/foo1/bar1/kuux', headers: {} },
     null
   )
 })
@@ -265,7 +265,7 @@ test('Nested wildcards case - 1', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo1/bar1/kuux' },
+    { method: 'GET', url: '/foo1/bar1/kuux', headers: {} },
     null
   )
 })
@@ -291,7 +291,7 @@ test('Nested wildcards case - 2', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo1/bar1/kuux' },
+    { method: 'GET', url: '/foo1/bar1/kuux', headers: {} },
     null
   )
 })
@@ -325,7 +325,7 @@ test('Nested wildcards with parametric and static - 1', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo1/bar1/kuux' },
+    { method: 'GET', url: '/foo1/bar1/kuux', headers: {} },
     null
   )
 })
@@ -359,7 +359,7 @@ test('Nested wildcards with parametric and static - 2', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo3/bar1' },
+    { method: 'GET', url: '/foo3/bar1', headers: {} },
     null
   )
 })
@@ -393,7 +393,7 @@ test('Nested wildcards with parametric and static - 3', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo4/param' },
+    { method: 'GET', url: '/foo4/param', headers: {} },
     null
   )
 })
@@ -427,7 +427,7 @@ test('Nested wildcards with parametric and static - 4', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo1/param' },
+    { method: 'GET', url: '/foo1/param', headers: {} },
     null
   )
 })
@@ -461,7 +461,7 @@ test('Nested wildcards with parametric and static - 5', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo1/param/hello/test/long/routee' },
+    { method: 'GET', url: '/foo1/param/hello/test/long/routee', headers: {} },
     null
   )
 })
@@ -495,7 +495,7 @@ test('Nested wildcards with parametric and static - 6', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo4/param/hello/test/long/routee' },
+    { method: 'GET', url: '/foo4/param/hello/test/long/routee', headers: {} },
     null
   )
 })
@@ -533,7 +533,7 @@ test('Nested wildcards with parametric and static - 7', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo3/hello' },
+    { method: 'GET', url: '/foo3/hello', headers: {} },
     null
   )
 })
@@ -571,7 +571,7 @@ test('Nested wildcards with parametric and static - 8', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo3/hello/world' },
+    { method: 'GET', url: '/foo3/hello/world', headers: {} },
     null
   )
 })

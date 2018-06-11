@@ -12,7 +12,7 @@ test('should sanitize the url - query', t => {
     t.ok('inside the handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test?hello=world' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test?hello=world', headers: {} }, null)
 })
 
 test('should sanitize the url - hash', t => {
@@ -23,7 +23,7 @@ test('should sanitize the url - hash', t => {
     t.ok('inside the handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test#hello' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test#hello', headers: {} }, null)
 })
 
 test('handles path and query separated by ;', t => {
@@ -34,5 +34,5 @@ test('handles path and query separated by ;', t => {
     t.ok('inside the handler')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test;jsessionid=123456' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test;jsessionid=123456', headers: {} }, null)
 })

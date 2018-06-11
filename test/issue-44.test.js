@@ -20,7 +20,7 @@ test('Parametric and static with shared prefix / 1', t => {
     t.equal(params.param, 'winter')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/winter' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/winter', headers: {} }, null)
 })
 
 test('Parametric and static with shared prefix / 2', t => {
@@ -39,7 +39,7 @@ test('Parametric and static with shared prefix / 2', t => {
     t.fail('we should not be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/woo' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/woo', headers: {} }, null)
 })
 
 test('Parametric and static with shared prefix (nested)', t => {
@@ -58,7 +58,7 @@ test('Parametric and static with shared prefix (nested)', t => {
     t.fail('we should not be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/winter/coming' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/winter/coming', headers: {} }, null)
 })
 
 test('Parametric and static with shared prefix and different suffix', t => {
@@ -77,7 +77,7 @@ test('Parametric and static with shared prefix and different suffix', t => {
     t.ok('We should be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/other' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/other', headers: {} }, null)
 })
 
 test('Parametric and static with shared prefix (with wildcard)', t => {
@@ -100,7 +100,7 @@ test('Parametric and static with shared prefix (with wildcard)', t => {
     t.fail('we should not be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/winter' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/winter', headers: {} }, null)
 })
 
 test('Parametric and static with shared prefix (nested with wildcard)', t => {
@@ -123,7 +123,7 @@ test('Parametric and static with shared prefix (nested with wildcard)', t => {
     t.equal(params['*'], 'winter/coming')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/winter/coming' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/winter/coming', headers: {} }, null)
 })
 
 test('Parametric and static with shared prefix (nested with split)', t => {
@@ -146,5 +146,5 @@ test('Parametric and static with shared prefix (nested with split)', t => {
     t.fail('we should not be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/winter' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/winter', headers: {} }, null)
 })

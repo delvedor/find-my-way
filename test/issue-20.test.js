@@ -16,7 +16,7 @@ test('Standard case', t => {
     t.equal(params.param, 'perfectly-fine-route')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/perfectly-fine-route' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/perfectly-fine-route', headers: {} }, null)
 })
 
 test('Should be 404 / 1', t => {
@@ -31,7 +31,7 @@ test('Should be 404 / 1', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a', headers: {} }, null)
 })
 
 test('Should be 404 / 2', t => {
@@ -46,7 +46,7 @@ test('Should be 404 / 2', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a-non-existing-route' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a-non-existing-route', headers: {} }, null)
 })
 
 test('Should be 404 / 3', t => {
@@ -61,7 +61,7 @@ test('Should be 404 / 3', t => {
     t.fail('We should not be here')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a//' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a//', headers: {} }, null)
 })
 
 test('Should get an empty parameter', t => {
@@ -76,5 +76,5 @@ test('Should get an empty parameter', t => {
     t.equal(params.param, '')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/a/' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/', headers: {} }, null)
 })

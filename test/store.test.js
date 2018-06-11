@@ -12,7 +12,7 @@ test('handler should have the store object', t => {
     t.is(store.hello, 'world')
   }, { hello: 'world' })
 
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
 })
 
 test('find a store object', t => {
@@ -39,11 +39,11 @@ test('update the store', t => {
       t.is(store.hello, 'world')
       store.hello = 'hello'
       bool = true
-      findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+      findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
     } else {
       t.is(store.hello, 'hello')
     }
   }, { hello: 'world' })
 
-  findMyWay.lookup({ method: 'GET', url: '/test' }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
 })
