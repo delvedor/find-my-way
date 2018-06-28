@@ -214,7 +214,7 @@ Node.prototype.prettyPrint = function (prefix, tail) {
 function buildHandlers (handlers) {
   var code = `handlers = handlers || {}
   `
-  for (var i in http.METHODS) {
+  for (var i = 0; i < http.METHODS.length; i++) {
     var m = http.METHODS[i]
     code += `this['${m}'] = handlers['${m}'] || null
     `
