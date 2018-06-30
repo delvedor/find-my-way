@@ -54,3 +54,20 @@ test('parametric case insensitive', t => {
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/bAR', headers: {} }, null)
 })
+
+test('parametric case insensitive with a static part', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    caseSensitive: false,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/foo/my-:param', (req, res, params) => {
+    t.equal(params.param, 'bar')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/Foo/MY-bAR', headers: {} }, null)
+})
