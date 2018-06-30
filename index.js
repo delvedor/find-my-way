@@ -32,6 +32,7 @@ function Router (opts) {
     this.defaultRoute = null
   }
 
+  this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
@@ -96,8 +97,14 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     if (path.charCodeAt(i) === 58) {
       var nodeType = NODE_TYPES.PARAM
       j = i + 1
+      var staticPart = path.slice(0, i)
+
+      if (!this.caseSensitive) {
+        staticPart = staticPart.toLowerCase()
+      }
+
       // add the static part of the route to the tree
-      this._insert(method, path.slice(0, i), 0, null, null, null, null, version)
+      this._insert(method, staticPart, 0, null, null, null, null, version)
 
       // isolate the parameter name
       var isRegex = false
@@ -149,6 +156,11 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       return this._insert(method, path.slice(0, len), 2, params, handler, store, null, version)
     }
   }
+
+  if (!this.caseSensitive) {
+    path = path.toLowerCase()
+  }
+
   // static route
   this._insert(method, path, 0, params, handler, store, null, version)
 }
@@ -308,6 +320,9 @@ Router.prototype.lookup = function lookup (req, res) {
 }
 
 Router.prototype.find = function find (method, path, version) {
+  if (!this.caseSensitive) {
+    path = path.toLowerCase()
+  }
   var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null
