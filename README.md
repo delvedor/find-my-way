@@ -76,7 +76,7 @@ const router = require('find-my-way')({
 })
 ```
 
-According to [RFC3986](https://tools.ietf.org/html/rfc3986#section-6.2.2.1find-my-way), Fastify is case sensitive by default.
+According to [RFC3986](https://tools.ietf.org/html/rfc3986#section-6.2.2.1), find-my-way is case sensitive by default.
 You can disable this by setting the `caseSensitive` option to `false`:
 in that case all paths will be lowercased before routing, including
 parametric and regexp-matched values. You can turn off case sensitivity
