@@ -118,7 +118,7 @@ router.on('GET', '/example', { version: '2.4.0' }, (req, res, params) => {
   res.send('Hello from 2.4.0!')
 })
 
-// The 'Accept-Version' header could be '1.2.0' as well as '2.x' or '2.4.x'
+// The 'Accept-Version' header could be '1.2.0' as well as '*', '2.x' or '2.4.x'
 ```
 If you declare multiple versions with the same *major* or *minor* `find-my-way` will always choose the highest compatible with the `Accept-Version` header value.
 
