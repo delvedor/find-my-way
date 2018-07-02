@@ -99,7 +99,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       j = i + 1
       var staticPart = path.slice(0, i)
 
-      if (!this.caseSensitive) {
+      if (this.caseSensitive === false) {
         staticPart = staticPart.toLowerCase()
       }
 
@@ -157,7 +157,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     }
   }
 
-  if (!this.caseSensitive) {
+  if (this.caseSensitive === false) {
     path = path.toLowerCase()
   }
 
@@ -320,7 +320,7 @@ Router.prototype.lookup = function lookup (req, res) {
 }
 
 Router.prototype.find = function find (method, path, version) {
-  if (!this.caseSensitive) {
+  if (this.caseSensitive === false) {
     path = path.toLowerCase()
   }
   var maxParamLength = this.maxParamLength
