@@ -54,7 +54,7 @@ const router = require('find-my-way')({
   ignoreTrailingSlash: true
 })
 function handler (req, res, params) {
-  res.send('foo')
+  res.end('foo')
 }
 // maps "/foo/" and "/foo" to `handler`
 router.on('GET', '/foo/', handler)
@@ -75,6 +75,19 @@ const router = require('find-my-way')({
   allowUnsafeRegex: true
 })
 ```
+
+According to [RFC3986](https://tools.ietf.org/html/rfc3986#section-6.2.2.1), find-my-way is case sensitive by default.
+You can disable this by setting the `caseSensitive` option to `false`:
+in that case all paths will be lowercased before routing, including
+parametric and regexp-matched values. You can turn off case sensitivity
+with:
+
+```js
+const router = require('find-my-way')({
+  caseSensitive: false
+})
+```
+
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])
 Register a new route.
