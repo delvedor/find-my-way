@@ -1,6 +1,6 @@
 {
   "name": "find-my-way",
-  "version": "1.14.1",
+  "version": "1.15.0",
   "description": "Crazy fast http radix based router",
   "main": "index.js",
   "scripts": {
@@ -27,7 +27,7 @@
   "homepage": "https://github.com/delvedor/find-my-way#readme",
   "devDependencies": {
     "benchmark": "^2.1.4",
-    "coveralls": "^3.0.1",
+    "coveralls": "^3.0.2",
     "pre-commit": "^1.2.2",
     "request": "^2.87.0",
     "standard": "^11.0.1",
