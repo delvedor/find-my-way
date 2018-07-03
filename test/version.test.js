@@ -78,6 +78,17 @@ test('A route could support multiple versions (find) / 4', t => {
   t.notOk(findMyWay.find('GET', '/test/hello', '2.x'))
 })
 
+test('A route could support multiple versions (find) / 5', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/', { version: '1.2.3' }, () => false)
+  findMyWay.on('GET', '/', { version: '3.2.0' }, () => true)
+
+  t.ok(findMyWay.find('GET', '/', '*').handler())
+})
+
 test('Find with a version but without versioned routes', t => {
   t.plan(1)
 
