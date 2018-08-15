@@ -111,11 +111,11 @@ Internally `find-my-way` uses the [`semver-store`](https://github.com/delvedor/s
 *Be aware that using this feature will cause a degradation of the overall performances of the router.*
 ```js
 router.on('GET', '/example', { version: '1.2.0' }, (req, res, params) => {
-  res.send('Hello from 1.2.0!')
+  res.end('Hello from 1.2.0!')
 })
 
 router.on('GET', '/example', { version: '2.4.0' }, (req, res, params) => {
-  res.send('Hello from 2.4.0!')
+  res.end('Hello from 2.4.0!')
 })
 
 // The 'Accept-Version' header could be '1.2.0' as well as '*', '2.x' or '2.4.x'
