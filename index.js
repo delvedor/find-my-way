@@ -38,6 +38,8 @@ function Router (opts) {
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.tree = new Node()
   this.routes = []
+  this._fastMatch = null
+  this.compile()
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -88,6 +90,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     handler: handler,
     store: store
   })
+  this.compile()
 
   const version = opts.version
 
@@ -265,6 +268,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 Router.prototype.reset = function reset () {
   this.tree = new Node()
   this.routes = []
+  this.compile()
 }
 
 Router.prototype.off = function off (method, path) {
@@ -319,10 +323,26 @@ Router.prototype.lookup = function lookup (req, res) {
   return handle.handler(req, res, handle.params, handle.store)
 }
 
-Router.prototype.find = function find (method, path, version) {
+Router.prototype.compile = function () {
+  if (!this.routes.length) {
+    this._fastMatch = function () {
+      return null
+    }
+  } else {
+    var match = require('./generate')(this.routes)
+    this._fastMatch = match
+  }
+}
+
+Router.prototype.find = function findFast (method, path, version) {
+  return this._fastMatch(method, path)
+}
+
+Router.prototype.find2 = function find (method, path, version) {
   if (this.caseSensitive === false) {
     path = path.toLowerCase()
   }
+
   var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null

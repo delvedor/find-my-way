@@ -12,7 +12,7 @@ findMyWay.on('GET', '/user/:id/static', () => true)
 findMyWay.on('GET', '/customer/:name-:surname', () => true)
 findMyWay.on('GET', '/at/:hour(^\\d+)h:minute(^\\d+)m', () => true)
 findMyWay.on('GET', '/abc/def/ghi/lmn/opq/rst/uvz', () => true)
-findMyWay.on('GET', '/', { version: '1.2.0' }, () => true)
+// findMyWay.on('GET', '/', { version: '1.2.0' }, () => true)
 
 suite
   .add('lookup static route', function () {
@@ -33,9 +33,9 @@ suite
   .add('lookup long dynamic route', function () {
     findMyWay.lookup({ method: 'GET', url: '/user/qwertyuiopasdfghjklzxcvbnm/static', headers: {} }, null)
   })
-  .add('lookup static versioned route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/', headers: { 'accept-version': '1.x' } }, null)
-  })
+//  .add('lookup static versioned route', function () {
+//    findMyWay.lookup({ method: 'GET', url: '/', headers: { 'accept-version': '1.x' } }, null)
+//  })
   .add('find static route', function () {
     findMyWay.find('GET', '/', undefined)
   })
@@ -54,9 +54,9 @@ suite
   .add('find long dynamic route', function () {
     findMyWay.find('GET', '/user/qwertyuiopasdfghjklzxcvbnm/static', undefined)
   })
-  .add('find static versioned route', function () {
-    findMyWay.find('GET', '/', '1.x')
-  })
+//  .add('find static versioned route', function () {
+//    findMyWay.find('GET', '/', '1.x')
+//  })
   .on('cycle', function (event) {
     console.log(String(event.target))
   })
