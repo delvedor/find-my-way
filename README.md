@@ -168,7 +168,9 @@ Having a route with multiple parameters may affect negatively the performance, s
 
 <a name="match-order"></a>
 ##### Match order
-The routes are matched in the following order:
+The routing algorithm tokenizes the request path into segments.
+The segments are processes one by one at the time and the comparison following the order:
+
 ```
 static
 parametric
@@ -176,6 +178,8 @@ wildcards
 parametric(regex)
 multi parametric(regex)
 ```
+
+When the first segment matches, the next segment will be processed.
 
 <a name="supported-methods"></a>
 ##### Supported methods
