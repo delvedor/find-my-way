@@ -1,12 +1,11 @@
-/* eslint-disable */
 'use strict'
 
-const t = require('tap')
-const test = t.test
+/* eslint no-extend-native: off */
 
-test('should not throw', t => {
-  t.plan(1)
-  // Something could extend the Array prototype
-  Array.prototype.test = null
-  t.doesNotThrow(require('../'))
+const t = require('tap')
+
+// Something could extend the Array prototype
+Array.prototype.test = null
+t.doesNotThrow(() => {
+  require('../')
 })
