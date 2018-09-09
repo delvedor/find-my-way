@@ -482,6 +482,7 @@ Router.prototype.prettyPrint = function () {
 }
 
 for (var i in http.METHODS) {
+  if (!http.METHODS.hasOwnProperty(i)) continue
   const m = http.METHODS[i]
   const methodName = m.toLowerCase()
 
