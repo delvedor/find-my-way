@@ -168,18 +168,26 @@ Having a route with multiple parameters may affect negatively the performance, s
 
 <a name="match-order"></a>
 ##### Match order
-The routing algorithm tokenizes the request path into segments.
-The segments are processes one by one at the time and the comparison following the order:
 
-```
-static
-parametric
-wildcards
-parametric(regex)
-multi parametric(regex)
-```
+The routing algorithm matches one chunk at a time (where the chunk is a string between two slashes),
+this means that it cannot know if a route is static or dynamic until it finishes to match the URL.
 
-When the first segment matches, the next segment will be processed.
+The chunks are matched in the following order:
+
+1. static
+1. parametric
+1. wildcards
+1. parametric(regex)
+1. multi parametric(regex)
+
+So if you declare the following routes
+
+- `/:userId/foo/bar`
+- `/33/:a(^.*$)/:b`
+
+and the URL of the incoming request is /33/foo/bar,
+the second route will be matched because the first chunk (33) matches the static chunk.
+If the URL would have been /32/foo/bar, the first route would have been matched.
 
 <a name="supported-methods"></a>
 ##### Supported methods
