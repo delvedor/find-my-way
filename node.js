@@ -24,7 +24,7 @@ function Node (prefix, children, kind, handlers, regex, versions) {
   this.regex = regex || null
   this.wildcardChild = null
   this.parametricBrother = null
-  this.versions = SemVerStore()
+  this.versions = versions || SemVerStore()
 }
 
 Object.defineProperty(Node.prototype, 'types', {
