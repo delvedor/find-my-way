@@ -340,9 +340,14 @@ Router.prototype.find = function find (method, path, version) {
     var prefixLen = prefix.length
     var len = 0
     var previousPath = path
+    var normalizedPath = path
+
+    if (!this.caseSensitive) {
+      normalizedPath = path.toLowerCase()
+    }
 
     // found the route
-    if (pathLen === 0 || (this.caseSensitive ? path : path.toLowerCase()) === prefix) {
+    if (pathLen === 0 || normalizedPath === prefix) {
       var handle = version === undefined
         ? currentNode.handlers[method]
         : currentNode.getVersionHandler(version, method)
@@ -366,7 +371,7 @@ Router.prototype.find = function find (method, path, version) {
 
     // search for the longest common prefix
     i = pathLen < prefixLen ? pathLen : prefixLen
-    while (len < i && (this.caseSensitive ? path : path.toLowerCase()).charCodeAt(len) === prefix.charCodeAt(len)) len++
+    while (len < i && normalizedPath.charCodeAt(len) === prefix.charCodeAt(len)) len++
 
     if (len === prefixLen) {
       path = path.slice(len)
