@@ -142,7 +142,11 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
       // if the path is ended
       if (i === len) {
-        return this._insert(method, path.slice(0, i), nodeType, params, handler, store, regex, version)
+        var completedPath = path.slice(0, i)
+        if (this.caseSensitive === false) {
+          completedPath = completedPath.toLowerCase()
+        }
+        return this._insert(method, completedPath, nodeType, params, handler, store, regex, version)
       }
       // add the parameter and continue with the search
       this._insert(method, path.slice(0, i), nodeType, params, null, null, regex, version)
