@@ -99,10 +99,14 @@ Node.prototype.findByLabel = function (path) {
   return this.children[path[0]]
 }
 
-Node.prototype.findChild = function (path, method) {
-  var child = this.children[path[0]]
+Node.prototype.findChild = function (path, method, caseSensitive) {
+  var normalizedPath = path
+  if (!caseSensitive) {
+    normalizedPath = path.toLowerCase()
+  }
+  var child = this.children[normalizedPath[0]]
   if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
-    if (path.slice(0, child.prefix.length) === child.prefix) {
+    if (normalizedPath.slice(0, child.prefix.length) === child.prefix) {
       return child
     }
   }
@@ -115,10 +119,15 @@ Node.prototype.findChild = function (path, method) {
   return null
 }
 
-Node.prototype.findVersionChild = function (version, path, method) {
-  var child = this.children[path[0]]
+Node.prototype.findVersionChild = function (version, path, method, caseSensitive) {
+  var normalizedPath = path
+  if (!caseSensitive) {
+    normalizedPath = path.toLowerCase()
+  }
+
+  var child = this.children[normalizedPath[0]]
   if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
-    if (path.slice(0, child.prefix.length) === child.prefix) {
+    if (normalizedPath.slice(0, child.prefix.length) === child.prefix) {
       return child
     }
   }

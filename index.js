@@ -324,9 +324,6 @@ Router.prototype.lookup = function lookup (req, res) {
 }
 
 Router.prototype.find = function find (method, path, version) {
-  if (this.caseSensitive === false) {
-    path = path.toLowerCase()
-  }
   var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null
@@ -345,7 +342,7 @@ Router.prototype.find = function find (method, path, version) {
     var previousPath = path
 
     // found the route
-    if (pathLen === 0 || path === prefix) {
+    if (pathLen === 0 || (this.caseSensitive ? path : path.toLowerCase()) === prefix) {
       var handle = version === undefined
         ? currentNode.handlers[method]
         : currentNode.getVersionHandler(version, method)
@@ -369,7 +366,7 @@ Router.prototype.find = function find (method, path, version) {
 
     // search for the longest common prefix
     i = pathLen < prefixLen ? pathLen : prefixLen
-    while (len < i && path.charCodeAt(len) === prefix.charCodeAt(len)) len++
+    while (len < i && (this.caseSensitive ? path : path.toLowerCase()).charCodeAt(len) === prefix.charCodeAt(len)) len++
 
     if (len === prefixLen) {
       path = path.slice(len)
@@ -377,8 +374,8 @@ Router.prototype.find = function find (method, path, version) {
     }
 
     var node = version === undefined
-      ? currentNode.findChild(path, method)
-      : currentNode.findVersionChild(version, path, method)
+      ? currentNode.findChild(path, method, this.caseSensitive)
+      : currentNode.findVersionChild(version, path, method, this.caseSensitive)
 
     if (node === null) {
       node = currentNode.parametricBrother
