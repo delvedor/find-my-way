@@ -88,3 +88,49 @@ test('parametric case insensitive with capital letter', t => {
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/bAR', headers: {} }, null)
 })
+
+test('case insensitive with capital letter in static path with param', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    caseSensitive: false,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/Foo/bar/:param', (req, res, params) => {
+    console.log('baz')
+    t.equal(params.param, 'baz')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/Foo/bar/baz', headers: {} }, null)
+})
+
+test('case insensitive with multiple paths containing capital letter in static path with param', t => {
+  /*
+   * This is a reproduction of the issue documented at
+   * https://github.com/delvedor/find-my-way/issues/96.
+   */
+  t.plan(2)
+
+  const findMyWay = FindMyWay({
+    caseSensitive: false,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/Foo/bar/:param', (req, res, params) => {
+    console.log('baz')
+    t.equal(params.param, 'baz')
+  })
+
+  findMyWay.on('GET', '/Foo/baz/:param', (req, res, params) => {
+    console.log('bar')
+    t.equal(params.param, 'bar')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/Foo/bar/baz', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/Foo/baz/bar', headers: {} }, null)
+})
