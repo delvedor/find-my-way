@@ -3,6 +3,7 @@
   "version": "1.15.4",
   "description": "Crazy fast http radix based router",
   "main": "index.js",
+  "typings": "index.d.ts",
   "scripts": {
     "bench": "node bench.js",
     "test": "standard && tap -j4 test/*.test.js",
