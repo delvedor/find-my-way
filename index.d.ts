@@ -12,13 +12,40 @@ declare namespace Router {
   }
 
   type HTTPMethod =
+    | 'ACL'
+    | 'BIND'
+    | 'CHECKOUT'
+    | 'CONNECT'
+    | 'COPY'
     | 'DELETE'
     | 'GET'
     | 'HEAD'
+    | 'LINK'
+    | 'LOCK'
+    | 'M-SEARCH'
+    | 'MERGE'
+    | 'MKACTIVITY'
+    | 'MKCALENDAR'
+    | 'MKCOL'
+    | 'MOVE'
+    | 'NOTIFY'
+    | 'OPTIONS'
     | 'PATCH'
     | 'POST'
+    | 'PROPFIND'
+    | 'PROPPATCH'
+    | 'PURGE'
     | 'PUT'
-    | 'OPTIONS';
+    | 'REBIND'
+    | 'REPORT'
+    | 'SEARCH'
+    | 'SOURCE'
+    | 'SUBSCRIBE'
+    | 'TRACE'
+    | 'UNBIND'
+    | 'UNLINK'
+    | 'UNLOCK'
+    | 'UNSUBSCRIBE';
 
   type Handler<V extends HTTPVersion> = (
     req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest,
@@ -85,16 +112,6 @@ declare namespace Router {
       store: any
     ): void;
 
-    all: ShortHandRoute<V>;
-
-    get: ShortHandRoute<V>;
-    post: ShortHandRoute<V>;
-    put: ShortHandRoute<V>;
-    patch: ShortHandRoute<V>;
-    delete: ShortHandRoute<V>;
-    head: ShortHandRoute<V>;
-    options: ShortHandRoute<V>;
-
     off(method: HTTPMethod | HTTPMethod[], path: string): void;
 
     lookup(
@@ -110,6 +127,43 @@ declare namespace Router {
 
     reset(): void;
     prettyPrint(): string;
+
+    all: ShortHandRoute<V>;
+
+    acl: ShortHandRoute<V>;
+    bind: ShortHandRoute<V>;
+    checkout: ShortHandRoute<V>;
+    connect: ShortHandRoute<V>;
+    copy: ShortHandRoute<V>;
+    delete: ShortHandRoute<V>;
+    get: ShortHandRoute<V>;
+    head: ShortHandRoute<V>;
+    link: ShortHandRoute<V>;
+    lock: ShortHandRoute<V>;
+    'm-search': ShortHandRoute<V>;
+    merge: ShortHandRoute<V>;
+    mkactivity: ShortHandRoute<V>;
+    mkcalendar: ShortHandRoute<V>;
+    mkcol: ShortHandRoute<V>;
+    move: ShortHandRoute<V>;
+    notify: ShortHandRoute<V>;
+    options: ShortHandRoute<V>;
+    patch: ShortHandRoute<V>;
+    post: ShortHandRoute<V>;
+    propfind: ShortHandRoute<V>;
+    proppatch: ShortHandRoute<V>;
+    purge: ShortHandRoute<V>;
+    put: ShortHandRoute<V>;
+    rebind: ShortHandRoute<V>;
+    report: ShortHandRoute<V>;
+    search: ShortHandRoute<V>;
+    source: ShortHandRoute<V>;
+    subscribe: ShortHandRoute<V>;
+    trace: ShortHandRoute<V>;
+    unbind: ShortHandRoute<V>;
+    unlink: ShortHandRoute<V>;
+    unlock: ShortHandRoute<V>;
+    unsubscribe: ShortHandRoute<V>;
   }
 }
 
