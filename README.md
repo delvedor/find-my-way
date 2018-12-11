@@ -294,8 +294,12 @@ console.log(findMyWay.prettyPrint())
 <a name="acknowledgements"></a>
 ## Acknowledgements
 
-This project is kindly sponsored by [LetzDoIt](http://www.letzdoitapp.com/).<br>
 It is inspired by the [echo](https://github.com/labstack/echo) router, some parts have been extracted from [trekjs](https://github.com/trekjs) router.
+
+<a name="sponsor"></a>
+#### Past sponsor
+
+- [LetzDoIt](http://www.letzdoitapp.com/)
 
 <a name="license"></a>
 ## License
