@@ -8,7 +8,7 @@
     "bench": "node bench.js",
     "test:typescript": "tsc --project ./test/types/tsconfig.json",
     "test": "standard && tap -j4 test/*.test.js && npm run test:typescript",
-    "coveralls": "tap -j4 test/*.test.js --cov --coverage-report=text-lcov | coveralls"
+    "coveralls": "if [[ $(node -v) != \"v4.9.1\" ]]; then tap -j4 test/*.test.js --cov --coverage-report=text-lcov | coveralls; fi"
   },
   "repository": {
     "type": "git",
