@@ -385,8 +385,11 @@ Router.prototype.find = function find (method, path, version) {
         return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
       }
 
-      const tempPath = originalPath.slice(0, originalPath.length - path.length)
-      const previousPath = `${tempPath.slice(tempPath.lastIndexOf('/') + 1, tempPath.length)}${path}`
+      // we need to know the outstanding path so far from the originalPath since the last encountered "/" and assign it to previousPath.
+      // e.g originalPath: /aa/bbb/cc, path: bb/cc
+      // outstanding path: /bbb/cc
+      const pathDiff = originalPath.slice(0, originalPath.length - path.length)
+      const previousPath = `${pathDiff.slice(pathDiff.lastIndexOf('/') + 1, pathDiff.length)}${path}`
 
       path = previousPath
       pathLen = previousPath.length
