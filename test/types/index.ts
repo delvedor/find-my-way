@@ -53,6 +53,7 @@ http1Router.delete(
 })();
 
 http1Router.lookup(http1Req, http1Res);
+http1Router.lookup(http1Req, http1Res, {foo: 'bar'});
 http1Router.off('GET', '/path');
 http1Router.off(['GET', 'CHECKOUT'], '/path');
 http1Router.prettyPrint();
@@ -108,6 +109,7 @@ http2Router.delete(
 })();
 
 http2Router.lookup(http2Req, http2Res);
+http2Router.lookup(http2Req, http2Res, {foo: 'bar'});
 http2Router.off('GET', '/path');
 http2Router.off(['GET', 'CHECKOUT'], '/path');
 http2Router.prettyPrint();

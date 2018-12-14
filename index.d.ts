@@ -114,9 +114,10 @@ declare namespace Router {
 
     off(method: HTTPMethod | HTTPMethod[], path: string): void;
 
-    lookup(
+    lookup<Context>(
       req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest,
-      res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse
+      res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse,
+      ctx?: Context
     ): void;
 
     find(
