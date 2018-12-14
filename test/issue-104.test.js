@@ -26,7 +26,7 @@ test('Nested static parametric route, url with parameter common prefix > 1', t =
     res.end('{"message":"hello world"}')
   })
 
-  t.deepEqual(findMyWay.find('DELETE', '/a/bbar').params, { 'id': 'bbar' })
+  t.deepEqual(findMyWay.find('DELETE', '/a/bbar').params, { id: 'bbar' })
 })
 
 test('Parametric route, url with parameter common prefix > 1', t => {
@@ -53,7 +53,7 @@ test('Parametric route, url with parameter common prefix > 1', t => {
     res.end('{"message":"hello world"}')
   })
 
-  t.deepEqual(findMyWay.find('GET', '/aab').params, { 'id': 'aab' })
+  t.deepEqual(findMyWay.find('GET', '/aab').params, { id: 'aab' })
 })
 
 test('Parametric route, url with multi parameter common prefix > 1', t => {
@@ -80,5 +80,66 @@ test('Parametric route, url with multi parameter common prefix > 1', t => {
     res.end('{"message":"hello world"}')
   })
 
-  t.deepEqual(findMyWay.find('GET', '/hello/aab').params, { 'a': 'hello', 'b': 'aab' })
+  t.deepEqual(findMyWay.find('GET', '/hello/aab').params, { a: 'hello', b: 'aab' })
+})
+
+test('Mixed routes, url with parameter common prefix > 1', t => {
+  t.plan(11)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/test', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/testify', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/test/hello', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/test/hello/test', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/te/:a', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/test/hello/:b', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/:c', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/text/hello', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/text/:d', (req, res, params) => {
+    res.end('{"winter":"is here"}')
+  })
+
+  findMyWay.on('GET', '/text/:e/test', (req, res, params) => {
+    res.end('{"winter":"is here"}')
+  })
+
+  t.deepEqual(findMyWay.find('GET', '/test').params, {})
+  t.deepEqual(findMyWay.find('GET', '/testify').params, {})
+  t.deepEqual(findMyWay.find('GET', '/test/hello').params, {})
+  t.deepEqual(findMyWay.find('GET', '/test/hello/test').params, {})
+  t.deepEqual(findMyWay.find('GET', '/te/hello').params, { a: 'hello' })
+  t.deepEqual(findMyWay.find('GET', '/te/').params, { a: '' })
+  t.deepEqual(findMyWay.find('GET', '/testy').params, { c: 'testy' })
+  t.deepEqual(findMyWay.find('GET', '/besty').params, { c: 'besty' })
+  t.deepEqual(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
+  t.deepEqual(findMyWay.find('GET', '/te/hello/'), null)
+  t.deepEqual(findMyWay.find('GET', '/te/hellos/testy'), null)
 })
