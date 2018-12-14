@@ -342,7 +342,6 @@ Router.prototype.find = function find (method, path, version) {
     var prefix = currentNode.prefix
     var prefixLen = prefix.length
     var len = 0
-    var previousPath = path
 
     // found the route
     if (pathLen === 0 || path === prefix) {
@@ -385,6 +384,10 @@ Router.prototype.find = function find (method, path, version) {
       if (node === null) {
         return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
       }
+
+      const tempPath = originalPath.slice(0, originalPath.length - path.length)
+      const previousPath = `${tempPath.slice(tempPath.lastIndexOf('/') + 1, tempPath.length)}${path}`
+
       path = previousPath
       pathLen = previousPath.length
       len = prefixLen
