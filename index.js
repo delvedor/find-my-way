@@ -320,7 +320,9 @@ Router.prototype.off = function off (method, path) {
 Router.prototype.lookup = function lookup (req, res, ctx) {
   var handle = this.find(req.method, sanitizeUrl(req.url), req.headers['accept-version'])
   if (handle === null) return this._defaultRoute(req, res, ctx)
-  return handle.handler.call(ctx, req, res, handle.params, handle.store)
+  return ctx == null
+    ? handle.handler(req, res, handle.params, handle.store)
+    : handle.handler.call(ctx, req, res, handle.params, handle.store)
 }
 
 Router.prototype.find = function find (method, path, version) {
@@ -474,7 +476,9 @@ Router.prototype.find = function find (method, path, version) {
 
 Router.prototype._defaultRoute = function (req, res, ctx) {
   if (this.defaultRoute !== null) {
-    this.defaultRoute.call(ctx, req, res)
+    return ctx == null
+      ? this.defaultRoute(req, res)
+      : this.defaultRoute.call(ctx, req, res)
   } else {
     res.statusCode = 404
     res.end()
