@@ -73,7 +73,7 @@ Node.prototype.addChild = function (node) {
   }
 
   // Save the parametric brother inside static children
-  let iterate = (node) => {
+  const iterate = (node) => {
     if (!node) {
       return
     }
