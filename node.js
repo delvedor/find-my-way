@@ -72,6 +72,7 @@ Node.prototype.addChild = function (node) {
     }
   }
 
+  // Save the parametric brother inside static children
   let iterate = (node) => {
     if (!node) {
       return
@@ -90,19 +91,6 @@ Node.prototype.addChild = function (node) {
   iterate(this)
 
   return this
-}
-
-Node.prototype.findParametricBrother = function () {
-  const labels = Object.keys(this.children)
-  var parametricBrother = null
-  for (var i = 0; i < labels.length; i++) {
-    const child = this.children[labels[i]]
-    if (child.label === ':') {
-      parametricBrother = child
-      break
-    }
-  }
-  return parametricBrother
 }
 
 Node.prototype.reset = function (prefix) {
