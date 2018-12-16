@@ -1,3 +1,5 @@
+'use strict'
+
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
@@ -142,4 +144,41 @@ test('Mixed routes, url with parameter common prefix > 1', t => {
   t.deepEqual(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
   t.deepEqual(findMyWay.find('GET', '/te/hello/'), null)
   t.deepEqual(findMyWay.find('GET', '/te/hellos/testy'), null)
+})
+
+test('Mixed parametric routes, with last defined route being static', t => {
+  t.plan(4)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/test', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/test/:a', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/test/hello/:b', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/test/hello/:c/test', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+  findMyWay.on('GET', '/test/hello/:c/:k', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/test/world', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  t.deepEqual(findMyWay.find('GET', '/test/hello').params, { a: 'hello' })
+  t.deepEqual(findMyWay.find('GET', '/test/hello/world/test').params, { c: 'world' })
+  t.deepEqual(findMyWay.find('GET', '/test/hello/world/te').params, { c: 'world', k: 'te' })
+  t.deepEqual(findMyWay.find('GET', '/test/hello/world/testy').params, { c: 'world', k: 'testy' })
 })

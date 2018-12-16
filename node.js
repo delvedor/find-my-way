@@ -78,9 +78,11 @@ Node.prototype.addChild = function (node) {
       return
     }
 
-    if (node.kind === this.types.STATIC) {
-      node.parametricBrother = parametricBrother
+    if (node.kind !== this.types.STATIC) {
+      return
     }
+
+    node.parametricBrother = parametricBrother
 
     const labels = Object.keys(node.children)
     for (var i = 0; i < labels.length; i++) {
