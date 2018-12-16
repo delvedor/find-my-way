@@ -476,7 +476,7 @@ Router.prototype.find = function find (method, path, version) {
 
 Router.prototype._defaultRoute = function (req, res, ctx) {
   if (this.defaultRoute !== null) {
-    return ctx == null
+    return ctx === undefined
       ? this.defaultRoute(req, res)
       : this.defaultRoute.call(ctx, req, res)
   } else {
