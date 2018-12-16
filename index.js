@@ -343,6 +343,7 @@ Router.prototype.find = function find (method, path, version) {
     var prefix = currentNode.prefix
     var prefixLen = prefix.length
     var len = 0
+    var previousPath = path
 
     // found the route
     if (pathLen === 0 || path === prefix) {
@@ -386,12 +387,13 @@ Router.prototype.find = function find (method, path, version) {
         return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
       }
 
-      // we need to know the outstanding path so far from the originalPath since the last encountered "/" and assign it to previousPath.
-      // e.g originalPath: /aa/bbb/cc, path: bb/cc
-      // outstanding path: /bbb/cc
-      var pathDiff = originalPath.slice(0, originalPathLength - pathLen)
-      var previousPath = pathDiff.slice(pathDiff.lastIndexOf('/') + 1, pathDiff.length) + path
-
+      if (originalPath.indexOf('/' + previousPath) === -1) {
+        // we need to know the outstanding path so far from the originalPath since the last encountered "/" and assign it to previousPath.
+        // e.g originalPath: /aa/bbb/cc, path: bb/cc
+        // outstanding path: /bbb/cc
+        var pathDiff = originalPath.slice(0, originalPathLength - pathLen)
+        previousPath = pathDiff.slice(pathDiff.lastIndexOf('/') + 1, pathDiff.length) + path
+      }
       path = previousPath
       pathLen = previousPath.length
       len = prefixLen
