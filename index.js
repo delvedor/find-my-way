@@ -320,7 +320,7 @@ Router.prototype.off = function off (method, path) {
 Router.prototype.lookup = function lookup (req, res, ctx) {
   var handle = this.find(req.method, sanitizeUrl(req.url), req.headers['accept-version'])
   if (handle === null) return this._defaultRoute(req, res, ctx)
-  return ctx == null
+  return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
     : handle.handler.call(ctx, req, res, handle.params, handle.store)
 }
