@@ -253,12 +253,20 @@ router.all(path, handler [, store])
 ```
 
 <a name="lookup"></a>
-#### lookup(request, response)
+#### lookup(request, response, [context])
 Start a new search, `request` and `response` are the server req/res objects.<br>
-If a route is found it will automatically called the handler, otherwise the default route will be called.<br>
+If a route is found it will automatically call the handler, otherwise the default route will be called.<br>
 The url is sanitized internally, all the parameters and wildcards are decoded automatically.
 ```js
 router.lookup(req, res)
+```
+
+`lookup` accepts an optional context which will be the value of `this` when executing a handler
+```js
+router.on('GET', '*', function(req, res) {
+  res.end(this.greeting);
+})
+router.lookup(req, res, { greeting: 'Hello, World!' })
 ```
 
 <a name="find"></a>
