@@ -3,6 +3,7 @@
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
+const Node = require('../node')
 
 test('Nested static parametric route, url with parameter common prefix > 1', t => {
   t.plan(1)
@@ -181,4 +182,22 @@ test('Mixed parametric routes, with last defined route being static', t => {
   t.deepEqual(findMyWay.find('GET', '/test/hello/world/test').params, { c: 'world' })
   t.deepEqual(findMyWay.find('GET', '/test/hello/world/te').params, { c: 'world', k: 'te' })
   t.deepEqual(findMyWay.find('GET', '/test/hello/world/testy').params, { c: 'world', k: 'testy' })
+})
+
+test('parametricBrother of Parent Node, with a parametric child', t => {
+  t.plan(1)
+  const parent = new Node('/a')
+  const parametricChild = new Node(':id', null, parent.types.PARAM)
+  parent.addChild(parametricChild)
+  t.equal(parent.parametricBrother, null)
+})
+
+test('parametricBrother of Parent Node, with a parametric child and a static child', t => {
+  t.plan(1)
+  const parent = new Node('/a')
+  const parametricChild = new Node(':id', null, parent.types.PARAM)
+  const staticChild = new Node('/b', null, parent.types.STATIC)
+  parent.addChild(parametricChild)
+  parent.addChild(staticChild)
+  t.equal(parent.parametricBrother, null)
 })
