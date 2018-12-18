@@ -63,7 +63,7 @@ Node.prototype.addChild = function (node) {
   this.numberOfChildren = Object.keys(this.children).length
 
   const labels = Object.keys(this.children)
-  var parametricBrother = null
+  var parametricBrother = this.parametricBrother
   for (var i = 0; i < labels.length; i++) {
     const child = this.children[labels[i]]
     if (child.label === ':') {
@@ -72,13 +72,27 @@ Node.prototype.addChild = function (node) {
     }
   }
 
-  // Save the parametric brother inside a static children
-  for (i = 0; i < labels.length; i++) {
-    const child = this.children[labels[i]]
-    if (child.kind === this.types.STATIC && parametricBrother) {
-      child.parametricBrother = parametricBrother
+  // Save the parametric brother inside static children
+  const iterate = (node) => {
+    if (!node) {
+      return
+    }
+
+    if (node.kind !== this.types.STATIC) {
+      return
+    }
+
+    if (node !== this) {
+      node.parametricBrother = parametricBrother
+    }
+
+    const labels = Object.keys(node.children)
+    for (var i = 0; i < labels.length; i++) {
+      iterate(node.children[labels[i]])
     }
   }
+
+  iterate(this)
 
   return this
 }
