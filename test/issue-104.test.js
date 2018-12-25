@@ -186,17 +186,17 @@ test('Mixed parametric routes, with last defined route being static', t => {
 
 test('parametricBrother of Parent Node, with a parametric child', t => {
   t.plan(1)
-  const parent = new Node('/a')
-  const parametricChild = new Node(':id', null, parent.types.PARAM)
+  const parent = new Node({ prefix: '/a' })
+  const parametricChild = new Node({ prefix: ':id', kind: parent.types.PARAM })
   parent.addChild(parametricChild)
   t.equal(parent.parametricBrother, null)
 })
 
 test('parametricBrother of Parent Node, with a parametric child and a static child', t => {
   t.plan(1)
-  const parent = new Node('/a')
-  const parametricChild = new Node(':id', null, parent.types.PARAM)
-  const staticChild = new Node('/b', null, parent.types.STATIC)
+  const parent = new Node({ prefix: '/a' })
+  const parametricChild = new Node({ prefix: ':id', kind: parent.types.PARAM })
+  const staticChild = new Node({ prefix: '/b', kind: parent.types.STATIC })
   parent.addChild(parametricChild)
   parent.addChild(staticChild)
   t.equal(parent.parametricBrother, null)

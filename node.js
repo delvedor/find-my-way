@@ -2,7 +2,6 @@
 
 const assert = require('assert')
 const http = require('http')
-const SemVerStore = require('semver-store')
 const Handlers = buildHandlers()
 
 const types = {
@@ -14,17 +13,19 @@ const types = {
   MULTI_PARAM: 4
 }
 
-function Node (prefix, children, kind, handlers, regex, versions) {
-  this.prefix = prefix || '/'
+function Node (options) {
+  // former arguments order: prefix, children, kind, handlers, regex, versions
+  options = options || {}
+  this.prefix = options.prefix || '/'
   this.label = this.prefix[0]
-  this.children = children || {}
+  this.children = options.children || {}
   this.numberOfChildren = Object.keys(this.children).length
-  this.kind = kind || this.types.STATIC
-  this.handlers = new Handlers(handlers)
-  this.regex = regex || null
+  this.kind = options.kind || this.types.STATIC
+  this.handlers = new Handlers(options.handlers)
+  this.regex = options.regex || null
   this.wildcardChild = null
   this.parametricBrother = null
-  this.versions = versions || SemVerStore()
+  this.versions = options.versions
 }
 
 Object.defineProperty(Node.prototype, 'types', {
@@ -97,7 +98,7 @@ Node.prototype.addChild = function (node) {
   return this
 }
 
-Node.prototype.reset = function (prefix) {
+Node.prototype.reset = function (prefix, versions) {
   this.prefix = prefix
   this.children = {}
   this.kind = this.types.STATIC
@@ -105,7 +106,7 @@ Node.prototype.reset = function (prefix) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
-  this.versions = SemVerStore()
+  this.versions = versions
   return this
 }
 

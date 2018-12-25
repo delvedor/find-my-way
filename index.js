@@ -19,6 +19,8 @@ const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
 
+const acceptVersionStrategy = require('./lib/accept-version')
+
 function Router (opts) {
   if (!(this instanceof Router)) {
     return new Router(opts)
@@ -36,7 +38,8 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  this.tree = new Node()
+  this.versioning = opts.versioning || acceptVersionStrategy
+  this.tree = new Node({ versions: this.versioning.storage() })
   this.routes = []
 }
 
@@ -193,12 +196,12 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
     // let's split the node and add a new child
     if (len < prefixLen) {
       node = new Node(
-        prefix.slice(len),
-        currentNode.children,
-        currentNode.kind,
-        new Node.Handlers(currentNode.handlers),
-        currentNode.regex,
-        currentNode.versions
+        { prefix: prefix.slice(len),
+          children: currentNode.children,
+          kind: currentNode.kind,
+          handlers: new Node.Handlers(currentNode.handlers),
+          regex: currentNode.regex,
+          versions: currentNode.versions }
       )
       if (currentNode.wildcardChild !== null) {
         node.wildcardChild = currentNode.wildcardChild
@@ -206,7 +209,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 
       // reset the parent
       currentNode
-        .reset(prefix.slice(0, len))
+        .reset(prefix.slice(0, len), this.versioning.storage())
         .addChild(node)
 
       // if the longest common prefix has the same length of the current path
@@ -221,7 +224,13 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         }
         currentNode.kind = kind
       } else {
-        node = new Node(path.slice(len), {}, kind, null, regex, null)
+        node = new Node({
+          prefix: path.slice(len),
+          kind: kind,
+          handlers: null,
+          regex: regex,
+          versions: this.versioning.storage()
+        })
         if (version) {
           node.setVersionHandler(version, method, handler, params, store)
         } else {
@@ -243,7 +252,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         continue
       }
       // there are not children within the given label, let's create a new one!
-      node = new Node(path, {}, kind, null, regex, null)
+      node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex, versions: this.versioning.storage() })
       if (version) {
         node.setVersionHandler(version, method, handler, params, store)
       } else {
@@ -267,7 +276,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 }
 
 Router.prototype.reset = function reset () {
-  this.tree = new Node()
+  this.tree = new Node({ versions: this.versioning.storage() })
   this.routes = []
 }
 
@@ -318,7 +327,7 @@ Router.prototype.off = function off (method, path) {
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, sanitizeUrl(req.url), req.headers['accept-version'])
+  var handle = this.find(req.method, sanitizeUrl(req.url), this.versioning.deriveVersion(req, ctx))
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
