@@ -329,6 +329,11 @@ Router.prototype.find = function find (method, path, version) {
   if (this.caseSensitive === false) {
     path = path.toLowerCase()
   }
+
+  if (path.charCodeAt(0) !== 47) { // 47 is '/'
+    path = path.replace(/^https?:\/\/.*\//, '/')
+  }
+
   var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null
