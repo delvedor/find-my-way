@@ -100,7 +100,6 @@ test('case insensitive with capital letter in static path with param', t => {
   })
 
   findMyWay.on('GET', '/Foo/bar/:param', (req, res, params) => {
-    console.log('baz')
     t.equal(params.param, 'baz')
   })
 
@@ -122,12 +121,10 @@ test('case insensitive with multiple paths containing capital letter in static p
   })
 
   findMyWay.on('GET', '/Foo/bar/:param', (req, res, params) => {
-    console.log('baz')
     t.equal(params.param, 'baz')
   })
 
   findMyWay.on('GET', '/Foo/baz/:param', (req, res, params) => {
-    console.log('bar')
     t.equal(params.param, 'bar')
   })
 
