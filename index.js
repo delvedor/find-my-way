@@ -18,6 +18,11 @@ const isRegexSafe = require('safe-regex')
 const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
+const FULL_PATH_REGEXP = /^https?:\/\/.*\//
+
+if (!isRegexSafe(FULL_PATH_REGEXP)) {
+  throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
+}
 
 function Router (opts) {
   if (!(this instanceof Router)) {
@@ -329,6 +334,11 @@ Router.prototype.find = function find (method, path, version) {
   if (this.caseSensitive === false) {
     path = path.toLowerCase()
   }
+
+  if (path.charCodeAt(0) !== 47) { // 47 is '/'
+    path = path.replace(FULL_PATH_REGEXP, '/')
+  }
+
   var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null
