@@ -120,6 +120,10 @@ declare namespace Router {
       ctx?: Context
     ): void;
 
+    handle(
+        req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest
+    ): FindResult<V> | null;
+
     find(
       method: HTTPMethod,
       path: string,
