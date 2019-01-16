@@ -323,11 +323,15 @@ Router.prototype.off = function off (method, path) {
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, sanitizeUrl(req.url), req.headers['accept-version'])
+  var handle = this.handle(req)
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
     : handle.handler.call(ctx, req, res, handle.params, handle.store)
+}
+
+Router.prototype.handle = function handle (req) {
+  return this.find(req.method, sanitizeUrl(req.url), req.headers['accept-version'])
 }
 
 Router.prototype.find = function find (method, path, version) {
