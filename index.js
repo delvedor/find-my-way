@@ -529,6 +529,7 @@ Router.prototype.all = function (path, handler, store) {
 }
 
 module.exports = Router
+module.exports.sanitizeUrl = sanitizeUrl
 
 function sanitizeUrl (url) {
   for (var i = 0, len = url.length; i < len; i++) {
