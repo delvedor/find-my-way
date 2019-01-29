@@ -67,6 +67,16 @@ declare namespace Router {
       req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest,
       res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse
     ): void;
+
+    versioning? : {
+      storage() : {
+        get(version: String) : Handler<V> | null,
+        set(version: String, store: Handler<V>) : void,
+        del(version: String) : void,
+        empty() : void
+      },
+      deriveVersion<Context>(req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest, ctx?: Context) : String,
+    }
   }
 
   interface RouteOptions {
