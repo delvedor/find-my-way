@@ -84,7 +84,7 @@ Node.prototype.addChild = function (node) {
     }
 
     if (node !== this) {
-      node.parametricBrother = parametricBrother
+      node.parametricBrother = parametricBrother || node.parametricBrother
     }
 
     const labels = Object.keys(node.children)
