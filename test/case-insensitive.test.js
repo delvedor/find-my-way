@@ -21,6 +21,23 @@ test('case insensitive static routes of level 1', t => {
   findMyWay.lookup({ method: 'GET', url: '/WOO', headers: {} }, null)
 })
 
+test('case insensitive static routes of level 2', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    caseSensitive: false,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/foo/woo', (req, res, params) => {
+    t.pass('we should be here')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/FoO/WOO', headers: {} }, null)
+})
+
 test('case insensitive static routes of level 3', t => {
   t.plan(1)
 
@@ -49,7 +66,7 @@ test('parametric case insensitive', t => {
   })
 
   findMyWay.on('GET', '/foo/:param', (req, res, params) => {
-    t.equal(params.param, 'bar')
+    t.equal(params.param, 'bAR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/bAR', headers: {} }, null)
@@ -66,7 +83,7 @@ test('parametric case insensitive with a static part', t => {
   })
 
   findMyWay.on('GET', '/foo/my-:param', (req, res, params) => {
-    t.equal(params.param, 'bar')
+    t.equal(params.param, 'bAR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/MY-bAR', headers: {} }, null)
@@ -83,7 +100,7 @@ test('parametric case insensitive with capital letter', t => {
   })
 
   findMyWay.on('GET', '/foo/:Param', (req, res, params) => {
-    t.equal(params.Param, 'bar')
+    t.equal(params.Param, 'bAR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/bAR', headers: {} }, null)
@@ -100,10 +117,10 @@ test('case insensitive with capital letter in static path with param', t => {
   })
 
   findMyWay.on('GET', '/Foo/bar/:param', (req, res, params) => {
-    t.equal(params.param, 'baz')
+    t.equal(params.param, 'baZ')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/Foo/bar/baz', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/foo/bar/baZ', headers: {} }, null)
 })
 
 test('case insensitive with multiple paths containing capital letter in static path with param', t => {
@@ -121,13 +138,66 @@ test('case insensitive with multiple paths containing capital letter in static p
   })
 
   findMyWay.on('GET', '/Foo/bar/:param', (req, res, params) => {
-    t.equal(params.param, 'baz')
+    t.equal(params.param, 'baZ')
   })
 
   findMyWay.on('GET', '/Foo/baz/:param', (req, res, params) => {
-    t.equal(params.param, 'bar')
+    t.equal(params.param, 'baR')
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/Foo/bar/baz', headers: {} }, null)
-  findMyWay.lookup({ method: 'GET', url: '/Foo/baz/bar', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/foo/bar/baZ', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/foo/baz/baR', headers: {} }, null)
+})
+
+test('case insensitive with multiple mixed-case params within same slash couple', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay({
+    caseSensitive: false,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/foo/:param1-:param2', (req, res, params) => {
+    t.equal(params.param1, 'My')
+    t.equal(params.param2, 'bAR')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/FOO/My-bAR', headers: {} }, null)
+})
+
+test('case insensitive with multiple mixed-case params', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay({
+    caseSensitive: false,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/foo/:param1/:param2', (req, res, params) => {
+    t.equal(params.param1, 'My')
+    t.equal(params.param2, 'bAR')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/FOO/My/bAR', headers: {} }, null)
+})
+
+test('case insensitive with wildcard', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    caseSensitive: false,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/foo/*', (req, res, params) => {
+    t.equal(params['*'], 'baR')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/FOO/baR', headers: {} }, null)
 })
