@@ -351,7 +351,6 @@ Router.prototype.find = function find (method, path, version) {
     path = path.toLowerCase()
   }
 
-  var encodedPath
   var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null
@@ -448,8 +447,48 @@ Router.prototype.find = function find (method, path, version) {
       pathLenWildcard = pathLen
     }
 
-    currentNode = node
+    // parametric route
+    if (kind === NODE_TYPES.PARAM) {
+      currentNode = node
+      i = path.indexOf('/')
+      if (i === -1) i = pathLen
+      if (i > maxParamLength) return null
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      if (decoded === null) return null
+      params[pindex++] = decoded
+      path = path.slice(i)
+      idxInOriginalPath += i
+      continue
+    }
+
+    // wildcard route
+    if (kind === NODE_TYPES.MATCH_ALL) {
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath))
+      if (decoded === null) return null
+      params[pindex] = decoded
+      currentNode = node
+      path = ''
+      continue
+    }
+
+    // parametric(regex) route
+    if (kind === NODE_TYPES.REGEX) {
+      currentNode = node
+      i = path.indexOf('/')
+      if (i === -1) i = pathLen
+      if (i > maxParamLength) return null
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      if (decoded === null) return null
+      if (!node.regex.test(decoded)) return null
+      params[pindex++] = decoded
+      path = path.slice(i)
+      idxInOriginalPath += i
+      continue
+    }
+
+    // multiparametric route
     if (kind === NODE_TYPES.MULTI_PARAM) {
+      currentNode = node
       i = 0
       if (node.regex !== null) {
         var matchedParameter = path.match(node.regex)
@@ -459,21 +498,15 @@ Router.prototype.find = function find (method, path, version) {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
         if (i > maxParamLength) return null
       }
-    } else if (kind === NODE_TYPES.MATCH_ALL) {
-      i = pathLen
-    } else {
-      i = path.indexOf('/')
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      if (decoded === null) return null
+      params[pindex++] = decoded
+      path = path.slice(i)
+      idxInOriginalPath += i
+      continue
     }
 
-    if (i === -1) i = pathLen
-    if (i > maxParamLength) return null
-    encodedPath = originalPath.slice(idxInOriginalPath, idxInOriginalPath + i)
-    decoded = fastDecode(encodedPath)
-    if (decoded === null) return null
-    if (kind === NODE_TYPES.REGEX && !node.regex.test(decoded)) return null
-    params[pindex++] = decoded
-    path = path.slice(i)
-    idxInOriginalPath += i
+    wildcardNode = null
   }
 }
 
