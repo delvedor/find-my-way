@@ -1,6 +1,14 @@
 'use strict'
 
 const Benchmark = require('benchmark')
+// The default number of samples for Benchmark seems to be low enough that it
+// can generate results with significant variance (~2%) for this benchmark
+// suite. This makes it sometimes a bit confusing to actually evaluate impact of
+// changes on performance. Setting the minimum of samples to 500 results in
+// significantly lower variance on my local setup for this tests suite, and
+// gives me higher confidence in benchmark results.
+Benchmark.options.minSamples = 500
+
 const suite = Benchmark.Suite()
 
 const FindMyWay = require('./')
