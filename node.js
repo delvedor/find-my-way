@@ -234,7 +234,18 @@ function buildHandlers (handlers) {
     code += `this['${m}'] = handlers['${m}'] || null
     `
   }
-  return new Function('handlers', code) // eslint-disable-line
+
+  try {
+    return new Function('handlers', code) // eslint-disable-line
+  } catch(e) {
+    return function(_handlers) {
+      _handlers = _handlers || {};
+      for (var i = 0; i < http.METHODS.length; i++) {
+        var m = http.METHODS[i];
+        this[m] = _handlers[m] || null;
+      }
+    };
+  }
 }
 
 module.exports = Node
