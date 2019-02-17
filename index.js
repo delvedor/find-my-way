@@ -340,24 +340,26 @@ Router.prototype.lookup = function lookup (req, res, ctx) {
 }
 
 Router.prototype.find = function find (method, path, version) {
-  if (this.caseSensitive === false) {
-    path = path.toLowerCase()
-  }
-
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
+  }
+
+  var originalPath = path
+  var originalPathLength = path.length
+
+  if (this.caseSensitive === false) {
+    path = path.toLowerCase()
   }
 
   var maxParamLength = this.maxParamLength
   var currentNode = this.tree
   var wildcardNode = null
   var pathLenWildcard = 0
-  var originalPath = path
-  var originalPathLength = path.length
   var decoded = null
   var pindex = 0
   var params = []
   var i = 0
+  var idxInOriginalPath = 0
 
   while (true) {
     var pathLen = path.length
@@ -365,7 +367,6 @@ Router.prototype.find = function find (method, path, version) {
     var prefixLen = prefix.length
     var len = 0
     var previousPath = path
-
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = version === undefined
@@ -396,6 +397,7 @@ Router.prototype.find = function find (method, path, version) {
     if (len === prefixLen) {
       path = path.slice(len)
       pathLen = path.length
+      idxInOriginalPath += len
     }
 
     var node = version === undefined
@@ -415,10 +417,13 @@ Router.prototype.find = function find (method, path, version) {
         var pathDiff = originalPath.slice(0, originalPathLength - pathLen)
         previousPath = pathDiff.slice(pathDiff.lastIndexOf('/') + 1, pathDiff.length) + path
       }
+      idxInOriginalPath = idxInOriginalPath -
+        (previousPath.length - path.length)
       path = previousPath
       pathLen = previousPath.length
       len = prefixLen
     }
+
     var kind = node.kind
 
     // static route
@@ -448,16 +453,17 @@ Router.prototype.find = function find (method, path, version) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = fastDecode(path.slice(0, i))
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       if (decoded === null) return null
       params[pindex++] = decoded
       path = path.slice(i)
+      idxInOriginalPath += i
       continue
     }
 
     // wildcard route
     if (kind === NODE_TYPES.MATCH_ALL) {
-      decoded = fastDecode(path)
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath))
       if (decoded === null) return null
       params[pindex] = decoded
       currentNode = node
@@ -471,11 +477,12 @@ Router.prototype.find = function find (method, path, version) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = fastDecode(path.slice(0, i))
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       if (decoded === null) return null
       if (!node.regex.test(decoded)) return null
       params[pindex++] = decoded
       path = path.slice(i)
+      idxInOriginalPath += i
       continue
     }
 
@@ -491,10 +498,11 @@ Router.prototype.find = function find (method, path, version) {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
         if (i > maxParamLength) return null
       }
-      decoded = fastDecode(path.slice(0, i))
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       if (decoded === null) return null
       params[pindex++] = decoded
       path = path.slice(i)
+      idxInOriginalPath += i
       continue
     }
 
