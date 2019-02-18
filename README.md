@@ -350,4 +350,4 @@ It is inspired by the [echo](https://github.com/labstack/echo) router, some part
 **[find-my-way - MIT](https://github.com/delvedor/find-my-way/blob/master/LICENSE)**<br>
 **[trekjs/router - MIT](https://github.com/trekjs/router/blob/master/LICENSE)**
 
-Copyright © 2017 Tomas Della Vedova
+Copyright © 2017-2019 Tomas Della Vedova
