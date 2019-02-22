@@ -6,9 +6,11 @@
   "typings": "index.d.ts",
   "scripts": {
     "bench": "node bench.js",
+    "test:lint": "standard",
     "test:typescript": "tsc --project ./test/types/tsconfig.json",
-    "test": "standard && tap -j4 test/*.test.js && npm run test:typescript",
-    "coveralls": "tap -j4 test/*.test.js --cov --coverage-report=text-lcov | coveralls;"
+    "test": "standard && tap -J test/*.test.js && npm run test:typescript",
+    "test:report": "tap -J test/*.test.js --cov --coverage-report=html --coverage-report=cobertura | tee out.tap",
+    "test:reporter": "tap-mocha-reporter xunit < out.tap > test/junit-testresults.xml"
   },
   "repository": {
     "type": "git",
@@ -33,11 +35,11 @@
   "devDependencies": {
     "@types/node": "^11.9.4",
     "benchmark": "^2.1.4",
-    "coveralls": "^3.0.2",
     "pre-commit": "^1.2.2",
     "request": "^2.88.0",
     "standard": "^12.0.1",
     "tap": "^12.5.3",
+    "tap-mocha-reporter": "^3.0.9",
     "typescript": "^3.3.3"
   },
   "dependencies": {
