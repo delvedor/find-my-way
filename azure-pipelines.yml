@@ -27,11 +27,8 @@ steps:
   - bash: npm run test:typescript
     displayName: Typings
 
-  - bash: npm test:report
-    displayName: Run tests
-
-  - bash: npm run report:junit
-    condition: succeededOrFailed()
+  - bash: npm run test:report && npm run test:reporter
+    displayName: Test
 
   - task: PublishTestResults@2
     displayName: "Publish Test Results"
