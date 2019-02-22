@@ -21,5 +21,21 @@ steps:
   - bash: npm install
     displayName: Install dependencies
 
-  - bash: npm test
+  - bash: npm run test:lint
+    displayName: Linter
+
+  - bash: npm run test:typescript
+    displayName: Typings
+
+  - bash: npm test:report
     displayName: Run tests
+
+  - bash: npm run report:junit
+    condition: succeededOrFailed()
+
+  - task: PublishTestResults@2
+    displayName: "Publish Test Results"
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: "**test/junit-testresults.xml"
+      testRunTitle: TestRun $(node_version)
