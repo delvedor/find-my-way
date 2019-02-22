@@ -37,9 +37,9 @@ steps:
       testResultsFiles: "**test/junit-testresults.xml"
       testRunTitle: TestRun $(node_version)
 
-  - task: PublishCodeCoverageResults@3
+  - task: PublishCodeCoverageResults@1
     displayName: "Publish code coverage results"
-    condition: succeededOrFailed()
+    condition: succeeded()
     inputs:
       codeCoverageTool: "cobertura"
       summaryFileLocation: "**/coverage/cobertura-coverage.xml"
