@@ -36,3 +36,10 @@ steps:
     inputs:
       testResultsFiles: "**test/junit-testresults.xml"
       testRunTitle: TestRun $(node_version)
+
+  - task: PublishCodeCoverageResults@3
+    displayName: "Publish code coverage results"
+    condition: succeededOrFailed()
+    inputs:
+      codeCoverageTool: "cobertura"
+      summaryFileLocation: "**/coverage/cobertura-coverage.xml"
