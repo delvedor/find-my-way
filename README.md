@@ -339,7 +339,9 @@ console.log(findMyWay.prettyPrint())
 #### routes
 Return the all routes **registered** at moment, useful for debugging.
 
-```
+```js
+const findMyWay = require('find-my-way')()
+
 findMyWay.on('GET', '/test', () => {})
 findMyWay.on('GET', '/test/hello', () => {})
 
