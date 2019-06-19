@@ -42,5 +42,5 @@ test('verify routes registered and deregister', t => {
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
   t.strictEqual(findMyWay.routes.length, quantity)
   findMyWay.off('GET', '/test-route-0')
-  t.notEqual(findMyWay.routes.length, quantity)
+  t.strictEqual(findMyWay.routes.length, quantity - 1)
 })
