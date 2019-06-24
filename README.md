@@ -335,6 +335,36 @@ console.log(findMyWay.prettyPrint())
 //   └── hello/world (GET)
 ```
 
+<a name="routes"></a>
+#### routes
+Return the all routes **registered** at moment, useful for debugging.
+
+```js
+const findMyWay = require('find-my-way')()
+
+findMyWay.on('GET', '/test', () => {})
+findMyWay.on('GET', '/test/hello', () => {})
+
+console.log(findMyWay.routes)
+// Will print
+// [ 
+//   { 
+//     method: 'GET',
+//     path: '/test',
+//     opts: {},
+//     handler: [Function],
+//     store: undefined 
+//   },
+//   { 
+//     method: 'GET',
+//     path: '/test/hello',
+//     opts: {},
+//     handler: [Function],
+//     store: undefined 
+//   } 
+// ]
+```
+
 <a name="acknowledgements"></a>
 ## Acknowledgements
 
