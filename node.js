@@ -203,7 +203,7 @@ Node.prototype.prettyPrint = function (prefix, tail) {
           paramName += param + ` (${method})\n`
           return
         }
-        paramName += '    ' + prefix + ':' + param + ` (${method})`
+        paramName += prefix + '    :' + param + ` (${method})`
         paramName += (index === methods.length - 1 ? '' : '\n')
       } else {
         paramName = params[params.length - 1] + ` (${method})`
