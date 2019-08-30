@@ -90,3 +90,27 @@ test('pretty print - wildcard routes', t => {
   t.is(typeof tree, 'string')
   t.equal(tree, expected)
 })
+
+test('pretty print - parametric routes with same parent and followed by a static route which has the same prefix with the former routes', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+  findMyWay.on('GET', '/test', () => {})
+  findMyWay.on('GET', '/test/hello/:id', () => {})
+  findMyWay.on('POST', '/test/hello/:id', () => {})
+  findMyWay.on('GET', '/test/helloworld', () => {})
+
+  const tree = findMyWay.prettyPrint()
+
+  const expected = `└── /
+    └── test (GET)
+        └── /hello
+            ├── /
+            │   └── :id (GET)
+            │       :id (POST)
+            └── world (GET)
+`
+
+  t.is(typeof tree, 'string')
+  t.equal(tree, expected)
+})
