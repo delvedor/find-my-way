@@ -429,7 +429,7 @@ Router.prototype.find = function find (method, path, version) {
     // static route
     if (kind === NODE_TYPES.STATIC) {
       // if exist, save the wildcard child
-      if (currentNode.wildcardChild !== null) {
+      if (currentNode.wildcardChild !== null && currentNode.wildcardChild.handlers[method] !== null) {
         wildcardNode = currentNode.wildcardChild
         pathLenWildcard = pathLen
       }
@@ -442,7 +442,7 @@ Router.prototype.find = function find (method, path, version) {
     }
 
     // if exist, save the wildcard child
-    if (currentNode.wildcardChild !== null) {
+    if (currentNode.wildcardChild !== null && currentNode.wildcardChild.handlers[method] !== null) {
       wildcardNode = currentNode.wildcardChild
       pathLenWildcard = pathLen
     }
