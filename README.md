@@ -48,6 +48,16 @@ const router = require('find-my-way')({
 })
 ```
 
+In case of a badly formatted url *(eg: `/hello/%world`)*, by default `find-my-way` will invoke the `defaultRoute`, unless you specify the `onBadUrl` option:
+```js
+const router = require('find-my-way')({
+  onBadUrl: (path, req, res) => {
+    res.statusCode = 400
+    res.end(`Bad path: ${path}`)
+  }
+})
+```
+
 Trailing slashes can be ignored by supplying the `ignoreTrailingSlash` option:
 ```js
 const router = require('find-my-way')({
@@ -347,21 +357,21 @@ findMyWay.on('GET', '/test/hello', () => {})
 
 console.log(findMyWay.routes)
 // Will print
-// [ 
-//   { 
+// [
+//   {
 //     method: 'GET',
 //     path: '/test',
 //     opts: {},
 //     handler: [Function],
-//     store: undefined 
+//     store: undefined
 //   },
-//   { 
+//   {
 //     method: 'GET',
 //     path: '/test/hello',
 //     opts: {},
 //     handler: [Function],
-//     store: undefined 
-//   } 
+//     store: undefined
+//   }
 // ]
 ```
 
