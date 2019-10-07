@@ -39,6 +39,13 @@ function Router (opts) {
     this.defaultRoute = null
   }
 
+  if (opts.onBadUrl) {
+    assert(typeof opts.onBadUrl === 'function', 'The bad url handler must be a function')
+    this.onBadUrl = opts.onBadUrl
+  } else {
+    this.onBadUrl = null
+  }
+
   this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
@@ -407,7 +414,7 @@ Router.prototype.find = function find (method, path, version) {
     if (node === null) {
       node = currentNode.parametricBrother
       if (node === null) {
-        return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+        return this._getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
       }
 
       if (originalPath.indexOf('/' + previousPath) === -1) {
@@ -438,7 +445,7 @@ Router.prototype.find = function find (method, path, version) {
     }
 
     if (len !== prefixLen) {
-      return getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+      return this._getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
     }
 
     // if exist, save the wildcard child
@@ -454,7 +461,11 @@ Router.prototype.find = function find (method, path, version) {
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
       decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-      if (decoded === null) return null
+      if (decoded === null) {
+        return this.onBadUrl !== null
+          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+          : null
+      }
       params[pindex++] = decoded
       path = path.slice(i)
       idxInOriginalPath += i
@@ -464,7 +475,11 @@ Router.prototype.find = function find (method, path, version) {
     // wildcard route
     if (kind === NODE_TYPES.MATCH_ALL) {
       decoded = fastDecode(originalPath.slice(idxInOriginalPath))
-      if (decoded === null) return null
+      if (decoded === null) {
+        return this.onBadUrl !== null
+          ? this._onBadUrl(originalPath.slice(idxInOriginalPath))
+          : null
+      }
       params[pindex] = decoded
       currentNode = node
       path = ''
@@ -478,7 +493,11 @@ Router.prototype.find = function find (method, path, version) {
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
       decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-      if (decoded === null) return null
+      if (decoded === null) {
+        return this.onBadUrl !== null
+          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+          : null
+      }
       if (!node.regex.test(decoded)) return null
       params[pindex++] = decoded
       path = path.slice(i)
@@ -499,7 +518,11 @@ Router.prototype.find = function find (method, path, version) {
         if (i > maxParamLength) return null
       }
       decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-      if (decoded === null) return null
+      if (decoded === null) {
+        return this.onBadUrl !== null
+          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+          : null
+      }
       params[pindex++] = decoded
       path = path.slice(i)
       idxInOriginalPath += i
@@ -510,6 +533,25 @@ Router.prototype.find = function find (method, path, version) {
   }
 }
 
+Router.prototype._getWildcardNode = function (node, method, path, len) {
+  if (node === null) return null
+  var decoded = fastDecode(path.slice(-len))
+  if (decoded === null) {
+    return this.onBadUrl !== null
+      ? this._onBadUrl(path.slice(-len))
+      : null
+  }
+  var handle = node.handlers[method]
+  if (handle !== null && handle !== undefined) {
+    return {
+      handler: handle.handler,
+      params: { '*': decoded },
+      store: handle.store
+    }
+  }
+  return null
+}
+
 Router.prototype._defaultRoute = function (req, res, ctx) {
   if (this.defaultRoute !== null) {
     return ctx === undefined
@@ -518,6 +560,15 @@ Router.prototype._defaultRoute = function (req, res, ctx) {
   } else {
     res.statusCode = 404
     res.end()
+  }
+}
+
+Router.prototype._onBadUrl = function (path) {
+  const onBadUrl = this.onBadUrl
+  return {
+    handler: (req, res, ctx) => onBadUrl(path, req, res),
+    params: {},
+    store: null
   }
 }
 
@@ -554,21 +605,6 @@ function sanitizeUrl (url) {
     }
   }
   return url
-}
-
-function getWildcardNode (node, method, path, len) {
-  if (node === null) return null
-  var decoded = fastDecode(path.slice(-len))
-  if (decoded === null) return null
-  var handle = node.handlers[method]
-  if (handle !== null && handle !== undefined) {
-    return {
-      handler: handle.handler,
-      params: { '*': decoded },
-      store: handle.store
-    }
-  }
-  return null
 }
 
 function getClosingParenthensePosition (path, idx) {
