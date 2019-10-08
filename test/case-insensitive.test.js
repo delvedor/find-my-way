@@ -203,7 +203,7 @@ test('case insensitive with wildcard', t => {
 })
 
 test('parametric case insensitive with multiple routes', t => {
-  t.plan(4)
+  t.plan(6)
 
   const findMyWay = FindMyWay({
     caseSensitive: false,
@@ -220,7 +220,12 @@ test('parametric case insensitive with multiple routes', t => {
     t.equal(params.param, 'Bar')
     t.equal(params.userId, 'two')
   })
+  findMyWay.on('POST', '/foo/:param/Static/:userId/CANCEL', (req, res, params) => {
+    t.equal(params.param, 'bAR')
+    t.equal(params.userId, 'THREE')
+  })
 
   findMyWay.lookup({ method: 'POST', url: '/foo/bAR/static/one/SAVE', headers: {} }, null)
-  findMyWay.lookup({ method: 'POST', url: '/foo/Bar/static/two/update', headers: {} }, null)
+  findMyWay.lookup({ method: 'POST', url: '/fOO/Bar/Static/two/update', headers: {} }, null)
+  findMyWay.lookup({ method: 'POST', url: '/Foo/bAR/STATIC/THREE/cAnCeL', headers: {} }, null)
 })
