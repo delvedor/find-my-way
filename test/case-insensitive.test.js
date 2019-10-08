@@ -201,3 +201,26 @@ test('case insensitive with wildcard', t => {
 
   findMyWay.lookup({ method: 'GET', url: '/FOO/baR', headers: {} }, null)
 })
+
+test('parametric case insensitive with multiple routes', t => {
+  t.plan(4)
+
+  const findMyWay = FindMyWay({
+    caseSensitive: false,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('POST', '/foo/:param/Static/:userId/Save', (req, res, params) => {
+    t.equal(params.param, 'bAR')
+    t.equal(params.userId, 'one')
+  })
+  findMyWay.on('POST', '/foo/:param/Static/:userId/Update', (req, res, params) => {
+    t.equal(params.param, 'Bar')
+    t.equal(params.userId, 'two')
+  })
+
+  findMyWay.lookup({ method: 'POST', url: '/foo/bAR/static/one/SAVE', headers: {} }, null)
+  findMyWay.lookup({ method: 'POST', url: '/foo/Bar/static/two/update', headers: {} }, null)
+})
