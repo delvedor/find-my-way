@@ -14,6 +14,11 @@ const http1Router = Router({
     const request: IncomingMessage = req;
     const response: ServerResponse = res;
     response.end(request.url);
+  },
+  onBadUrl(path, req, res) {
+    const request: IncomingMessage = req;
+    const response: ServerResponse = res;
+    response.end(request.url + path);
   }
 });
 
@@ -70,6 +75,11 @@ const http2Router = Router<Router.HTTPVersion.V2>({
     const request: Http2ServerRequest = req;
     const response: Http2ServerResponse = res;
     response.end(request.url);
+  },
+  onBadUrl(path, req, res) {
+    const request: Http2ServerRequest = req;
+    const response: Http2ServerResponse = res;
+    response.end(request.url + path);
   }
 });
 
