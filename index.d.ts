@@ -68,6 +68,12 @@ declare namespace Router {
       res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse
     ): void;
 
+    onBadUrl?(
+      path: string,
+      req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest,
+      res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse
+    ): void;
+
     versioning? : {
       storage() : {
         get(version: String) : Handler<V> | null,
