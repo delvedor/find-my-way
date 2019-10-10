@@ -119,7 +119,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       }
 
       // add the static part of the route to the tree
-      this._insert(method, staticPart, 0, null, null, null, null, version)
+      this._insert(method, staticPart, NODE_TYPES.STATIC, null, null, null, null, version)
 
       // isolate the parameter name
       var isRegex = false
@@ -164,15 +164,19 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         return this._insert(method, completedPath, nodeType, params, handler, store, regex, version)
       }
       // add the parameter and continue with the search
-      this._insert(method, path.slice(0, i), nodeType, params, null, null, regex, version)
+      staticPart = path.slice(0, i)
+      if (this.caseSensitive === false) {
+        staticPart = staticPart.toLowerCase()
+      }
+      this._insert(method, staticPart, nodeType, params, null, null, regex, version)
 
       i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
-      this._insert(method, path.slice(0, i), 0, null, null, null, null, version)
+      this._insert(method, path.slice(0, i), NODE_TYPES.STATIC, null, null, null, null, version)
       // add the wildcard parameter
       params.push('*')
-      return this._insert(method, path.slice(0, len), 2, params, handler, store, null, version)
+      return this._insert(method, path.slice(0, len), NODE_TYPES.MATCH_ALL, params, handler, store, null, version)
     }
   }
 
@@ -181,7 +185,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   }
 
   // static route
-  this._insert(method, path, 0, params, handler, store, null, version)
+  this._insert(method, path, NODE_TYPES.STATIC, params, handler, store, null, version)
 }
 
 Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, version) {
