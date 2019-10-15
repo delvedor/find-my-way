@@ -198,19 +198,22 @@ Node.prototype.prettyPrint = function (prefix, tail) {
     methods.forEach((method, index) => {
       var params = this.handlers[method].params
       var param = params[params.length - 1]
+      var methodHandler = handlers[method].handler.name.length > 0 ? ` (${method}) ${handlers[method].handler.name}` : ` (${method})`
       if (methods.length > 1) {
         if (index === 0) {
-          paramName += param + ` (${method})\n`
+          paramName += param + `${methodHandler}\n`
           return
         }
-        paramName += prefix + '    :' + param + ` (${method})`
+        paramName += prefix + '    :' + param + methodHandler
         paramName += (index === methods.length - 1 ? '' : '\n')
       } else {
-        paramName = params[params.length - 1] + ` (${method})`
+        paramName = params[params.length - 1] + methodHandler
       }
     })
   } else if (methods.length) {
-    paramName = ` (${methods.join('|')})`
+    var endpointHandlers = methods
+      .map(method => handlers[method].handler.name.length > 0 ? `(${method}) ${handlers[method].handler.name}` : `(${method})`)
+    paramName = ` ${endpointHandlers.join('|')}`
   }
 
   var tree = `${prefix}${tail ? '└── ' : '├── '}${this.prefix}${paramName}\n`

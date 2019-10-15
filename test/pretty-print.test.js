@@ -24,6 +24,25 @@ test('pretty print - static routes', t => {
   t.equal(tree, expected)
 })
 
+test('pretty print - static routes with named functions', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+  findMyWay.on('GET', '/test', function handler () {})
+  findMyWay.on('POST', '/test/hello', function handler2 () {})
+  findMyWay.on('PUT', '/hello/world', function handler3 () {})
+
+  const tree = findMyWay.prettyPrint()
+
+  const expected = `└── /
+    ├── test (GET) handler
+    │   └── /hello (POST) handler2
+    └── hello/world (PUT) handler3
+`
+  t.is(typeof tree, 'string')
+  t.equal(tree, expected)
+})
+
 test('pretty print - parametric routes', t => {
   t.plan(2)
 
@@ -109,6 +128,30 @@ test('pretty print - parametric routes with same parent and followed by a static
             │   └── :id (GET)
             │       :id (POST)
             └── world (GET)
+`
+
+  t.is(typeof tree, 'string')
+  t.equal(tree, expected)
+})
+
+test('pretty print - parametric routes with named functions', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+  findMyWay.on('GET', '/test', function handler () {})
+  findMyWay.on('GET', '/test/hello/:id', function handler2 () {})
+  findMyWay.on('POST', '/test/hello/:id', function handler3 () {})
+  findMyWay.on('GET', '/test/helloworld', function handler4 () {})
+
+  const tree = findMyWay.prettyPrint()
+
+  const expected = `└── /
+    └── test (GET) handler
+        └── /hello
+            ├── /
+            │   └── :id (GET) handler2
+            │       :id (POST) handler3
+            └── world (GET) handler4
 `
 
   t.is(typeof tree, 'string')
