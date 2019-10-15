@@ -335,13 +335,13 @@ router.find('GET', '/example', '1.x')
 Prints the representation of the internal radix tree, useful for debugging.
 ```js
 findMyWay.on('GET', '/test', () => {})
-findMyWay.on('GET', '/test/hello', () => {})
+findMyWay.on('GET', '/test/hello', function handler (){})
 findMyWay.on('GET', '/hello/world', () => {})
 
 console.log(findMyWay.prettyPrint())
 // └── /
 //   ├── test (GET)
-//   │   └── /hello (GET)
+//   │   └── /hello (GET) handler
 //   └── hello/world (GET)
 ```
 
