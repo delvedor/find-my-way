@@ -47,9 +47,12 @@ declare namespace Router {
     | 'UNLOCK'
     | 'UNSUBSCRIBE';
 
+  type Req<V> = V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest;
+  type Res<V> = V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse;
+
   type Handler<V extends HTTPVersion> = (
-    req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest,
-    res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse,
+    req: Req<V>,
+    res: Res<V>,
     params: { [k: string]: string | undefined },
     store: any
   ) => void;
@@ -64,14 +67,14 @@ declare namespace Router {
     maxParamLength?: number;
 
     defaultRoute?(
-      req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest,
-      res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse
+      req: Req<V>,
+      res: Res<V>
     ): void;
 
     onBadUrl?(
       path: string,
-      req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest,
-      res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse
+      req: Req<V>,
+      res: Res<V>
     ): void;
 
     versioning? : {
@@ -81,7 +84,7 @@ declare namespace Router {
         del(version: String) : void,
         empty() : void
       },
-      deriveVersion<Context>(req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest, ctx?: Context) : String,
+      deriveVersion<Context>(req: Req<V>, ctx?: Context) : String,
     }
   }
 
@@ -131,8 +134,8 @@ declare namespace Router {
     off(method: HTTPMethod | HTTPMethod[], path: string): void;
 
     lookup<Context>(
-      req: V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest,
-      res: V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse,
+      req: Req<V>,
+      res: Res<V>,
       ctx?: Context
     ): void;
 
