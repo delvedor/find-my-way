@@ -212,9 +212,9 @@ function traverseTree (node) {
   } else if (routes.length === 1) {
     const currentRoute = routes[0]
     if (node.prefix === ':') {
-      node.label = `:${currentRoute[1].params.join(':')} (${currentRoute[0]})`
+      node.label = `:${currentRoute[1].params.join(':')} (${currentRoute[0]}) ${currentRoute[1].handler.name}`
     } else {
-      node.label = `${node.prefix} (${currentRoute[0]})`
+      node.label = `${node.prefix} (${currentRoute[0]}) ${currentRoute[1].handler.name}`
     }
   } else {
     node.label = archy({
@@ -223,9 +223,9 @@ function traverseTree (node) {
         let label
         // The & is to later find this branches and fix them
         if (node.prefix === ':') {
-          label = `&:${route[1].params.join()} (${route[0]})`
+          label = `&:${route[1].params.join()} (${route[0]}) ${route[0][1].handler.name}`
         } else {
-          label = `&(${route[0]})`
+          label = `&(${route[0]}) ${route[0][1].handler.name}`
         }
 
         return { label: label }
