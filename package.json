@@ -43,6 +43,7 @@
     "typescript": "^3.3.3"
   },
   "dependencies": {
+    "archy": "^1.0.0",
     "fast-decode-uri-component": "^1.0.0",
     "safe-regex2": "^2.0.0",
     "semver-store": "^0.3.0"

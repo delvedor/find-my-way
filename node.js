@@ -2,6 +2,7 @@
 
 const assert = require('assert')
 const http = require('http')
+const archy = require('archy')
 const Handlers = buildHandlers()
 
 const types = {
@@ -187,6 +188,62 @@ Node.prototype.getHandler = function (method) {
 Node.prototype.getVersionHandler = function (version, method) {
   var handlers = this.versions.get(version)
   return handlers === null ? handlers : handlers[method]
+}
+
+Node.prototype.prettyPrintNew = function () {
+  const tree = { ...this }
+  traverseTree(tree)
+
+  // Moneky patch needed for the routes that have multiple handlers
+  return archy(tree)
+    .replace(/─┬/g, '')
+    .replace(/│ ├── &/g, '├── ')
+    .replace(/│ └── &/g, '├── ')
+}
+
+function traverseTree (node) {
+  // Remove the keys with null value, end up with [ ['GET', { handler }] ]
+  const routes = Object.entries(node.handlers).filter(object => object[1] !== null)
+
+  // Map to label and nodes, this format is needed by archy
+  node.nodes = mapChildredToArray(node.children)
+  if (routes.length === 0) {
+    node.label = node.prefix
+  } else if (routes.length === 1) {
+    const currentRoute = routes[0]
+    if (node.prefix === ':') {
+      node.label = `:${currentRoute[1].params.join(':')} (${currentRoute[0]})`
+    } else {
+      node.label = `${node.prefix} (${currentRoute[0]})`
+    }
+  } else {
+    node.label = archy({
+      label: node.prefix,
+      nodes: routes.map(route => {
+        let label
+        // The & is to later find this branches and fix them
+        if (node.prefix === ':') {
+          label = `&:${route[1].params.join()} (${route[0]})`
+        } else {
+          label = `&(${route[0]})`
+        }
+
+        return { label: label }
+      })
+    })
+  }
+
+  const numberOfChildren = Object.keys(node.nodes).length
+  if (numberOfChildren !== 0) {
+    const labels = Object.keys(node.nodes)
+    for (let i = 0; numberOfChildren > i; i++) {
+      traverseTree(node.nodes[labels[i]])
+    }
+  }
+}
+
+function mapChildredToArray (children) {
+  return Object.keys(children).map(i => children[i])
 }
 
 Node.prototype.prettyPrint = function (prefix, tail) {
