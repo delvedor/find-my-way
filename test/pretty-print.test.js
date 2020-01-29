@@ -114,3 +114,24 @@ test('pretty print - parametric routes with same parent and followed by a static
   t.is(typeof tree, 'string')
   t.equal(tree, expected)
 })
+
+test('pretty print - handle multiple handlers in parametric route properly', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+  findMyWay.on('GET', '/:a', () => {})
+  findMyWay.on('POST', '/:b', () => {})
+  findMyWay.on('POST', '/c', () => {})
+
+  const tree = findMyWay.prettyPrint()
+
+  const expected = `/
+  ├── :
+  │   ├── :a (GET) 
+  │   └── :b (POST) 
+  │   
+  └── c (POST) `
+
+  t.is(typeof tree, 'string')
+  t.equal(tree, expected)
+})
