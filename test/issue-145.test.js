@@ -4,7 +4,7 @@ const t = require('tap')
 const FindMyWay = require('../')
 
 t.test('issue-145', (t) => {
-  t.plan(4)
+  t.plan(8)
 
   const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
 
@@ -14,7 +14,11 @@ t.test('issue-145', (t) => {
   findMyWay.on('GET', '/a/:pam/c', varPath)
 
   t.equals(findMyWay.find('GET', '/a/b').handler, fixedPath)
+  t.equals(findMyWay.find('GET', '/a/b/').handler, fixedPath)
   t.equals(findMyWay.find('GET', '/a/b/c').handler, varPath)
+  t.equals(findMyWay.find('GET', '/a/b/c/').handler, varPath)
   t.equals(findMyWay.find('GET', '/a/foo/c').handler, varPath)
+  t.equals(findMyWay.find('GET', '/a/foo/c/').handler, varPath)
   t.notOk(findMyWay.find('GET', '/a/c'))
+  t.notOk(findMyWay.find('GET', '/a/c/'))
 })
