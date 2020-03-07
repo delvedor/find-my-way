@@ -421,7 +421,8 @@ Router.prototype.find = function find (method, path, version) {
         return this._getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
       }
 
-      if (originalPath.indexOf('/' + previousPath) === -1) {
+      var goBack = this.ignoreTrailingSlash ? previousPath : '/' + previousPath
+      if (originalPath.indexOf(goBack) === -1) {
         // we need to know the outstanding path so far from the originalPath since the last encountered "/" and assign it to previousPath.
         // e.g originalPath: /aa/bbb/cc, path: bb/cc
         // outstanding path: /bbb/cc
