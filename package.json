@@ -1,6 +1,6 @@
 {
   "name": "find-my-way",
-  "version": "2.2.2",
+  "version": "3.0.0",
   "description": "Crazy fast http radix based router",
   "main": "index.js",
   "typings": "index.d.ts",
@@ -24,7 +24,7 @@
     "speed"
   ],
   "engines": {
-    "node": ">=6"
+    "node": ">=10"
   },
   "author": "Tomas Della Vedova - @delvedor (http://delved.org)",
   "license": "MIT",
