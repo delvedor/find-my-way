@@ -37,9 +37,9 @@
     "benchmark": "^2.1.4",
     "pre-commit": "^1.2.2",
     "request": "^2.88.0",
-    "standard": "^12.0.1",
-    "tap": "^12.5.3",
-    "tap-mocha-reporter": "^3.0.9",
+    "standard": "^14.0.0",
+    "tap": "^14.0.0",
+    "tap-mocha-reporter": "^5.0.1",
     "typescript": "^3.3.3"
   },
   "dependencies": {
