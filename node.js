@@ -122,7 +122,12 @@ Node.prototype.findChild = function (path, method) {
     }
   }
 
-  child = this.children[':'] || this.children['*']
+  child = this.children[':']
+  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
+    return child
+  }
+
+  child = this.children['*']
   if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
     return child
   }
@@ -138,7 +143,12 @@ Node.prototype.findVersionChild = function (version, path, method) {
     }
   }
 
-  child = this.children[':'] || this.children['*']
+  child = this.children[':']
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+    return child
+  }
+
+  child = this.children['*']
   if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
     return child
   }
