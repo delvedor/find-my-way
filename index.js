@@ -18,7 +18,7 @@ const isRegexSafe = require('safe-regex2')
 const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
-const FULL_PATH_REGEXP = /^https?:\/\/.*\//
+const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 
 if (!isRegexSafe(FULL_PATH_REGEXP)) {
   throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
