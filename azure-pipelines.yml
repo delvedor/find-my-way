@@ -9,6 +9,8 @@ strategy:
       node_version: 12.x
     node_13_x:
       node_version: 13.x
+    node_14_x:
+      node_version: 14.x
 
 steps:
   - task: NodeTool@0
