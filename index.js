@@ -94,7 +94,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
 
   // version validation
-  if (opts.hasOwnProperty('version')) {
+  if (opts.version !== undefined) {
     assert(typeof opts.version === 'string', 'Version should be a string')
   }
 
