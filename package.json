@@ -3,11 +3,11 @@
   "version": "3.0.1",
   "description": "Crazy fast http radix based router",
   "main": "index.js",
-  "typings": "index.d.ts",
+  "types": "index.d.ts",
   "scripts": {
     "bench": "node bench.js",
     "test:lint": "standard",
-    "test:typescript": "tsc --project ./test/types/tsconfig.json",
+    "test:typescript": "tsd",
     "test": "standard && tap -J test/*.test.js && npm run test:typescript",
     "test:report": "tap -J test/*.test.js --cov --coverage-report=html --coverage-report=cobertura | tee out.tap",
     "test:reporter": "tap-mocha-reporter xunit < out.tap > test/junit-testresults.xml"
@@ -33,18 +33,21 @@
   },
   "homepage": "https://github.com/delvedor/find-my-way#readme",
   "devDependencies": {
-    "@types/node": "^11.9.4",
+    "@types/node": "^14.0.27",
     "benchmark": "^2.1.4",
     "pre-commit": "^1.2.2",
-    "request": "^2.88.0",
-    "standard": "^14.0.0",
-    "tap": "^14.0.0",
+    "request": "^2.88.2",
+    "standard": "^14.3.4",
+    "tap": "^14.10.8",
     "tap-mocha-reporter": "^5.0.1",
-    "typescript": "^3.3.3"
+    "tsd": "^0.13.1"
   },
   "dependencies": {
-    "fast-decode-uri-component": "^1.0.0",
+    "fast-decode-uri-component": "^1.0.1",
     "safe-regex2": "^2.0.0",
     "semver-store": "^0.3.0"
+  },
+  "tsd": {
+    "directory": "test/types"
   }
 }
