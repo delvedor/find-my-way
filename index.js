@@ -350,7 +350,7 @@ Router.prototype.off = function off (method, path) {
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, sanitizeUrl(req.url), this.versioning.deriveVersion(req, ctx))
+  var handle = this.find(req.method, req.url, this.versioning.deriveVersion(req, ctx))
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
@@ -358,6 +358,9 @@ Router.prototype.lookup = function lookup (req, res, ctx) {
 }
 
 Router.prototype.find = function find (method, path, version) {
+
+  path = sanitizeUrl(path);
+
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
