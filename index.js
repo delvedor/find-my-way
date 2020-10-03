@@ -24,7 +24,7 @@ if (!isRegexSafe(FULL_PATH_REGEXP)) {
   throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
 }
 
-const acceptVersionStrategy = require('./lib/accept-version')
+const acceptConstraints = require('./lib/accept-constraints')
 
 function Router (opts) {
   if (!(this instanceof Router)) {
@@ -50,8 +50,8 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  this.versioning = opts.versioning || acceptVersionStrategy
-  this.tree = new Node({ versions: this.versioning.storage() })
+  this.constraining = acceptConstraints(opts.constrainingStrategies)
+  this.tree = new Node({ constraints: this.constraining.storage() })
   this.routes = []
 }
 
