@@ -117,42 +117,21 @@ Node.prototype.findByLabel = function (path) {
   return this.children[path[0]]
 }
 
-Node.prototype.findChild = function (path, method) {
+Node.prototype.findMatchingChild = function (constraintsExtractor, path, method) {
   var child = this.children[path[0]]
-  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(constraintsExtractor, method) !== null)) {
     if (path.slice(0, child.prefix.length) === child.prefix) {
       return child
     }
   }
 
   child = this.children[':']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(constraintsExtractor, method) !== null)) {
     return child
   }
 
   child = this.children['*']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
-    return child
-  }
-
-  return null
-}
-
-Node.prototype.findVersionChild = function (version, path, method) {
-  var child = this.children[path[0]]
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
-    if (path.slice(0, child.prefix.length) === child.prefix) {
-      return child
-    }
-  }
-
-  child = this.children[':']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
-    return child
-  }
-
-  child = this.children['*']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(constraintsExtractor, method) !== null)) {
     return child
   }
 
