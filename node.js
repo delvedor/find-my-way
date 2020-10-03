@@ -164,7 +164,7 @@ Node.prototype.setHandler = function (method, handler, params, store) {
 
   assert(
     this.handlers[method] !== undefined,
-    `There is already an handler with method '${method}'`
+    `There is already a handler with method '${method}'`
   )
 
   this.handlers[method] = {
