@@ -25,7 +25,8 @@ function Node(options) {
   this.regex = options.regex || null
   this.wildcardChild = null
   this.parametricBrother = null
-  this.versions = options.versions
+  // kConstraints allows us to know which constraints we need to extract from the request
+  this.kConstraints = new Set()
   this.constraintsStorage = options.constraints
 }
 
@@ -99,7 +100,7 @@ Node.prototype.addChild = function (node) {
   return this
 }
 
-Node.prototype.reset = function (prefix, versions) {
+Node.prototype.reset = function (prefix, constraints) {
   this.prefix = prefix
   this.children = {}
   this.kind = this.types.STATIC
@@ -107,7 +108,8 @@ Node.prototype.reset = function (prefix, versions) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
-  this.versions = versions
+  this.kConstraints = new Set()
+  this.constraintsStorage = constraints
   return this
 }
 
