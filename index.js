@@ -99,7 +99,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     assert(typeof opts.constraints === 'object' && opts.constraints !== null, 'Constraints should be an object')
     if (Object.keys(opts.constraints).length === 0) {
       opts.constraints = undefined
-  }
+    }
   }
 
   const params = []
@@ -242,9 +242,9 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       // if the longest common prefix has the same length of the current path
       // the handler should be added to the current node, to a child otherwise
       if (len === pathLen) {
-        if (version) {
-          assert(!currentNode.getVersionHandler(version, method), `Method '${method}' already declared for route '${route}' version '${version}'`)
-          currentNode.setVersionHandler(version, method, handler, params, store)
+        if (constraints) {
+          assert(!currentNode.getConstraintsHandler(constraints, method), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
+          currentNode.setConstraintsHandler(constraints, method, handler, params, store)
         } else {
           assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
           currentNode.setHandler(method, handler, params, store)
@@ -258,8 +258,8 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
           regex: regex,
           constraints: this.constraining.storage()
         })
-        if (version) {
-          node.setVersionHandler(version, method, handler, params, store)
+        if (constraints) {
+          node.setConstraintsHandler(constraints, method, handler, params, store)
         } else {
           node.setHandler(method, handler, params, store)
         }
@@ -280,6 +280,8 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       }
       // there are not children within the given label, let's create a new one!
       node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex, constraints: this.constraining.storage() })
+      if (constraints) {
+        node.setConstraintsHandler(constraints, method, handler, params, store)
       } else {
         node.setHandler(method, handler, params, store)
       }
@@ -288,9 +290,9 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 
     // the node already exist
     } else if (handler) {
-      if (version) {
-        assert(!currentNode.getVersionHandler(version, method), `Method '${method}' already declared for route '${route}' version '${version}'`)
-        currentNode.setVersionHandler(version, method, handler, params, store)
+      if (constraints) {
+        assert(!currentNode.getConstraintsHandler(constraints, method), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
+        currentNode.setConstraintsHandler(constraints, method, handler, params, store)
       } else {
         assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
         currentNode.setHandler(method, handler, params, store)
