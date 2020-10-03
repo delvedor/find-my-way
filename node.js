@@ -197,8 +197,8 @@ Node.prototype.getHandler = function (method) {
   return this.handlers[method]
 }
 
-Node.prototype.getVersionHandler = function (version, method) {
-  var handlers = this.versions.get(version)
+Node.prototype.getConstraintsHandler = function (constraints, method) {
+  var handlers = this.constraintsStorage.get(constraints, method)
   return handlers === null ? handlers : handlers[method]
 }
 
