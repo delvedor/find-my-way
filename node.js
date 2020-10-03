@@ -202,6 +202,17 @@ Node.prototype.getConstraintsHandler = function (constraints, method) {
   return handlers === null ? handlers : handlers[method]
 }
 
+Node.prototype.getMatchingHandler = function (constraintsExtractor, method) {
+  var constraints = constraintsExtractor(this.kConstraints)
+
+  if (Object.keys(constraints).length) {
+    var handler = this.getConstraintsHandler(constraints, method)
+    if (handler) return handler;
+  }
+
+  return this.getHandler(method)
+}
+
 Node.prototype.prettyPrint = function (prefix, tail) {
   var paramName = ''
   var handlers = this.handlers || {}
