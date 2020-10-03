@@ -13,8 +13,8 @@ const types = {
   MULTI_PARAM: 4
 }
 
-function Node (options) {
-  // former arguments order: prefix, children, kind, handlers, regex, versions
+function Node(options) {
+  // former arguments order: prefix, children, kind, handlers, regex, constraints
   options = options || {}
   this.prefix = options.prefix || '/'
   this.label = this.prefix[0]
@@ -26,6 +26,7 @@ function Node (options) {
   this.wildcardChild = null
   this.parametricBrother = null
   this.versions = options.versions
+  this.constraintsStorage = options.constraints
 }
 
 Object.defineProperty(Node.prototype, 'types', {
