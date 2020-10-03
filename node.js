@@ -154,14 +154,15 @@ Node.prototype.setHandler = function (method, handler, params, store) {
   }
 }
 
-Node.prototype.setVersionHandler = function (version, method, handler, params, store) {
+Node.prototype.setConstraintsHandler = function (constraints, method, handler, params, store) {
   if (!handler) return
 
-  const handlers = this.versions.get(version) || new Handlers()
-  assert(
-    handlers[method] === null,
-    `There is already an handler with version '${version}' and method '${method}'`
-  )
+  const handlers = this.constraintsStorage.get(constraints, method) || new Handlers()
+
+  assert(handlers[method] === null, `There is already a handler with constraints '${JSON.stringify(constraints)}' and method '${method}'`)
+
+  // Update kConstraints with new constraint keys for this node
+  Object.keys(constraints).forEach(kConstraint => this.kConstraints.add(kConstraint))
 
   handlers[method] = {
     handler: handler,
@@ -169,7 +170,8 @@ Node.prototype.setVersionHandler = function (version, method, handler, params, s
     store: store || null,
     paramsLength: params.length
   }
-  this.versions.set(version, handlers)
+
+  this.constraintsStorage.set(constraints, handlers)
 }
 
 Node.prototype.getHandler = function (method) {
