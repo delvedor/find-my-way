@@ -93,9 +93,13 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
 
-  // version validation
-  if (opts.version !== undefined) {
-    assert(typeof opts.version === 'string', 'Version should be a string')
+  // constraints validation
+  if (opts.constraints !== undefined) {
+    // TODO: Support more explicit validation?
+    assert(typeof opts.constraints === 'object' && opts.constraints !== null, 'Constraints should be an object')
+    if (Object.keys(opts.constraints).length === 0) {
+      opts.constraints = undefined
+  }
   }
 
   const params = []
@@ -109,7 +113,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     store: store
   })
 
-  const version = opts.version
+  const constraints = opts.constraints
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
@@ -124,7 +128,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       }
 
       // add the static part of the route to the tree
-      this._insert(method, staticPart, NODE_TYPES.STATIC, null, null, null, null, version)
+      this._insert(method, staticPart, NODE_TYPES.STATIC, null, null, null, null, constraints)
 
       // isolate the parameter name
       var isRegex = false
@@ -166,22 +170,22 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         if (this.caseSensitive === false) {
           completedPath = completedPath.toLowerCase()
         }
-        return this._insert(method, completedPath, nodeType, params, handler, store, regex, version)
+        return this._insert(method, completedPath, nodeType, params, handler, store, regex, constraints)
       }
       // add the parameter and continue with the search
       staticPart = path.slice(0, i)
       if (this.caseSensitive === false) {
         staticPart = staticPart.toLowerCase()
       }
-      this._insert(method, staticPart, nodeType, params, null, null, regex, version)
+      this._insert(method, staticPart, nodeType, params, null, null, regex, constraints)
 
       i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
-      this._insert(method, path.slice(0, i), NODE_TYPES.STATIC, null, null, null, null, version)
+      this._insert(method, path.slice(0, i), NODE_TYPES.STATIC, null, null, null, null, constraints)
       // add the wildcard parameter
       params.push('*')
-      return this._insert(method, path.slice(0, len), NODE_TYPES.MATCH_ALL, params, handler, store, null, version)
+      return this._insert(method, path.slice(0, len), NODE_TYPES.MATCH_ALL, params, handler, store, null, constraints)
     }
   }
 
@@ -190,10 +194,10 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   }
 
   // static route
-  this._insert(method, path, NODE_TYPES.STATIC, params, handler, store, null, version)
+  this._insert(method, path, NODE_TYPES.STATIC, params, handler, store, null, constraints)
 }
 
-Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, version) {
+Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, constraints) {
   const route = path
   var currentNode = this.tree
   var prefix = ''
@@ -223,7 +227,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
           kind: currentNode.kind,
           handlers: new Node.Handlers(currentNode.handlers),
           regex: currentNode.regex,
-          versions: currentNode.versions
+          constraints: currentNode.constraintsStorage
         }
       )
       if (currentNode.wildcardChild !== null) {
@@ -232,7 +236,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 
       // reset the parent
       currentNode
-        .reset(prefix.slice(0, len), this.versioning.storage())
+        .reset(prefix.slice(0, len), this.constraining.storage())
         .addChild(node)
 
       // if the longest common prefix has the same length of the current path
@@ -252,7 +256,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
           kind: kind,
           handlers: null,
           regex: regex,
-          versions: this.versioning.storage()
+          constraints: this.constraining.storage()
         })
         if (version) {
           node.setVersionHandler(version, method, handler, params, store)
@@ -275,9 +279,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         continue
       }
       // there are not children within the given label, let's create a new one!
-      node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex, versions: this.versioning.storage() })
-      if (version) {
-        node.setVersionHandler(version, method, handler, params, store)
+      node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex, constraints: this.constraining.storage() })
       } else {
         node.setHandler(method, handler, params, store)
       }
@@ -299,7 +301,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 }
 
 Router.prototype.reset = function reset () {
-  this.tree = new Node({ versions: this.versioning.storage() })
+  this.tree = new Node({ constraints: this.constraining.storage() })
   this.routes = []
 }
 
