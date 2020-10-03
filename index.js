@@ -352,14 +352,14 @@ Router.prototype.off = function off (method, path) {
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, sanitizeUrl(req.url), this.versioning.deriveVersion(req, ctx))
+  var handle = this.find(req.method, sanitizeUrl(req.url), this.constraining.getConstraintsExtractor(req, ctx))
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
     : handle.handler.call(ctx, req, res, handle.params, handle.store)
 }
 
-Router.prototype.find = function find (method, path, version) {
+Router.prototype.find = function find (method, path, constraintsExtractor) {
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
