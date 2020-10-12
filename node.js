@@ -26,7 +26,7 @@ function Node(options) {
   this.wildcardChild = null
   this.parametricBrother = null
   // kConstraints allows us to know which constraints we need to extract from the request
-  this.kConstraints = new Set()
+  this.kConstraints = []
   this.constraintsStorage = options.constraints
 }
 
@@ -108,7 +108,7 @@ Node.prototype.reset = function (prefix, constraints) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
-  this.kConstraints = new Set()
+  this.kConstraints = []
   this.constraintsStorage = constraints
   return this
 }
@@ -162,7 +162,8 @@ Node.prototype.setConstraintsHandler = function (constraints, method, handler, p
   assert(handlers[method] === null, `There is already a handler with constraints '${JSON.stringify(constraints)}' and method '${method}'`)
 
   // Update kConstraints with new constraint keys for this node
-  Object.keys(constraints).forEach(kConstraint => this.kConstraints.add(kConstraint))
+  // Object.keys(constraints).forEach(kConstraint => this.kConstraints.add(kConstraint))
+  this.kConstraints.push(Object.keys(constraints))
 
   handlers[method] = {
     handler: handler,
@@ -185,8 +186,15 @@ Node.prototype.getConstraintsHandler = function (constraints, method) {
 
 Node.prototype.getMatchingHandler = function (derivedConstraints, method) {
   if (derivedConstraints) {
-    var handler = this.getConstraintsHandler(derivedConstraints, method)
-    if (handler) return handler;
+    var constraints
+    for (let i = 0; i < this.kConstraints.length; i++) {
+      constraints = {}
+      for (let j = 0; j < this.kConstraints[i].length; j++) {
+        constraints[this.kConstraints[i][j]] = derivedConstraints[this.kConstraints[i][j]]
+      }
+      var handler = this.getConstraintsHandler(constraints, method)
+      if (handler) return handler;
+    }
   }
 
   return this.getHandler(method)
