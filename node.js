@@ -117,21 +117,21 @@ Node.prototype.findByLabel = function (path) {
   return this.children[path[0]]
 }
 
-Node.prototype.findMatchingChild = function (constraintsExtractor, path, method) {
+Node.prototype.findMatchingChild = function (derivedConstraints, path, method) {
   var child = this.children[path[0]]
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(constraintsExtractor, method) !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints, method) !== null)) {
     if (path.slice(0, child.prefix.length) === child.prefix) {
       return child
     }
   }
 
   child = this.children[':']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(constraintsExtractor, method) !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints, method) !== null)) {
     return child
   }
 
   child = this.children['*']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(constraintsExtractor, method) !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints, method) !== null)) {
     return child
   }
 
@@ -183,11 +183,9 @@ Node.prototype.getConstraintsHandler = function (constraints, method) {
   return handlers === null ? handlers : handlers[method]
 }
 
-Node.prototype.getMatchingHandler = function (constraintsExtractor, method) {
-  var constraints = constraintsExtractor(this.kConstraints)
-
-  if (Object.keys(constraints).length) {
-    var handler = this.getConstraintsHandler(constraints, method)
+Node.prototype.getMatchingHandler = function (derivedConstraints, method) {
+  if (derivedConstraints) {
+    var handler = this.getConstraintsHandler(derivedConstraints, method)
     if (handler) return handler;
   }
 

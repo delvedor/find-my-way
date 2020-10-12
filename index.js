@@ -354,14 +354,14 @@ Router.prototype.off = function off (method, path) {
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, sanitizeUrl(req.url), this.constraining.getConstraintsExtractor(req, ctx))
+  var handle = this.find(req.method, sanitizeUrl(req.url), this.constraining.deriveConstraints(req, ctx))
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
     : handle.handler.call(ctx, req, res, handle.params, handle.store)
 }
 
-Router.prototype.find = function find (method, path, constraintsExtractor) {
+Router.prototype.find = function find (method, path, derivedConstraints) {
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
@@ -391,7 +391,7 @@ Router.prototype.find = function find (method, path, constraintsExtractor) {
     var previousPath = path
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = currentNode.getMatchingHandler(constraintsExtractor, method)
+      var handle = currentNode.getMatchingHandler(derivedConstraints, method)
       if (handle !== null && handle !== undefined) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
@@ -420,7 +420,7 @@ Router.prototype.find = function find (method, path, constraintsExtractor) {
       idxInOriginalPath += len
     }
 
-    var node = currentNode.findMatchingChild(constraintsExtractor, path, method)
+    var node = currentNode.findMatchingChild(derivedConstraints, path, method)
 
     if (node === null) {
       node = currentNode.parametricBrother
