@@ -210,6 +210,12 @@ router.on('GET', '/example/at/:hour(^\\d{2})h:minute(^\\d{2})m', (req, res, para
 ```
 In this case as parameter separator it's possible to use whatever character is not matched by the regular expression.
 
+The last parameter can be made optional if you add a question mark ("?") at the end of the parameters name.
+```js
+router.on('GET', '/example/posts/:id?', (req, res, params) => {}))
+```
+In this case you can request `/example/posts` as well as `/example/posts/1`. The optional param will be undefined if not specified.
+
 Having a route with multiple parameters may affect negatively the performance, so prefer single parameter approach whenever possible, especially on routes which are on the hot path of your application.
 
 <a name="match-order"></a>
