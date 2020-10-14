@@ -57,3 +57,24 @@ test('Test for param with ? not at the end', (t) => {
 
   findMyWay.lookup({ method: 'GET', url: '/foo/a/baz', headers: {} }, null)
 })
+
+test('Multi parametric route with optional param', (t) => {
+  t.plan(2)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/a/:p1-:p2?', (req, res, params) => {
+    console.log('Multi parametric params', params)
+    if (params.p1 && params.p2) {
+      t.equal(params.p1, 'foo')
+      t.equal(params.p2, 'bar-baz')
+    }
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar-baz', headers: {} }, null)
+  // findMyWay.lookup({ method: 'GET', url: '/a/foo', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a', headers: {} }, null)
+})
