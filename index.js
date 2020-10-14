@@ -70,6 +70,17 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
   // handler validation
   assert(typeof handler === 'function', 'Handler should be a function')
 
+  // path ends with optional parameter
+  if (path.endsWith('?') || path.endsWith('?/')) {
+    const optionalParamRegex = /(\/:[^/]*?)\?(\/?)$/
+    const pathFull = path.replace(optionalParamRegex, '$1')
+    const pathOptional = path.replace(optionalParamRegex, '$2')
+
+    this.on(method, pathFull, opts, handler, store)
+    this.on(method, pathOptional, opts, handler, store)
+    return
+  }
+
   this._on(method, path, opts, handler, store)
 
   if (this.ignoreTrailingSlash && path !== '/' && !path.endsWith('*')) {
