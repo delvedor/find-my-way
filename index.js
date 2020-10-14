@@ -331,6 +331,17 @@ Router.prototype.off = function off (method, path) {
   assert(path.length > 0, 'The path could not be empty')
   assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
 
+  // path ends with optional parameter
+  const optionalParamRegex = /(\/:[^/]*?)\?(\/?)$/
+  if (path.match(optionalParamRegex)) {
+    const pathFull = path.replace(optionalParamRegex, '$1$2')
+    const pathOptional = path.replace(optionalParamRegex, '$2')
+
+    this.off(method, pathFull)
+    this.off(method, pathOptional)
+    return
+  }
+
   // Rebuild tree without the specific route
   const ignoreTrailingSlash = this.ignoreTrailingSlash
   var newRoutes = self.routes.filter(function (route) {
