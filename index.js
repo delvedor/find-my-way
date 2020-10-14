@@ -71,8 +71,8 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
   assert(typeof handler === 'function', 'Handler should be a function')
 
   // path ends with optional parameter
-  if (path.endsWith('?') || path.endsWith('?/')) {
-    const optionalParamRegex = /(\/:[^/]*?)\?(\/?)$/
+  const optionalParamRegex = /(\/:[^/]*?)\?(\/?)$/
+  if (path.match(optionalParamRegex)) {
     const pathFull = path.replace(optionalParamRegex, '$1$2')
     const pathOptional = path.replace(optionalParamRegex, '$2')
 
