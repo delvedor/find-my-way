@@ -162,7 +162,6 @@ Node.prototype.setConstraintsHandler = function (constraints, method, handler, p
   assert(handlers[method] === null, `There is already a handler with constraints '${JSON.stringify(constraints)}' and method '${method}'`)
 
   // Update kConstraints with new constraint keys for this node
-  // Object.keys(constraints).forEach(kConstraint => this.kConstraints.add(kConstraint))
   this.kConstraints.push(Object.keys(constraints))
 
   handlers[method] = {
