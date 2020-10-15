@@ -196,7 +196,7 @@ Node.prototype.getMatchingHandler = function (derivedConstraints, method) {
     }
   }
 
-  return this.getHandler(method)
+  return this.handlers[method]
 }
 
 Node.prototype.prettyPrint = function (prefix, tail) {
