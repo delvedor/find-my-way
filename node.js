@@ -26,7 +26,7 @@ function Node(options) {
   this.wildcardChild = null
   this.parametricBrother = null
   // kConstraints allows us to know which constraints we need to extract from the request
-  this.kConstraints = []
+  this.kConstraints = options.kConstraints || []
   this.constraintsStorage = options.constraints
 }
 

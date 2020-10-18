@@ -227,6 +227,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
           kind: currentNode.kind,
           handlers: new Node.Handlers(currentNode.handlers),
           regex: currentNode.regex,
+          kConstraints: currentNode.kConstraints,
           constraints: currentNode.constraintsStorage
         }
       )
