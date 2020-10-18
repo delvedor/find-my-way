@@ -50,22 +50,22 @@ suite
     findMyWay.lookup({ method: 'GET', url: '/', headers: { 'accept-version': '1.x', host: 'google.com' } }, null)
   })
   .add('find static route', function () {
-    findMyWay.find('GET', '/', undefined)
+    findMyWay.find('GET', '/', null)
   })
   .add('find dynamic route', function () {
-    findMyWay.find('GET', '/user/tomas', undefined)
+    findMyWay.find('GET', '/user/tomas', null)
   })
   .add('find dynamic multi-parametric route', function () {
-    findMyWay.find('GET', '/customer/john-doe', undefined)
+    findMyWay.find('GET', '/customer/john-doe', null)
   })
   .add('find dynamic multi-parametric route with regex', function () {
-    findMyWay.find('GET', '/at/12h00m', undefined)
+    findMyWay.find('GET', '/at/12h00m', null)
   })
   .add('find long static route', function () {
-    findMyWay.find('GET', '/abc/def/ghi/lmn/opq/rst/uvz', undefined)
+    findMyWay.find('GET', '/abc/def/ghi/lmn/opq/rst/uvz', null)
   })
   .add('find long dynamic route', function () {
-    findMyWay.find('GET', '/user/qwertyuiopasdfghjklzxcvbnm/static', undefined)
+    findMyWay.find('GET', '/user/qwertyuiopasdfghjklzxcvbnm/static', null)
   })
   .add('find static versioned route', function () {
     findMyWay.find('GET', '/', { version: '1.x'} )
