@@ -50,12 +50,12 @@ test('Test for param with ? not at the end', (t) => {
     }
   })
 
-  findMyWay.on('GET', '/foo/:bar?/baz', (req, res, params) => {
-    // since we only support optional params at the end of the path, 'bar?' is our param name
-    t.equal(params['bar?'], 'a')
-  })
-
-  findMyWay.lookup({ method: 'GET', url: '/foo/a/baz', headers: {} }, null)
+  try {
+    findMyWay.on('GET', '/foo/:bar?/baz', (req, res, params) => {})
+    t.fail('Optional Param in the middle of the path is not allowed')
+  } catch (e) {
+    t.is(e.message, 'Optional Parameter needs to be the last parameter of the path')
+  }
 })
 
 test('Multi parametric route with optional param', (t) => {

@@ -19,9 +19,14 @@ const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
+const OPTIONAL_PARAM_REGEXP = /(\/:[^/()]*?)\?(\/?)/
 
 if (!isRegexSafe(FULL_PATH_REGEXP)) {
   throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
+}
+
+if (!isRegexSafe(OPTIONAL_PARAM_REGEXP)) {
+  throw new Error('the OPTIONAL_PARAM_REGEXP is not safe, update this module')
 }
 
 const acceptVersionStrategy = require('./lib/accept-version')
@@ -71,10 +76,12 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
   assert(typeof handler === 'function', 'Handler should be a function')
 
   // path ends with optional parameter
-  const optionalParamRegex = /(\/:[^/]*?)\?(\/?)$/
-  if (path.match(optionalParamRegex)) {
-    const pathFull = path.replace(optionalParamRegex, '$1$2')
-    const pathOptional = path.replace(optionalParamRegex, '$2')
+  const optionalParamMatch = path.match(OPTIONAL_PARAM_REGEXP)
+  if (optionalParamMatch) {
+    assert(path.length === optionalParamMatch.index + optionalParamMatch[0].length, 'Optional Parameter needs to be the last parameter of the path')
+
+    const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
+    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
 
     this.on(method, pathFull, opts, handler, store)
     this.on(method, pathOptional, opts, handler, store)
@@ -332,10 +339,12 @@ Router.prototype.off = function off (method, path) {
   assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
 
   // path ends with optional parameter
-  const optionalParamRegex = /(\/:[^/]*?)\?(\/?)$/
-  if (path.match(optionalParamRegex)) {
-    const pathFull = path.replace(optionalParamRegex, '$1$2')
-    const pathOptional = path.replace(optionalParamRegex, '$2')
+  const optionalParamMatch = path.match(OPTIONAL_PARAM_REGEXP)
+  if (optionalParamMatch) {
+    assert(path.length === optionalParamMatch.index + optionalParamMatch[0].length, 'Optional Parameter needs to be the last parameter of the path')
+
+    const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
+    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
 
     this.off(method, pathFull)
     this.off(method, pathOptional)
