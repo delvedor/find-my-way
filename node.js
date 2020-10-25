@@ -13,7 +13,7 @@ const types = {
   MULTI_PARAM: 4
 }
 
-function Node(options) {
+function Node (options) {
   // former arguments order: prefix, children, kind, handlers, regex, constraints
   options = options || {}
   this.prefix = options.prefix || '/'

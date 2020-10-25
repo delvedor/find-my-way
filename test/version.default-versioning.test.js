@@ -3,23 +3,23 @@
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
-const noop = () => {}
+const noop = () => { }
 
 test('A route could support multiple versions (find) / 1', t => {
   t.plan(7)
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/', { version: '1.2.3' }, noop)
-  findMyWay.on('GET', '/', { version: '3.2.0' }, noop)
+  findMyWay.on('GET', '/', { constraints: { version: '1.2.3' } }, noop)
+  findMyWay.on('GET', '/', { constraints: { version: '3.2.0' } }, noop)
 
-  t.ok(findMyWay.find('GET', '/', '1.x'))
-  t.ok(findMyWay.find('GET', '/', '1.2.3'))
-  t.ok(findMyWay.find('GET', '/', '3.x'))
-  t.ok(findMyWay.find('GET', '/', '3.2.0'))
-  t.notOk(findMyWay.find('GET', '/', '2.x'))
-  t.notOk(findMyWay.find('GET', '/', '2.3.4'))
-  t.notOk(findMyWay.find('GET', '/', '3.2.1'))
+  t.ok(findMyWay.find('GET', '/', { version: '1.x' }))
+  t.ok(findMyWay.find('GET', '/', { version: '1.2.3' }))
+  t.ok(findMyWay.find('GET', '/', { version: '3.x' }))
+  t.ok(findMyWay.find('GET', '/', { version: '3.2.0' }))
+  t.notOk(findMyWay.find('GET', '/', { version: '2.x' }))
+  t.notOk(findMyWay.find('GET', '/', { version: '2.3.4' }))
+  t.notOk(findMyWay.find('GET', '/', { version: '3.2.1' }))
 })
 
 test('A route could support multiple versions (find) / 2', t => {
@@ -27,16 +27,16 @@ test('A route could support multiple versions (find) / 2', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/test', { version: '1.2.3' }, noop)
-  findMyWay.on('GET', '/test', { version: '3.2.0' }, noop)
+  findMyWay.on('GET', '/test', { constraints: { version: '1.2.3' } }, noop)
+  findMyWay.on('GET', '/test', { constraints: { version: '3.2.0' } }, noop)
 
-  t.ok(findMyWay.find('GET', '/test', '1.x'))
-  t.ok(findMyWay.find('GET', '/test', '1.2.3'))
-  t.ok(findMyWay.find('GET', '/test', '3.x'))
-  t.ok(findMyWay.find('GET', '/test', '3.2.0'))
-  t.notOk(findMyWay.find('GET', '/test', '2.x'))
-  t.notOk(findMyWay.find('GET', '/test', '2.3.4'))
-  t.notOk(findMyWay.find('GET', '/test', '3.2.1'))
+  t.ok(findMyWay.find('GET', '/test', { version: '1.x' }))
+  t.ok(findMyWay.find('GET', '/test', { version: '1.2.3' }))
+  t.ok(findMyWay.find('GET', '/test', { version: '3.x' }))
+  t.ok(findMyWay.find('GET', '/test', { version: '3.2.0' }))
+  t.notOk(findMyWay.find('GET', '/test', { version: '2.x' }))
+  t.notOk(findMyWay.find('GET', '/test', { version: '2.3.4' }))
+  t.notOk(findMyWay.find('GET', '/test', { version: '3.2.1' }))
 })
 
 test('A route could support multiple versions (find) / 3', t => {
@@ -44,20 +44,20 @@ test('A route could support multiple versions (find) / 3', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/test/:id/hello', { version: '1.2.3' }, noop)
-  findMyWay.on('GET', '/test/:id/hello', { version: '3.2.0' }, noop)
-  findMyWay.on('GET', '/test/name/hello', { version: '4.0.0' }, noop)
+  findMyWay.on('GET', '/test/:id/hello', { constraints: { version: '1.2.3' } }, noop)
+  findMyWay.on('GET', '/test/:id/hello', { constraints: { version: '3.2.0' } }, noop)
+  findMyWay.on('GET', '/test/name/hello', { constraints: { version: '4.0.0' } }, noop)
 
-  t.ok(findMyWay.find('GET', '/test/1234/hello', '1.x'))
-  t.ok(findMyWay.find('GET', '/test/1234/hello', '1.2.3'))
-  t.ok(findMyWay.find('GET', '/test/1234/hello', '3.x'))
-  t.ok(findMyWay.find('GET', '/test/1234/hello', '3.2.0'))
-  t.ok(findMyWay.find('GET', '/test/name/hello', '4.x'))
-  t.ok(findMyWay.find('GET', '/test/name/hello', '3.x'))
-  t.notOk(findMyWay.find('GET', '/test/1234/hello', '2.x'))
-  t.notOk(findMyWay.find('GET', '/test/1234/hello', '2.3.4'))
-  t.notOk(findMyWay.find('GET', '/test/1234/hello', '3.2.1'))
-  t.notOk(findMyWay.find('GET', '/test/1234/hello', '4.x'))
+  t.ok(findMyWay.find('GET', '/test/1234/hello', { version: '1.x' }))
+  t.ok(findMyWay.find('GET', '/test/1234/hello', { version: '1.2.3' }))
+  t.ok(findMyWay.find('GET', '/test/1234/hello', { version: '3.x' }))
+  t.ok(findMyWay.find('GET', '/test/1234/hello', { version: '3.2.0' }))
+  t.ok(findMyWay.find('GET', '/test/name/hello', { version: '4.x' }))
+  t.ok(findMyWay.find('GET', '/test/name/hello', { version: '3.x' }))
+  t.notOk(findMyWay.find('GET', '/test/1234/hello', { version: '2.x' }))
+  t.notOk(findMyWay.find('GET', '/test/1234/hello', { version: '2.3.4' }))
+  t.notOk(findMyWay.find('GET', '/test/1234/hello', { version: '3.2.1' }))
+  t.notOk(findMyWay.find('GET', '/test/1234/hello', { version: '4.x' }))
 })
 
 test('A route could support multiple versions (find) / 4', t => {
@@ -65,17 +65,17 @@ test('A route could support multiple versions (find) / 4', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/test/*', { version: '1.2.3' }, noop)
-  findMyWay.on('GET', '/test/hello', { version: '3.2.0' }, noop)
+  findMyWay.on('GET', '/test/*', { constraints: { version: '1.2.3' } }, noop)
+  findMyWay.on('GET', '/test/hello', { constraints: { version: '3.2.0' } }, noop)
 
-  t.ok(findMyWay.find('GET', '/test/1234/hello', '1.x'))
-  t.ok(findMyWay.find('GET', '/test/1234/hello', '1.2.3'))
-  t.ok(findMyWay.find('GET', '/test/hello', '3.x'))
-  t.ok(findMyWay.find('GET', '/test/hello', '3.2.0'))
-  t.notOk(findMyWay.find('GET', '/test/1234/hello', '3.2.0'))
-  t.notOk(findMyWay.find('GET', '/test/1234/hello', '3.x'))
-  t.notOk(findMyWay.find('GET', '/test/1234/hello', '2.x'))
-  t.notOk(findMyWay.find('GET', '/test/hello', '2.x'))
+  t.ok(findMyWay.find('GET', '/test/1234/hello', { version: '1.x' }))
+  t.ok(findMyWay.find('GET', '/test/1234/hello', { version: '1.2.3' }))
+  t.ok(findMyWay.find('GET', '/test/hello', { version: '3.x' }))
+  t.ok(findMyWay.find('GET', '/test/hello', { version: '3.2.0' }))
+  t.notOk(findMyWay.find('GET', '/test/1234/hello', { version: '3.2.0' }))
+  t.notOk(findMyWay.find('GET', '/test/1234/hello', { version: '3.x' }))
+  t.notOk(findMyWay.find('GET', '/test/1234/hello', { version: '2.x' }))
+  t.notOk(findMyWay.find('GET', '/test/hello', { version: '2.x' }))
 })
 
 test('A route could support multiple versions (find) / 5', t => {
@@ -83,10 +83,10 @@ test('A route could support multiple versions (find) / 5', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/', { version: '1.2.3' }, () => false)
-  findMyWay.on('GET', '/', { version: '3.2.0' }, () => true)
+  findMyWay.on('GET', '/', { constraints: { version: '1.2.3' } }, () => false)
+  findMyWay.on('GET', '/', { constraints: { version: '3.2.0' } }, () => true)
 
-  t.ok(findMyWay.find('GET', '/', '*').handler())
+  t.ok(findMyWay.find('GET', '/', { version: '*' }).handler())
 })
 
 test('Find with a version but without versioned routes', t => {
@@ -96,7 +96,7 @@ test('Find with a version but without versioned routes', t => {
 
   findMyWay.on('GET', '/', noop)
 
-  t.notOk(findMyWay.find('GET', '/', '1.x'))
+  t.notOk(findMyWay.find('GET', '/', { version: '1.x' }))
 })
 
 test('A route could support multiple versions (lookup)', t => {
@@ -109,12 +109,12 @@ test('A route could support multiple versions (lookup)', t => {
     }
   })
 
-  findMyWay.on('GET', '/', { version: '1.2.3' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '1.2.3' } }, (req, res) => {
     const versions = ['1.x', '1.2.3']
     t.ok(versions.indexOf(req.headers['accept-version']) > -1)
   })
 
-  findMyWay.on('GET', '/', { version: '3.2.0' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '3.2.0' } }, (req, res) => {
     const versions = ['3.x', '3.2.0']
     t.ok(versions.indexOf(req.headers['accept-version']) > -1)
   })
@@ -167,31 +167,31 @@ test('It should always choose the highest version of a route', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/', { version: '2.3.0' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '2.3.0' } }, (req, res) => {
     t.fail('We should not be here')
   })
 
-  findMyWay.on('GET', '/', { version: '2.4.0' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '2.4.0' } }, (req, res) => {
     t.pass('Yeah!')
   })
 
-  findMyWay.on('GET', '/', { version: '3.3.0' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '3.3.0' } }, (req, res) => {
     t.pass('Yeah!')
   })
 
-  findMyWay.on('GET', '/', { version: '3.2.0' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '3.2.0' } }, (req, res) => {
     t.fail('We should not be here')
   })
 
-  findMyWay.on('GET', '/', { version: '3.2.2' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '3.2.2' } }, (req, res) => {
     t.fail('We should not be here')
   })
 
-  findMyWay.on('GET', '/', { version: '4.4.0' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '4.4.0' } }, (req, res) => {
     t.fail('We should not be here')
   })
 
-  findMyWay.on('GET', '/', { version: '4.3.2' }, (req, res) => {
+  findMyWay.on('GET', '/', { constraints: { version: '4.3.2' } }, (req, res) => {
     t.pass('Yeah!')
   })
 
@@ -220,7 +220,7 @@ test('Declare the same route with and without version', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/', noop)
-  findMyWay.on('GET', '/', { version: '1.2.0' }, noop)
+  findMyWay.on('GET', '/', { constraints: { version: '1.2.0' } }, noop)
 
   t.ok(findMyWay.find('GET', '/', '1.x'))
   t.ok(findMyWay.find('GET', '/'))
@@ -231,12 +231,12 @@ test('It should throw if you declare multiple times the same route', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/', { version: '1.2.3' }, noop)
+  findMyWay.on('GET', '/', { constraints: { version: '1.2.3' } }, noop)
 
   try {
-    findMyWay.on('GET', '/', { version: '1.2.3' }, noop)
+    findMyWay.on('GET', '/', { constraints: { version: '1.2.3' } }, noop)
     t.fail('It should throw')
   } catch (err) {
-    t.is(err.message, 'Method \'GET\' already declared for route \'/\' version \'1.2.3\'')
+    t.is(err.message, 'Method \'GET\' already declared for route \'/\' with constraints \'{"version":"1.2.3"}\'')
   }
 })

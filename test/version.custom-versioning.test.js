@@ -3,9 +3,10 @@
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
-const noop = () => {}
+const noop = () => { }
 
 const customVersioning = {
+  name: 'version',
   // storage factory
   storage: function () {
     let versions = {}
@@ -16,7 +17,7 @@ const customVersioning = {
       empty: () => { versions = {} }
     }
   },
-  deriveVersion: (req, ctx) => {
+  deriveConstraint: (req, ctx) => {
     return req.headers.accept
   }
 }
@@ -24,14 +25,14 @@ const customVersioning = {
 test('A route could support multiple versions (find) / 1', t => {
   t.plan(5)
 
-  const findMyWay = FindMyWay({ versioning: customVersioning })
+  const findMyWay = FindMyWay({ constrainingStrategies: { version: customVersioning } })
 
-  findMyWay.on('GET', '/', { version: 'application/vnd.example.api+json;version=2' }, noop)
-  findMyWay.on('GET', '/', { version: 'application/vnd.example.api+json;version=3' }, noop)
+  findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, noop)
+  findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, noop)
 
-  t.ok(findMyWay.find('GET', '/', 'application/vnd.example.api+json;version=2'))
-  t.ok(findMyWay.find('GET', '/', 'application/vnd.example.api+json;version=3'))
-  t.notOk(findMyWay.find('GET', '/', 'application/vnd.example.api+json;version=4'))
-  t.notOk(findMyWay.find('GET', '/', 'application/vnd.example.api+json;version=5'))
-  t.notOk(findMyWay.find('GET', '/', 'application/vnd.example.api+json;version=6'))
+  t.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=2' }))
+  t.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=3' }))
+  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=4' }))
+  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=5' }))
+  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=6' }))
 })

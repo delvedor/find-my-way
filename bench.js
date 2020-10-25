@@ -20,8 +20,9 @@ findMyWay.on('GET', '/user/:id/static', () => true)
 findMyWay.on('GET', '/customer/:name-:surname', () => true)
 findMyWay.on('GET', '/at/:hour(^\\d+)h:minute(^\\d+)m', () => true)
 findMyWay.on('GET', '/abc/def/ghi/lmn/opq/rst/uvz', () => true)
-findMyWay.on('GET', '/', { constraints: { version: '1.2.0'} }, () => true)
+findMyWay.on('GET', '/', { constraints: { version: '1.2.0' } }, () => true)
 
+console.log(findMyWay.routes)
 console.log('Routes registered successfully...')
 
 suite
@@ -68,10 +69,10 @@ suite
     findMyWay.find('GET', '/user/qwertyuiopasdfghjklzxcvbnm/static', null)
   })
   .add('find static versioned route', function () {
-    findMyWay.find('GET', '/', { version: '1.x'} )
+    findMyWay.find('GET', '/', { version: '1.x' })
   })
   .add('find static constrained (version & host) route', function () {
-    findMyWay.find('GET', '/', { version: '1.x', host: 'google.com'} )
+    findMyWay.find('GET', '/', { version: '1.x', host: 'google.com' })
   })
   .on('cycle', function (event) {
     console.log(String(event.target))
