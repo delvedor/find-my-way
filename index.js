@@ -220,25 +220,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
     // the longest common prefix is smaller than the current prefix
     // let's split the node and add a new child
     if (len < prefixLen) {
-      node = new Node(
-        {
-          prefix: prefix.slice(len),
-          children: currentNode.children,
-          kind: currentNode.kind,
-          handlers: new Node.Handlers(currentNode.handlers),
-          regex: currentNode.regex,
-          kConstraints: currentNode.kConstraints,
-          constraints: currentNode.constraintsStorage
-        }
-      )
-      if (currentNode.wildcardChild !== null) {
-        node.wildcardChild = currentNode.wildcardChild
-      }
-
-      // reset the parent
-      currentNode
-        .reset(prefix.slice(0, len), this.constraining.storage())
-        .addChild(node)
+      node = currentNode.split(len)
 
       // if the longest common prefix has the same length of the current path
       // the handler should be added to the current node, to a child otherwise

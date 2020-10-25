@@ -113,6 +113,28 @@ Node.prototype.reset = function (prefix, constraints) {
   return this
 }
 
+Node.prototype.split = function (length) {
+  const newChild = new Node(
+    {
+      prefix: this.prefix.slice(length),
+      children: this.children,
+      kind: this.kind,
+      handlers: new Handlers(this.handlers),
+      regex: this.regex,
+      kConstraints: this.kConstraints,
+      constraints: this.constraintsStorage
+    }
+  )
+
+  if (this.wildcardChild !== null) {
+    newChild.wildcardChild = this.wildcardChild
+  }
+
+  this.reset(this.prefix.slice(0, length))
+  this.addChild(newChild)
+  return newChild
+}
+
 Node.prototype.findByLabel = function (path) {
   return this.children[path[0]]
 }
