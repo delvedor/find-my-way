@@ -22,7 +22,7 @@ test('find a store object', t => {
 
   findMyWay.on('GET', '/test', fn, { hello: 'world' })
 
-  t.deepEqual(findMyWay.find('GET', '/test'), {
+  t.deepEqual(findMyWay.find('GET', '/test', {}), {
     handler: fn,
     params: {},
     store: { hello: 'world' }

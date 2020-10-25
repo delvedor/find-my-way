@@ -29,7 +29,7 @@ test('Nested static parametric route, url with parameter common prefix > 1', t =
     res.end('{"message":"hello world"}')
   })
 
-  t.deepEqual(findMyWay.find('DELETE', '/a/bbar').params, { id: 'bbar' })
+  t.deepEqual(findMyWay.find('DELETE', '/a/bbar', {}).params, { id: 'bbar' })
 })
 
 test('Parametric route, url with parameter common prefix > 1', t => {
@@ -83,7 +83,7 @@ test('Parametric route, url with multi parameter common prefix > 1', t => {
     res.end('{"message":"hello world"}')
   })
 
-  t.deepEqual(findMyWay.find('GET', '/hello/aab').params, { a: 'hello', b: 'aab' })
+  t.deepEqual(findMyWay.find('GET', '/hello/aab', {}).params, { a: 'hello', b: 'aab' })
 })
 
 test('Mixed routes, url with parameter common prefix > 1', t => {
@@ -134,17 +134,17 @@ test('Mixed routes, url with parameter common prefix > 1', t => {
     res.end('{"winter":"is here"}')
   })
 
-  t.deepEqual(findMyWay.find('GET', '/test').params, {})
-  t.deepEqual(findMyWay.find('GET', '/testify').params, {})
-  t.deepEqual(findMyWay.find('GET', '/test/hello').params, {})
-  t.deepEqual(findMyWay.find('GET', '/test/hello/test').params, {})
-  t.deepEqual(findMyWay.find('GET', '/te/hello').params, { a: 'hello' })
-  t.deepEqual(findMyWay.find('GET', '/te/').params, { a: '' })
-  t.deepEqual(findMyWay.find('GET', '/testy').params, { c: 'testy' })
-  t.deepEqual(findMyWay.find('GET', '/besty').params, { c: 'besty' })
-  t.deepEqual(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
-  t.deepEqual(findMyWay.find('GET', '/te/hello/'), null)
-  t.deepEqual(findMyWay.find('GET', '/te/hellos/testy'), null)
+  t.deepEqual(findMyWay.find('GET', '/test', {}).params, {})
+  t.deepEqual(findMyWay.find('GET', '/testify', {}).params, {})
+  t.deepEqual(findMyWay.find('GET', '/test/hello', {}).params, {})
+  t.deepEqual(findMyWay.find('GET', '/test/hello/test', {}).params, {})
+  t.deepEqual(findMyWay.find('GET', '/te/hello', {}).params, { a: 'hello' })
+  t.deepEqual(findMyWay.find('GET', '/te/', {}).params, { a: '' })
+  t.deepEqual(findMyWay.find('GET', '/testy', {}).params, { c: 'testy' })
+  t.deepEqual(findMyWay.find('GET', '/besty', {}).params, { c: 'besty' })
+  t.deepEqual(findMyWay.find('GET', '/text/hellos/test', {}).params, { e: 'hellos' })
+  t.deepEqual(findMyWay.find('GET', '/te/hello/', {}), null)
+  t.deepEqual(findMyWay.find('GET', '/te/hellos/testy', {}), null)
 })
 
 test('Mixed parametric routes, with last defined route being static', t => {
@@ -178,10 +178,10 @@ test('Mixed parametric routes, with last defined route being static', t => {
     res.end('{"hello":"world"}')
   })
 
-  t.deepEqual(findMyWay.find('GET', '/test/hello').params, { a: 'hello' })
-  t.deepEqual(findMyWay.find('GET', '/test/hello/world/test').params, { c: 'world' })
-  t.deepEqual(findMyWay.find('GET', '/test/hello/world/te').params, { c: 'world', k: 'te' })
-  t.deepEqual(findMyWay.find('GET', '/test/hello/world/testy').params, { c: 'world', k: 'testy' })
+  t.deepEqual(findMyWay.find('GET', '/test/hello', {}).params, { a: 'hello' })
+  t.deepEqual(findMyWay.find('GET', '/test/hello/world/test', {}).params, { c: 'world' })
+  t.deepEqual(findMyWay.find('GET', '/test/hello/world/te', {}).params, { c: 'world', k: 'te' })
+  t.deepEqual(findMyWay.find('GET', '/test/hello/world/testy', {}).params, { c: 'world', k: 'testy' })
 })
 
 test('parametricBrother of Parent Node, with a parametric child', t => {

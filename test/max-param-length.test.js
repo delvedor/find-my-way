@@ -16,7 +16,7 @@ test('maxParamLength should set the maximum length for a parametric route', t =>
 
   const findMyWay = FindMyWay({ maxParamLength: 10 })
   findMyWay.on('GET', '/test/:param', () => {})
-  t.deepEqual(findMyWay.find('GET', '/test/123456789abcd'), null)
+  t.deepEqual(findMyWay.find('GET', '/test/123456789abcd', {}), null)
 })
 
 test('maxParamLength should set the maximum length for a parametric (regex) route', t => {
@@ -25,7 +25,7 @@ test('maxParamLength should set the maximum length for a parametric (regex) rout
   const findMyWay = FindMyWay({ maxParamLength: 10 })
   findMyWay.on('GET', '/test/:param(^\\d+$)', () => {})
 
-  t.deepEqual(findMyWay.find('GET', '/test/123456789abcd'), null)
+  t.deepEqual(findMyWay.find('GET', '/test/123456789abcd', {}), null)
 })
 
 test('maxParamLength should set the maximum length for a parametric (multi) route', t => {
@@ -33,7 +33,7 @@ test('maxParamLength should set the maximum length for a parametric (multi) rout
 
   const findMyWay = FindMyWay({ maxParamLength: 10 })
   findMyWay.on('GET', '/test/:param-bar', () => {})
-  t.deepEqual(findMyWay.find('GET', '/test/123456789abcd'), null)
+  t.deepEqual(findMyWay.find('GET', '/test/123456789abcd', {}), null)
 })
 
 test('maxParamLength should set the maximum length for a parametric (regex with suffix) route', t => {
@@ -41,5 +41,5 @@ test('maxParamLength should set the maximum length for a parametric (regex with 
 
   const findMyWay = FindMyWay({ maxParamLength: 10 })
   findMyWay.on('GET', '/test/:param(^\\w{3})bar', () => {})
-  t.deepEqual(findMyWay.find('GET', '/test/123456789abcd'), null)
+  t.deepEqual(findMyWay.find('GET', '/test/123456789abcd', {}), null)
 })

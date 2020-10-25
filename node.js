@@ -184,22 +184,20 @@ Node.prototype.getConstraintsHandler = function (constraints, method) {
 }
 
 Node.prototype.getMatchingHandler = function (derivedConstraints, method) {
-  if (derivedConstraints) {
-    if (this.kConstraints.length) {
-      var constraints, handler, hasConstraint
-      for (var i = 0; i < this.kConstraints.length; i++) {
-        hasConstraint = false
-        constraints = {}
-        for (var j = 0; j < this.kConstraints[i].length; j++) {
-          if (derivedConstraints[this.kConstraints[i][j]]) {
-            hasConstraint = true
-            constraints[this.kConstraints[i][j]] = derivedConstraints[this.kConstraints[i][j]]
-          }
+  if (this.kConstraints.length) {
+    var constraints, handler, hasConstraint
+    for (var i = 0; i < this.kConstraints.length; i++) {
+      hasConstraint = false
+      constraints = {}
+      for (var j = 0; j < this.kConstraints[i].length; j++) {
+        if (derivedConstraints[this.kConstraints[i][j]]) {
+          hasConstraint = true
+          constraints[this.kConstraints[i][j]] = derivedConstraints[this.kConstraints[i][j]]
         }
-        if (hasConstraint) {
-          handler = this.getConstraintsHandler(constraints, method)
-          if (handler) return handler
-        }
+      }
+      if (hasConstraint) {
+        handler = this.getConstraintsHandler(constraints, method)
+        if (handler) return handler
       }
     }
   }

@@ -14,9 +14,9 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
 
   findMyWay.get('/static/*', () => {})
 
-  t.deepEqual(findMyWay.find('GET', '/static/').params, { '*': '' })
-  t.deepEqual(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
-  t.deepEqual(findMyWay.find('GET', '/static'), null)
+  t.deepEqual(findMyWay.find('GET', '/static/', {}).params, { '*': '' })
+  t.deepEqual(findMyWay.find('GET', '/static/hello', {}).params, { '*': 'hello' })
+  t.deepEqual(findMyWay.find('GET', '/static', {}), null)
 })
 
 test('If the prefixLen is higher than the pathLen we should not save the wildcard child (mixed routes)', t => {
@@ -32,9 +32,9 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   findMyWay.get('/simple/:bar', () => {})
   findMyWay.get('/hello', () => {})
 
-  t.deepEqual(findMyWay.find('GET', '/static/').params, { '*': '' })
-  t.deepEqual(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
-  t.deepEqual(findMyWay.find('GET', '/static'), null)
+  t.deepEqual(findMyWay.find('GET', '/static/', {}).params, { '*': '' })
+  t.deepEqual(findMyWay.find('GET', '/static/hello', {}).params, { '*': 'hello' })
+  t.deepEqual(findMyWay.find('GET', '/static', {}), null)
 })
 
 test('If the prefixLen is higher than the pathLen we should not save the wildcard child (with a root wildcard)', t => {
@@ -51,9 +51,9 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   findMyWay.get('/simple/:bar', () => {})
   findMyWay.get('/hello', () => {})
 
-  t.deepEqual(findMyWay.find('GET', '/static/').params, { '*': '' })
-  t.deepEqual(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
-  t.deepEqual(findMyWay.find('GET', '/static').params, { '*': '/static' })
+  t.deepEqual(findMyWay.find('GET', '/static/', {}).params, { '*': '' })
+  t.deepEqual(findMyWay.find('GET', '/static/hello', {}).params, { '*': 'hello' })
+  t.deepEqual(findMyWay.find('GET', '/static', {}).params, { '*': '/static' })
 })
 
 test('If the prefixLen is higher than the pathLen we should not save the wildcard child (404)', t => {
@@ -69,8 +69,8 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   findMyWay.get('/simple/:bar', () => {})
   findMyWay.get('/hello', () => {})
 
-  t.deepEqual(findMyWay.find('GET', '/stati'), null)
-  t.deepEqual(findMyWay.find('GET', '/staticc'), null)
-  t.deepEqual(findMyWay.find('GET', '/stati/hello'), null)
-  t.deepEqual(findMyWay.find('GET', '/staticc/hello'), null)
+  t.deepEqual(findMyWay.find('GET', '/stati', {}), null)
+  t.deepEqual(findMyWay.find('GET', '/staticc', {}), null)
+  t.deepEqual(findMyWay.find('GET', '/stati/hello', {}), null)
+  t.deepEqual(findMyWay.find('GET', '/staticc/hello', {}), null)
 })

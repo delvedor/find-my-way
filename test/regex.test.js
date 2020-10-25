@@ -139,7 +139,7 @@ test('safe decodeURIComponent', t => {
   })
 
   t.deepEqual(
-    findMyWay.find('GET', '/test/hel%"Flo'),
+    findMyWay.find('GET', '/test/hel%"Flo', {}),
     null
   )
 })

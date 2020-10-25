@@ -319,13 +319,13 @@ router.lookup(req, res, { greeting: 'Hello, World!' })
 #### find(method, path [, version])
 Return (if present) the route registered in *method:path*.<br>
 The path must be sanitized, all the parameters and wildcards are decoded automatically.<br/>
-You can also pass an optional version string. In case of the default versioning strategy it should be conform to the [semver](https://semver.org/) specification.
+The derived routing constraints must also be passed, like the host for the request, or optionally the version for the route to be matched. In case of the default versioning strategy it should be conform to the [semver](https://semver.org/) specification.
 ```js
-router.find('GET', '/example')
+router.find('GET', '/example', { host: 'fastify.io' })
 // => { handler: Function, params: Object, store: Object}
 // => null
 
-router.find('GET', '/example', '1.x')
+router.find('GET', '/example', { host: 'fastify.io', version: '1.x' })
 // => { handler: Function, params: Object, store: Object}
 // => null
 ```

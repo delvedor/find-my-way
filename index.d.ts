@@ -142,7 +142,7 @@ declare namespace Router {
     find(
       method: HTTPMethod,
       path: string,
-      version?: string
+      constraints: { [key: string]: any }
     ): FindResult<V> | null;
 
     reset(): void;

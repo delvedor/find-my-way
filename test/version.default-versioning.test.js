@@ -222,8 +222,8 @@ test('Declare the same route with and without version', t => {
   findMyWay.on('GET', '/', noop)
   findMyWay.on('GET', '/', { constraints: { version: '1.2.0' } }, noop)
 
-  t.ok(findMyWay.find('GET', '/', '1.x'))
-  t.ok(findMyWay.find('GET', '/'))
+  t.ok(findMyWay.find('GET', '/', { version: '1.x' }))
+  t.ok(findMyWay.find('GET', '/', {}))
 })
 
 test('It should throw if you declare multiple times the same route', t => {

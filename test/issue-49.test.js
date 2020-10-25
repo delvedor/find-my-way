@@ -12,9 +12,9 @@ test('Defining static route after parametric - 1', t => {
   findMyWay.on('GET', '/static', noop)
   findMyWay.on('GET', '/:param', noop)
 
-  t.ok(findMyWay.find('GET', '/static'))
-  t.ok(findMyWay.find('GET', '/para'))
-  t.ok(findMyWay.find('GET', '/s'))
+  t.ok(findMyWay.find('GET', '/static', {}))
+  t.ok(findMyWay.find('GET', '/para', {}))
+  t.ok(findMyWay.find('GET', '/s', {}))
 })
 
 test('Defining static route after parametric - 2', t => {
@@ -24,9 +24,9 @@ test('Defining static route after parametric - 2', t => {
   findMyWay.on('GET', '/:param', noop)
   findMyWay.on('GET', '/static', noop)
 
-  t.ok(findMyWay.find('GET', '/static'))
-  t.ok(findMyWay.find('GET', '/para'))
-  t.ok(findMyWay.find('GET', '/s'))
+  t.ok(findMyWay.find('GET', '/static', {}))
+  t.ok(findMyWay.find('GET', '/para', {}))
+  t.ok(findMyWay.find('GET', '/s', {}))
 })
 
 test('Defining static route after parametric - 3', t => {
@@ -37,10 +37,10 @@ test('Defining static route after parametric - 3', t => {
   findMyWay.on('GET', '/static', noop)
   findMyWay.on('GET', '/other', noop)
 
-  t.ok(findMyWay.find('GET', '/static'))
-  t.ok(findMyWay.find('GET', '/para'))
-  t.ok(findMyWay.find('GET', '/s'))
-  t.ok(findMyWay.find('GET', '/o'))
+  t.ok(findMyWay.find('GET', '/static', {}))
+  t.ok(findMyWay.find('GET', '/para', {}))
+  t.ok(findMyWay.find('GET', '/s', {}))
+  t.ok(findMyWay.find('GET', '/o', {}))
 })
 
 test('Defining static route after parametric - 4', t => {
@@ -51,10 +51,10 @@ test('Defining static route after parametric - 4', t => {
   findMyWay.on('GET', '/other', noop)
   findMyWay.on('GET', '/:param', noop)
 
-  t.ok(findMyWay.find('GET', '/static'))
-  t.ok(findMyWay.find('GET', '/para'))
-  t.ok(findMyWay.find('GET', '/s'))
-  t.ok(findMyWay.find('GET', '/o'))
+  t.ok(findMyWay.find('GET', '/static', {}))
+  t.ok(findMyWay.find('GET', '/para', {}))
+  t.ok(findMyWay.find('GET', '/s', {}))
+  t.ok(findMyWay.find('GET', '/o', {}))
 })
 
 test('Defining static route after parametric - 5', t => {
@@ -65,10 +65,10 @@ test('Defining static route after parametric - 5', t => {
   findMyWay.on('GET', '/:param', noop)
   findMyWay.on('GET', '/other', noop)
 
-  t.ok(findMyWay.find('GET', '/static'))
-  t.ok(findMyWay.find('GET', '/para'))
-  t.ok(findMyWay.find('GET', '/s'))
-  t.ok(findMyWay.find('GET', '/o'))
+  t.ok(findMyWay.find('GET', '/static', {}))
+  t.ok(findMyWay.find('GET', '/para', {}))
+  t.ok(findMyWay.find('GET', '/s', {}))
+  t.ok(findMyWay.find('GET', '/o', {}))
 })
 
 test('Should produce the same tree - 1', t => {

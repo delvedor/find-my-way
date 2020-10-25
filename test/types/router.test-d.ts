@@ -47,8 +47,8 @@ let http2Res!: Http2ServerResponse;
   expectType<void>(router.off(['GET', 'POST'], '/'))
 
   expectType<void>(router.lookup(http1Req, http1Res))
-  expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/'))
-  expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/', '1.0.0'))
+  expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/', {}))
+  expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/', {version: '1.0.0'}))
 
   expectType<void>(router.reset())
   expectType<string>(router.prettyPrint())
@@ -93,8 +93,8 @@ let http2Res!: Http2ServerResponse;
   expectType<void>(router.off(['GET', 'POST'], '/'))
 
   expectType<void>(router.lookup(http2Req, http2Res))
-  expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('GET', '/'))
-  expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('GET', '/', '1.0.0'))
+  expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('GET', '/', {}))
+  expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('GET', '/', {version: '1.0.0', host: 'fastify.io'}))
 
   expectType<void>(router.reset())
   expectType<string>(router.prettyPrint())
