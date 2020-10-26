@@ -56,7 +56,7 @@ test('Parametric route, url with parameter common prefix > 1', t => {
     res.end('{"message":"hello world"}')
   })
 
-  t.deepEqual(findMyWay.find('GET', '/aab').params, { id: 'aab' })
+  t.deepEqual(findMyWay.find('GET', '/aab', {}).params, { id: 'aab' })
 })
 
 test('Parametric route, url with multi parameter common prefix > 1', t => {

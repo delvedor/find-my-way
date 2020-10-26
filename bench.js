@@ -22,9 +22,6 @@ findMyWay.on('GET', '/at/:hour(^\\d+)h:minute(^\\d+)m', () => true)
 findMyWay.on('GET', '/abc/def/ghi/lmn/opq/rst/uvz', () => true)
 findMyWay.on('GET', '/', { constraints: { version: '1.2.0' } }, () => true)
 
-console.log(findMyWay.routes)
-console.log('Routes registered successfully...')
-
 suite
   .add('lookup static route', function () {
     findMyWay.lookup({ method: 'GET', url: '/', headers: { host: 'fastify.io' } }, null)

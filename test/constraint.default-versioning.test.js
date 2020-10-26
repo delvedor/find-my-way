@@ -2,7 +2,7 @@
 
 const t = require('tap')
 const test = t.test
-const FindMyWay = require('../')
+const FindMyWay = require('..')
 const noop = () => { }
 
 test('A route could support multiple versions (find) / 1', t => {

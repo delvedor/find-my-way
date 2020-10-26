@@ -16,6 +16,8 @@ const http = require('http')
 const fastDecode = require('fast-decode-uri-component')
 const isRegexSafe = require('safe-regex2')
 const Node = require('./node')
+const Constrainer = require('./lib/constrainer')
+
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
@@ -23,8 +25,6 @@ const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 if (!isRegexSafe(FULL_PATH_REGEXP)) {
   throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
 }
-
-const acceptConstraints = require('./lib/accept-constraints')
 
 function Router (opts) {
   if (!(this instanceof Router)) {
@@ -50,8 +50,8 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  this.constraining = acceptConstraints(opts.constrainingStrategies)
-  this.tree = new Node({ constraints: this.constraining.storage() })
+  this.constrainer = new Constrainer(opts.constraints)
+  this.trees = new MethodMap()
   this.routes = []
 }
 
@@ -89,18 +89,24 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     return
   }
 
-  // method validation
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
 
-  // constraints validation
+  let constraints = {}
   if (opts.constraints !== undefined) {
-    // TODO: Support more explicit validation?
     assert(typeof opts.constraints === 'object' && opts.constraints !== null, 'Constraints should be an object')
-    if (Object.keys(opts.constraints).length === 0) {
-      opts.constraints = undefined
+    if (Object.keys(opts.constraints).length !== 0) {
+      constraints = opts.constraints
     }
   }
+
+  // backwards compatability with old style of version constraint definition
+  if (opts.version !== undefined) {
+    assert(!constraints.version, "can't specify a route version option and a route constraints.version option")
+    constraints.version = opts.version
+  }
+
+  this.constrainer.validateConstraints(constraints)
 
   const params = []
   var j = 0
@@ -112,8 +118,6 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     handler: handler,
     store: store
   })
-
-  const constraints = opts.constraints
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
@@ -199,13 +203,18 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
 Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, constraints) {
   const route = path
-  var currentNode = this.tree
   var prefix = ''
   var pathLen = 0
   var prefixLen = 0
   var len = 0
   var max = 0
   var node = null
+
+  var currentNode = this.trees[method]
+  if (!currentNode) {
+    currentNode = new Node({ constrainer: this.constrainer })
+    this.trees[method] = currentNode
+  }
 
   while (true) {
     prefix = currentNode.prefix
@@ -225,13 +234,8 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       // if the longest common prefix has the same length of the current path
       // the handler should be added to the current node, to a child otherwise
       if (len === pathLen) {
-        if (constraints) {
-          assert(!currentNode.getConstraintsHandler(constraints, method), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
-          currentNode.setConstraintsHandler(constraints, method, handler, params, store)
-        } else {
-          assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
-          currentNode.setHandler(method, handler, params, store)
-        }
+        assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
+        currentNode.addHandler(handler, params, store, constraints)
         currentNode.kind = kind
       } else {
         node = new Node({
@@ -239,13 +243,9 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
           kind: kind,
           handlers: null,
           regex: regex,
-          constraints: this.constraining.storage()
+          constrainer: this.constrainer
         })
-        if (constraints) {
-          node.setConstraintsHandler(constraints, method, handler, params, store)
-        } else {
-          node.setHandler(method, handler, params, store)
-        }
+        node.addHandler(handler, params, store, constraints)
         currentNode.addChild(node)
       }
 
@@ -262,31 +262,21 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         continue
       }
       // there are not children within the given label, let's create a new one!
-      node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex, constraints: this.constraining.storage() })
-      if (constraints) {
-        node.setConstraintsHandler(constraints, method, handler, params, store)
-      } else {
-        node.setHandler(method, handler, params, store)
-      }
-
+      node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex, constrainer: this.constrainer })
+      node.addHandler(handler, params, store, constraints)
       currentNode.addChild(node)
 
     // the node already exist
     } else if (handler) {
-      if (constraints) {
-        assert(!currentNode.getConstraintsHandler(constraints, method), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
-        currentNode.setConstraintsHandler(constraints, method, handler, params, store)
-      } else {
-        assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
-        currentNode.setHandler(method, handler, params, store)
-      }
+      assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
+      currentNode.addHandler(handler, params, store, constraints)
     }
     return
   }
 }
 
 Router.prototype.reset = function reset () {
-  this.tree = new Node({ constraints: this.constraining.storage() })
+  this.trees = new MethodMap()
   this.routes = []
 }
 
@@ -337,7 +327,7 @@ Router.prototype.off = function off (method, path) {
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, sanitizeUrl(req.url), this.constraining.deriveConstraints(req, ctx))
+  var handle = this.find(req.method, sanitizeUrl(req.url), this.constrainer.deriveConstraints(req, ctx))
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
@@ -356,8 +346,10 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.toLowerCase()
   }
 
+  var currentNode = this.trees[method]
+  if (!currentNode) return null
+
   var maxParamLength = this.maxParamLength
-  var currentNode = this.tree
   var wildcardNode = null
   var pathLenWildcard = 0
   var decoded = null
@@ -374,7 +366,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     var previousPath = path
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = currentNode.getMatchingHandler(derivedConstraints, method)
+      var handle = currentNode.getMatchingHandler(derivedConstraints)
       if (handle !== null && handle !== undefined) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
@@ -403,12 +395,12 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       idxInOriginalPath += len
     }
 
-    var node = currentNode.findMatchingChild(derivedConstraints, path, method)
+    var node = currentNode.findMatchingChild(derivedConstraints, path)
 
     if (node === null) {
       node = currentNode.parametricBrother
       if (node === null) {
-        return this._getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+        return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard)
       }
 
       var goBack = previousPath.charCodeAt(0) === 47 ? previousPath : '/' + previousPath
@@ -431,7 +423,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     // static route
     if (kind === NODE_TYPES.STATIC) {
       // if exist, save the wildcard child
-      if (currentNode.wildcardChild !== null && currentNode.wildcardChild.handlers[method] !== null) {
+      if (currentNode.wildcardChild !== null) {
         wildcardNode = currentNode.wildcardChild
         pathLenWildcard = pathLen
       }
@@ -440,11 +432,11 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     }
 
     if (len !== prefixLen) {
-      return this._getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+      return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard)
     }
 
     // if exist, save the wildcard child
-    if (currentNode.wildcardChild !== null && currentNode.wildcardChild.handlers[method] !== null) {
+    if (currentNode.wildcardChild !== null) {
       wildcardNode = currentNode.wildcardChild
       pathLenWildcard = pathLen
     }
@@ -528,7 +520,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   }
 }
 
-Router.prototype._getWildcardNode = function (node, method, path, len) {
+Router.prototype._getWildcardNode = function (node, path, len) {
   if (node === null) return null
   var decoded = fastDecode(path.slice(-len))
   if (decoded === null) {
@@ -536,7 +528,7 @@ Router.prototype._getWildcardNode = function (node, method, path, len) {
       ? this._onBadUrl(path.slice(-len))
       : null
   }
-  var handle = node.handlers[method]
+  var handle = node.handlers[0]
   if (handle !== null && handle !== undefined) {
     return {
       handler: handle.handler,
@@ -568,10 +560,16 @@ Router.prototype._onBadUrl = function (path) {
 }
 
 Router.prototype.prettyPrint = function () {
-  return this.tree.prettyPrint('', true)
+  // TODO
+  // return this.trees.prettyPrint('', true)
 }
 
+// Object with prototype slots for all the HTTP methods
+function MethodMap () {}
+
 for (var i in http.METHODS) {
+  MethodMap.prototype[http.METHODS[i]] = null
+
   /* eslint no-prototype-builtins: "off" */
   if (!http.METHODS.hasOwnProperty(i)) continue
   const m = http.METHODS[i]

@@ -2,7 +2,7 @@
 
 const t = require('tap')
 const test = t.test
-const FindMyWay = require('../')
+const FindMyWay = require('..')
 const noop = () => { }
 
 const customVersioning = {
@@ -25,7 +25,7 @@ const customVersioning = {
 test('A route could support multiple versions (find) / 1', t => {
   t.plan(5)
 
-  const findMyWay = FindMyWay({ constrainingStrategies: { version: customVersioning } })
+  const findMyWay = FindMyWay({ constraints: { version: customVersioning } })
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, noop)
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, noop)
