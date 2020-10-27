@@ -26,6 +26,18 @@ if (!isRegexSafe(FULL_PATH_REGEXP)) {
   throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
 }
 
+function buildMethodMap () {
+  const code = []
+  for (var i = 0; i < http.METHODS.length; i++) {
+    var m = http.METHODS[i]
+    code.push(`this['${m}'] = null`)
+  }
+  return new Function(code.join('\n')) // eslint-disable-line
+}
+
+// Object with prototype slots for all the HTTP methods
+const MethodMap = buildMethodMap()
+
 function Router (opts) {
   if (!(this instanceof Router)) {
     return new Router(opts)
@@ -212,7 +224,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 
   var currentNode = this.trees[method]
   if (!currentNode) {
-    currentNode = new Node({ constrainer: this.constrainer })
+    currentNode = new Node({ method: method, constrainer: this.constrainer })
     this.trees[method] = currentNode
   }
 
@@ -239,6 +251,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         currentNode.kind = kind
       } else {
         node = new Node({
+          method: method,
           prefix: path.slice(len),
           kind: kind,
           handlers: null,
@@ -262,7 +275,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         continue
       }
       // there are not children within the given label, let's create a new one!
-      node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex, constrainer: this.constrainer })
+      node = new Node({ method: method, prefix: path, kind: kind, handlers: null, regex: regex, constrainer: this.constrainer })
       node.addHandler(handler, params, store, constraints)
       currentNode.addChild(node)
 
@@ -559,17 +572,107 @@ Router.prototype._onBadUrl = function (path) {
   }
 }
 
-Router.prototype.prettyPrint = function () {
-  // TODO
-  // return this.trees.prettyPrint('', true)
+function prettyPrintFlattenedNode (flattenedNode, prefix, tail) {
+  var paramName = ''
+  const handlers = flattenedNode.nodes.map(node => node.handlers.map(handler => ({ method: node.method, ...handler }))).flat()
+
+  if (flattenedNode.prefix.includes(':')) {
+    handlers.forEach((handler, index) => {
+      var params = handler.params
+      var param = params[params.length - 1]
+      if (handlers.length > 1) {
+        if (index === 0) {
+          paramName += param + ` (${handler.method})\n`
+          return
+        }
+        paramName += prefix + '    :' + param + ` (${handler.method})`
+        paramName += (index === handlers.length - 1 ? '' : '\n')
+      } else {
+        paramName = params[params.length - 1] + ` (${handler.method})`
+      }
+    })
+  } else if (handlers.length) {
+    paramName = ` (${handlers.map(handler => handler.method).join('|')})`
+  }
+
+  var tree = `${prefix}${tail ? '└── ' : '├── '}${flattenedNode.prefix}${paramName}\n`
+
+  prefix = `${prefix}${tail ? '    ' : '│   '}`
+  const labels = Object.keys(flattenedNode.children)
+  for (var i = 0; i < labels.length; i++) {
+    const child = flattenedNode.children[labels[i]]
+    tree += prettyPrintFlattenedNode(child, prefix, i === (labels.length - 1))
+  }
+  return tree
 }
 
-// Object with prototype slots for all the HTTP methods
-function MethodMap () {}
+function flattenNode (flattened, node) {
+  if (node.handlers.length > 0) {
+    flattened.nodes.push(node)
+  }
+
+  if (node.children) {
+    for (const child of Object.values(node.children)) {
+      const childPrefixSegments = child.prefix.split(/(?=\/)/) // split on the slash separator but use a regex to lookahead and not actually match it, preserving it in the returned string segments
+      let cursor = flattened
+      let parent
+      for (const segment of childPrefixSegments) {
+        parent = cursor
+        cursor = cursor.children[segment]
+        if (!cursor) {
+          cursor = {
+            prefix: segment,
+            nodes: [],
+            children: {}
+          }
+          parent.children[segment] = cursor
+        }
+      }
+
+      flattenNode(cursor, child)
+    }
+  }
+}
+
+function compressFlattenedNode (flattenedNode) {
+  const childKeys = Object.keys(flattenedNode.children)
+  if (flattenedNode.nodes.length === 0 && childKeys.length === 1) {
+    const child = flattenedNode.children[childKeys[0]]
+    if (child.nodes.length <= 1) {
+      compressFlattenedNode(child)
+      flattenedNode.nodes = child.nodes
+      flattenedNode.prefix += child.prefix
+      flattenedNode.children = child.children
+      return flattenedNode
+    }
+  }
+
+  for (const key of Object.keys(flattenedNode.children)) {
+    compressFlattenedNode(flattenedNode.children[key])
+  }
+
+  return flattenedNode
+}
+
+Router.prototype.prettyPrint = function () {
+  const root = {
+    prefix: '/',
+    nodes: [],
+    children: {}
+  }
+
+  for (const node of Object.values(this.trees)) {
+    if (node) {
+      flattenNode(root, node)
+    }
+  }
+
+  compressFlattenedNode(root)
+
+  return prettyPrintFlattenedNode(root, '', true)
+}
 
 for (var i in http.METHODS) {
-  MethodMap.prototype[http.METHODS[i]] = null
-
   /* eslint no-prototype-builtins: "off" */
   if (!http.METHODS.hasOwnProperty(i)) continue
   const m = http.METHODS[i]

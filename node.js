@@ -16,7 +16,7 @@ function Node (options) {
   options = options || {}
   this.prefix = options.prefix || '/'
   this.label = this.prefix[0]
-  this.method = options.method
+  this.method = options.method // not used for logic, just for debugging and pretty printing
   this.handlers = options.handlers || [] // unoptimized list of handler objects for which the fast matcher function will be compiled
   this.children = options.children || {}
   this.numberOfChildren = Object.keys(this.children).length

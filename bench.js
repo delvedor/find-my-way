@@ -17,10 +17,31 @@ const findMyWay = new FindMyWay()
 findMyWay.on('GET', '/', () => true)
 findMyWay.on('GET', '/user/:id', () => true)
 findMyWay.on('GET', '/user/:id/static', () => true)
+findMyWay.on('POST', '/user/:id', () => true)
+findMyWay.on('PUT', '/user/:id', () => true)
 findMyWay.on('GET', '/customer/:name-:surname', () => true)
+findMyWay.on('POST', '/customer', () => true)
 findMyWay.on('GET', '/at/:hour(^\\d+)h:minute(^\\d+)m', () => true)
 findMyWay.on('GET', '/abc/def/ghi/lmn/opq/rst/uvz', () => true)
 findMyWay.on('GET', '/', { constraints: { version: '1.2.0' } }, () => true)
+
+findMyWay.on('GET', '/products', () => true)
+findMyWay.on('GET', '/products/:id', () => true)
+findMyWay.on('GET', '/products/:id/options', () => true)
+
+findMyWay.on('GET', '/posts', () => true)
+findMyWay.on('POST', '/posts', () => true)
+findMyWay.on('GET', '/posts/:id', () => true)
+findMyWay.on('GET', '/posts/:id/author', () => true)
+findMyWay.on('GET', '/posts/:id/comments', () => true)
+findMyWay.on('POST', '/posts/:id/comments', () => true)
+findMyWay.on('GET', '/posts/:id/comments/:id', () => true)
+findMyWay.on('GET', '/posts/:id/comments/:id/author', () => true)
+findMyWay.on('GET', '/posts/:id/counter', () => true)
+
+findMyWay.on('GET', '/pages', () => true)
+findMyWay.on('POST', '/pages', () => true)
+findMyWay.on('GET', '/pages/:id', () => true)
 
 suite
   .add('lookup static route', function () {
@@ -70,6 +91,12 @@ suite
   })
   .add('find static constrained (version & host) route', function () {
     findMyWay.find('GET', '/', { version: '1.x', host: 'google.com' })
+  })
+  .add('find long nested dynamic route', function () {
+    findMyWay.find('GET', '/posts/10/comments/42/author', undefined)
+  })
+  .add('find long nested dynamic route with other method', function () {
+    findMyWay.find('POST', '/posts/10/comments', undefined)
   })
   .on('cycle', function (event) {
     console.log(String(event.target))
