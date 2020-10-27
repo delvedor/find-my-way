@@ -1,8 +1,6 @@
 'use strict'
 
 const assert = require('assert')
-const http = require('http')
-const Handlers = buildHandlers()
 
 const types = {
   STATIC: 0,
@@ -14,14 +12,14 @@ const types = {
 }
 
 function Node (options) {
-  // former arguments order: prefix, children, kind, handlers, regex, versions
   options = options || {}
   this.prefix = options.prefix || '/'
   this.label = this.prefix[0]
+  this.method = options.method // just for debugging and error messages
   this.children = options.children || {}
   this.numberOfChildren = Object.keys(this.children).length
   this.kind = options.kind || this.types.STATIC
-  this.handlers = new Handlers(options.handlers)
+  this.handler = options.handler
   this.regex = options.regex || null
   this.wildcardChild = null
   this.parametricBrother = null
@@ -102,7 +100,7 @@ Node.prototype.reset = function (prefix, versions) {
   this.prefix = prefix
   this.children = {}
   this.kind = this.types.STATIC
-  this.handlers = new Handlers()
+  this.handler = null
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
@@ -114,57 +112,57 @@ Node.prototype.findByLabel = function (path) {
   return this.children[path[0]]
 }
 
-Node.prototype.findChild = function (path, method) {
+Node.prototype.findChild = function (path) {
   var child = this.children[path[0]]
-  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.handler !== null)) {
     if (path.slice(0, child.prefix.length) === child.prefix) {
       return child
     }
   }
 
   child = this.children[':']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.handler !== null)) {
     return child
   }
 
   child = this.children['*']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.handler !== null)) {
     return child
   }
 
   return null
 }
 
-Node.prototype.findVersionChild = function (version, path, method) {
+Node.prototype.findVersionChild = function (version, path) {
   var child = this.children[path[0]]
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version) !== null)) {
     if (path.slice(0, child.prefix.length) === child.prefix) {
       return child
     }
   }
 
   child = this.children[':']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version) !== null)) {
     return child
   }
 
   child = this.children['*']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version, method) !== null)) {
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getVersionHandler(version) !== null)) {
     return child
   }
 
   return null
 }
 
-Node.prototype.setHandler = function (method, handler, params, store) {
+Node.prototype.setHandler = function (handler, params, store) {
   if (!handler) return
 
   assert(
-    this.handlers[method] !== undefined,
-    `There is already an handler with method '${method}'`
+    !this.handler,
+    `There is already an handler with method '${this.method}'`
   )
 
-  this.handlers[method] = {
+  this.handler = {
     handler: handler,
     params: params,
     store: store || null,
@@ -172,80 +170,24 @@ Node.prototype.setHandler = function (method, handler, params, store) {
   }
 }
 
-Node.prototype.setVersionHandler = function (version, method, handler, params, store) {
+Node.prototype.setVersionHandler = function (version, handler, params, store) {
   if (!handler) return
 
-  const handlers = this.versions.get(version) || new Handlers()
   assert(
-    handlers[method] === null,
-    `There is already an handler with version '${version}' and method '${method}'`
+    !this.versions.get(version),
+    `There is already an handler with version '${version}' and method '${this.method}'`
   )
 
-  handlers[method] = {
+  this.versions.set(version, {
     handler: handler,
     params: params,
     store: store || null,
     paramsLength: params.length
-  }
-  this.versions.set(version, handlers)
+  })
 }
 
-Node.prototype.getHandler = function (method) {
-  return this.handlers[method]
-}
-
-Node.prototype.getVersionHandler = function (version, method) {
-  var handlers = this.versions.get(version)
-  return handlers === null ? handlers : handlers[method]
-}
-
-Node.prototype.prettyPrint = function (prefix, tail) {
-  var paramName = ''
-  var handlers = this.handlers || {}
-  var methods = Object.keys(handlers).filter(method => handlers[method] && handlers[method].handler)
-
-  if (this.prefix === ':') {
-    methods.forEach((method, index) => {
-      var params = this.handlers[method].params
-      var param = params[params.length - 1]
-      if (methods.length > 1) {
-        if (index === 0) {
-          paramName += param + ` (${method})\n`
-          return
-        }
-        paramName += prefix + '    :' + param + ` (${method})`
-        paramName += (index === methods.length - 1 ? '' : '\n')
-      } else {
-        paramName = params[params.length - 1] + ` (${method})`
-      }
-    })
-  } else if (methods.length) {
-    paramName = ` (${methods.join('|')})`
-  }
-
-  var tree = `${prefix}${tail ? '└── ' : '├── '}${this.prefix}${paramName}\n`
-
-  prefix = `${prefix}${tail ? '    ' : '│   '}`
-  const labels = Object.keys(this.children)
-  for (var i = 0; i < labels.length - 1; i++) {
-    tree += this.children[labels[i]].prettyPrint(prefix, false)
-  }
-  if (labels.length > 0) {
-    tree += this.children[labels[labels.length - 1]].prettyPrint(prefix, true)
-  }
-  return tree
-}
-
-function buildHandlers (handlers) {
-  var code = `handlers = handlers || {}
-  `
-  for (var i = 0; i < http.METHODS.length; i++) {
-    var m = http.METHODS[i]
-    code += `this['${m}'] = handlers['${m}'] || null
-    `
-  }
-  return new Function('handlers', code) // eslint-disable-line
+Node.prototype.getVersionHandler = function (version) {
+  return this.versions.get(version)
 }
 
 module.exports = Node
-module.exports.Handlers = Handlers
