@@ -576,24 +576,33 @@ function prettyPrintFlattenedNode (flattenedNode, prefix, tail) {
   var paramName = ''
   const handlers = flattenedNode.nodes.map(node => node.handlers.map(handler => ({ method: node.method, ...handler }))).flat()
 
-  if (flattenedNode.prefix.includes(':')) {
-    handlers.forEach((handler, index) => {
+  handlers.forEach((handler, index) => {
+    let suffix = `(${handler.method}`
+    if (Object.keys(handler.constraints).length > 0) {
+      suffix += ' ' + JSON.stringify(handler.constraints)
+    }
+    suffix += ')'
+
+    let name = ''
+    if (flattenedNode.prefix.includes(':')) {
       var params = handler.params
-      var param = params[params.length - 1]
-      if (handlers.length > 1) {
-        if (index === 0) {
-          paramName += param + ` (${handler.method})\n`
-          return
-        }
-        paramName += prefix + '    :' + param + ` (${handler.method})`
-        paramName += (index === handlers.length - 1 ? '' : '\n')
-      } else {
-        paramName = params[params.length - 1] + ` (${handler.method})`
+      name = params[params.length - 1]
+      if (index > 0) {
+        name = ':' + name
       }
-    })
-  } else if (handlers.length) {
-    paramName = ` (${handlers.map(handler => handler.method).join('|')})`
-  }
+    } else if (index > 0) {
+      name = flattenedNode.prefix
+    }
+
+    if (index === 0) {
+      paramName += name + ` ${suffix}`
+      return
+    } else {
+      paramName += '\n'
+    }
+
+    paramName += prefix + '    ' + name + ` ${suffix}`
+  })
 
   var tree = `${prefix}${tail ? '└── ' : '├── '}${flattenedNode.prefix}${paramName}\n`
 
