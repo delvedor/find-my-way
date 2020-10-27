@@ -36,10 +36,8 @@ test('pretty print - parametric routes', t => {
 
   const expected = `└── /
     ├── test (GET)
-    │   └── /
-    │       └── :hello (GET)
-    └── hello/
-        └── :world (GET)
+    │   └── /:hello (GET)
+    └── hello/:world (GET)
 `
 
   t.is(typeof tree, 'string')
@@ -57,12 +55,11 @@ test('pretty print - mixed parametric routes', t => {
 
   const tree = findMyWay.prettyPrint()
 
-  const expected = `└── /
-    └── test (GET)
-        └── /
-            └── :hello (GET)
-                :hello (POST)
-                └── /world (GET)
+  const expected = `└── /test (GET)
+    └── /
+        └── :hello (GET)
+            :hello (POST)
+            └── /world (GET)
 `
 
   t.is(typeof tree, 'string')
@@ -81,10 +78,8 @@ test('pretty print - wildcard routes', t => {
 
   const expected = `└── /
     ├── test (GET)
-    │   └── /
-    │       └── * (GET)
-    └── hello/
-        └── * (GET)
+    │   └── /* (GET)
+    └── hello/* (GET)
 `
 
   t.is(typeof tree, 'string')
@@ -102,13 +97,12 @@ test('pretty print - parametric routes with same parent and followed by a static
 
   const tree = findMyWay.prettyPrint()
 
-  const expected = `└── /
-    └── test (GET)
-        └── /hello
-            ├── /
-            │   └── :id (GET)
-            │       :id (POST)
-            └── world (GET)
+  const expected = `└── /test (GET)
+    └── /hello
+        ├── /
+        │   └── :id (GET)
+        │       :id (POST)
+        └── world (GET)
 `
 
   t.is(typeof tree, 'string')
