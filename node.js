@@ -230,7 +230,7 @@ function noHandlerMatcher () {
 
 // Compile a fast function to match the handlers for this node
 Node.prototype.compileHandlerMatcher = function () {
-  this.constrainedHandlerStores = new this.constrainer.ConstraintMap()
+  this.constrainedHandlerStores = {}
   const lines = []
 
   // If this node has no handlers, it can't ever match anything, so set a function that just returns null
