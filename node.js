@@ -25,6 +25,7 @@ function Node (options) {
   this.wildcardChild = null
   this.parametricBrother = null
   this.constrainer = options.constrainer
+  this.constraintKeys = options.constraintKeys || []
   this.constrainedHandlerStores = null
 }
 
@@ -106,7 +107,8 @@ Node.prototype.reset = function (prefix, constraints) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
-  this.decompileHandlerMatcher()
+  this.constraintKeys = []
+  this._decompileGetHandlerMatchingConstraints()
   return this
 }
 
@@ -118,7 +120,8 @@ Node.prototype.split = function (length) {
       kind: this.kind,
       handlers: this.handlers.slice(0),
       regex: this.regex,
-      constrainer: this.constrainer
+      constrainer: this.constrainer,
+      constraintKeys: this.constraintKeys.slice(0)
     }
   )
 
@@ -169,7 +172,15 @@ Node.prototype.addHandler = function (handler, params, store, constraints) {
     paramsLength: params.length
   })
 
-  this.decompileHandlerMatcher()
+  for (const key in constraints) {
+    if (!this.constraintKeys.includes(key)) {
+      this.constraintKeys.push(key)
+    }
+  }
+
+  // Note that the fancy constraint handler matcher needs to be recompiled now that the list of handlers has changed
+  // This lazy compilation means we don't do the compile until the first time the route match is tried, which doesn't waste time re-compiling every time a new handler is added
+  this._decompileGetHandlerMatchingConstraints()
 }
 
 Node.prototype.getHandler = function (constraints) {
@@ -177,16 +188,32 @@ Node.prototype.getHandler = function (constraints) {
 }
 
 // We compile the handler matcher the first time this node is matched. We need to recompile it if new handlers are added, so when a new handler is added, we reset the handler matching function to this base one that will recompile it.
-function compileThenGetMatchingHandler (derivedConstraints) {
-  this.compileHandlerMatcher()
-  return this.getMatchingHandler(derivedConstraints)
+function compileThenGetHandlerMatchingConstraints (derivedConstraints) {
+  this._compileGetHandlerMatchingConstraints()
+  return this._getHandlerMatchingConstraints(derivedConstraints)
 }
 
-// The handler needs to be compiled for the first time after a node is born
-Node.prototype.getMatchingHandler = compileThenGetMatchingHandler
+// This is the hot path for node handler finding -- change with care!
+Node.prototype.getMatchingHandler = function (derivedConstraints) {
+  // If this node has no handlers, it can't ever match anything, so set a function that just returns null
+  if (this.handlers.length === 0) {
+    return null
+  }
 
-Node.prototype.decompileHandlerMatcher = function () {
-  this.getMatchingHandler = compileThenGetMatchingHandler
+  if (this.constraintKeys.length === 0) {
+    // If this node doesn't have any handlers that are constrained, don't spend any time matching constraints.
+    // Use the performant derviedConstraint checker from the constrainer
+    return this.constrainer.mustMatchHandlerMatcher.call(this, derivedConstraints)
+  } else {
+    // This node is constrained, use the performant precompiled constraint matcher
+    return this._getHandlerMatchingConstraints(derivedConstraints)
+  }
+}
+
+Node.prototype._getHandlerMatchingConstraints = compileThenGetHandlerMatchingConstraints
+
+Node.prototype._decompileGetHandlerMatchingConstraints = function () {
+  this._getHandlerMatchingConstraints = compileThenGetHandlerMatchingConstraints
   return null
 }
 
@@ -224,38 +251,16 @@ Node.prototype._constrainedIndexBitmask = function (constraint) {
   return ~mask
 }
 
-function noHandlerMatcher () {
-  return null
-}
-
 // Compile a fast function to match the handlers for this node
-Node.prototype.compileHandlerMatcher = function () {
+// The function implements a general case multi-constraint matching algorithm.
+// The general idea is this: we have a bunch of handlers, each with a potentially different set of constraints, and sometimes none at all. We're given a list of constraint values and we have to use the constraint-value-comparison strategies to see which handlers match the constraint values passed in.
+// We do this by asking each constraint store which handler indexes match the given constraint value for each store. Trickly, the handlers that a store says match are the handlers constrained by that store, but handlers that aren't constrained at all by that store could still match just fine. So, there's a "mask" where each constraint store can only say if some of the handlers match or not.
+// To implement this efficiently, we use bitmaps so we can use bitwise operations. They're cheap to allocate, let us implement this masking behaviour in one CPU instruction, and are quite compact in memory. We start with a bitmap set to all 1s representing every handler being a candidate, and then for each constraint, see which handlers match using the store, and then mask the result by the mask of handlers that that store applies to, and bitwise AND with the candidate list. Phew.
+Node.prototype._compileGetHandlerMatchingConstraints = function () {
   this.constrainedHandlerStores = {}
   const lines = []
 
-  // If this node has no handlers, it can't ever match anything, so set a function that just returns null
-  if (this.handlers.length === 0) {
-    this.getMatchingHandler = noHandlerMatcher
-    return
-  }
-
-  // build a list of all the constraints that any of the handlers have
-  const constraints = []
-  for (const handler of this.handlers) {
-    if (!handler.constraints) continue
-    for (const key in handler.constraints) {
-      if (!constraints.includes(key)) {
-        constraints.push(key)
-      }
-    }
-  }
-
-  if (constraints.length === 0) {
-    // If this node doesn't have any handlers that are constrained, don't spend any time matching constraints
-    this.getMatchingHandler = this.constrainer.mustMatchHandlerMatcher
-    return
-  }
-
+  const constraints = Array.from(this.constraintKeys)
   // always check the version constraint first as it is the most selective
   constraints.sort((a, b) => a === 'version' ? 1 : 0)
 
@@ -263,10 +268,6 @@ Node.prototype.compileHandlerMatcher = function () {
     this.constrainedHandlerStores[constraint] = this._buildConstraintStore(constraint)
   }
 
-  // Implement the general case multi-constraint matching algorithm.
-  // The general idea is this: we have a bunch of handlers, each with a potentially different set of constraints, and sometimes none at all. We're given a list of constraint values and we have to use the constraint-value-comparison strategies to see which handlers match the constraint values passed in.
-  // We do this by asking each constraint store which handler indexes match the given constraint value for each store. Trickly, the handlers that a store says match are the handlers constrained by that store, but handlers that aren't constrained at all by that store could still match just fine. So, there's a "mask" where each constraint store can only say if some of the handlers match or not.
-  // To implement this efficiently, we use bitmaps so we can use bitwise operations. They're cheap to allocate, let us implement this masking behaviour in one CPU instruction, and are quite compact in memory. We start with a bitmap set to all 1s representing every handler being a candidate, and then for each constraint, see which handlers match using the store, and then mask the result by the mask of handlers that that store applies to, and bitwise AND with the candidate list. Phew.
   lines.push(`
   let candidates = 0b${'1'.repeat(this.handlers.length)}
   let mask, matches
@@ -295,7 +296,7 @@ Node.prototype.compileHandlerMatcher = function () {
   return this.handlers[Math.floor(Math.log2(candidates))]
   `)
 
-  this.getMatchingHandler = new Function('derivedConstraints', lines.join('\n')) // eslint-disable-line
+  this._getHandlerMatchingConstraints = new Function('derivedConstraints', lines.join('\n')) // eslint-disable-line
 }
 
 module.exports = Node
