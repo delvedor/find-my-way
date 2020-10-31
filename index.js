@@ -15,6 +15,7 @@ const assert = require('assert')
 const http = require('http')
 const fastDecode = require('fast-decode-uri-component')
 const isRegexSafe = require('safe-regex2')
+const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode } = require('./lib/pretty-print')
 const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
@@ -51,7 +52,7 @@ function Router (opts) {
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.versioning = opts.versioning || acceptVersionStrategy
-  this.tree = new Node({ versions: this.versioning.storage() })
+  this.trees = {}
   this.routes = []
 }
 
@@ -195,13 +196,18 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
 Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, version) {
   const route = path
-  var currentNode = this.tree
   var prefix = ''
   var pathLen = 0
   var prefixLen = 0
   var len = 0
   var max = 0
   var node = null
+
+  var currentNode = this.trees[method]
+  if (typeof currentNode === 'undefined') {
+    currentNode = new Node({ method: method, versions: this.versioning.storage() })
+    this.trees[method] = currentNode
+  }
 
   while (true) {
     prefix = currentNode.prefix
@@ -218,10 +224,11 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
     if (len < prefixLen) {
       node = new Node(
         {
+          method: method,
           prefix: prefix.slice(len),
           children: currentNode.children,
           kind: currentNode.kind,
-          handlers: new Node.Handlers(currentNode.handlers),
+          handler: currentNode.handler,
           regex: currentNode.regex,
           versions: currentNode.versions
         }
@@ -239,15 +246,16 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       // the handler should be added to the current node, to a child otherwise
       if (len === pathLen) {
         if (version) {
-          assert(!currentNode.getVersionHandler(version, method), `Method '${method}' already declared for route '${route}' version '${version}'`)
-          currentNode.setVersionHandler(version, method, handler, params, store)
+          assert(!currentNode.getVersionHandler(version), `Method '${method}' already declared for route '${route}' version '${version}'`)
+          currentNode.setVersionHandler(version, handler, params, store)
         } else {
-          assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
-          currentNode.setHandler(method, handler, params, store)
+          assert(!currentNode.handler, `Method '${method}' already declared for route '${route}'`)
+          currentNode.setHandler(handler, params, store)
         }
         currentNode.kind = kind
       } else {
         node = new Node({
+          method: method,
           prefix: path.slice(len),
           kind: kind,
           handlers: null,
@@ -255,9 +263,9 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
           versions: this.versioning.storage()
         })
         if (version) {
-          node.setVersionHandler(version, method, handler, params, store)
+          node.setVersionHandler(version, handler, params, store)
         } else {
-          node.setHandler(method, handler, params, store)
+          node.setHandler(handler, params, store)
         }
         currentNode.addChild(node)
       }
@@ -275,11 +283,11 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         continue
       }
       // there are not children within the given label, let's create a new one!
-      node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex, versions: this.versioning.storage() })
+      node = new Node({ method: method, prefix: path, kind: kind, regex: regex, versions: this.versioning.storage() })
       if (version) {
-        node.setVersionHandler(version, method, handler, params, store)
+        node.setVersionHandler(version, handler, params, store)
       } else {
-        node.setHandler(method, handler, params, store)
+        node.setHandler(handler, params, store)
       }
 
       currentNode.addChild(node)
@@ -287,11 +295,11 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
     // the node already exist
     } else if (handler) {
       if (version) {
-        assert(!currentNode.getVersionHandler(version, method), `Method '${method}' already declared for route '${route}' version '${version}'`)
-        currentNode.setVersionHandler(version, method, handler, params, store)
+        assert(!currentNode.getVersionHandler(version), `Method '${method}' already declared for route '${route}' version '${version}'`)
+        currentNode.setVersionHandler(version, handler, params, store)
       } else {
-        assert(!currentNode.getHandler(method), `Method '${method}' already declared for route '${route}'`)
-        currentNode.setHandler(method, handler, params, store)
+        assert(!currentNode.handler, `Method '${method}' already declared for route '${route}'`)
+        currentNode.setHandler(handler, params, store)
       }
     }
     return
@@ -299,7 +307,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 }
 
 Router.prototype.reset = function reset () {
-  this.tree = new Node({ versions: this.versioning.storage() })
+  this.trees = {}
   this.routes = []
 }
 
@@ -358,6 +366,9 @@ Router.prototype.lookup = function lookup (req, res, ctx) {
 }
 
 Router.prototype.find = function find (method, path, version) {
+  var currentNode = this.trees[method]
+  if (!currentNode) return null
+
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
@@ -370,7 +381,6 @@ Router.prototype.find = function find (method, path, version) {
   }
 
   var maxParamLength = this.maxParamLength
-  var currentNode = this.tree
   var wildcardNode = null
   var pathLenWildcard = 0
   var decoded = null
@@ -388,8 +398,8 @@ Router.prototype.find = function find (method, path, version) {
     // found the route
     if (pathLen === 0 || path === prefix) {
       var handle = version === undefined
-        ? currentNode.handlers[method]
-        : currentNode.getVersionHandler(version, method)
+        ? currentNode.handler
+        : currentNode.getVersionHandler(version)
       if (handle !== null && handle !== undefined) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
@@ -419,13 +429,13 @@ Router.prototype.find = function find (method, path, version) {
     }
 
     var node = version === undefined
-      ? currentNode.findChild(path, method)
-      : currentNode.findVersionChild(version, path, method)
+      ? currentNode.findChild(path)
+      : currentNode.findVersionChild(version, path)
 
     if (node === null) {
       node = currentNode.parametricBrother
       if (node === null) {
-        return this._getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+        return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard)
       }
 
       var goBack = previousPath.charCodeAt(0) === 47 ? previousPath : '/' + previousPath
@@ -448,7 +458,7 @@ Router.prototype.find = function find (method, path, version) {
     // static route
     if (kind === NODE_TYPES.STATIC) {
       // if exist, save the wildcard child
-      if (currentNode.wildcardChild !== null && currentNode.wildcardChild.handlers[method] !== null) {
+      if (currentNode.wildcardChild !== null) {
         wildcardNode = currentNode.wildcardChild
         pathLenWildcard = pathLen
       }
@@ -457,11 +467,11 @@ Router.prototype.find = function find (method, path, version) {
     }
 
     if (len !== prefixLen) {
-      return this._getWildcardNode(wildcardNode, method, originalPath, pathLenWildcard)
+      return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard)
     }
 
     // if exist, save the wildcard child
-    if (currentNode.wildcardChild !== null && currentNode.wildcardChild.handlers[method] !== null) {
+    if (currentNode.wildcardChild !== null) {
       wildcardNode = currentNode.wildcardChild
       pathLenWildcard = pathLen
     }
@@ -545,7 +555,7 @@ Router.prototype.find = function find (method, path, version) {
   }
 }
 
-Router.prototype._getWildcardNode = function (node, method, path, len) {
+Router.prototype._getWildcardNode = function (node, path, len) {
   if (node === null) return null
   var decoded = fastDecode(path.slice(-len))
   if (decoded === null) {
@@ -553,7 +563,7 @@ Router.prototype._getWildcardNode = function (node, method, path, len) {
       ? this._onBadUrl(path.slice(-len))
       : null
   }
-  var handle = node.handlers[method]
+  var handle = node.handler
   if (handle !== null && handle !== undefined) {
     return {
       handler: handle.handler,
@@ -585,7 +595,21 @@ Router.prototype._onBadUrl = function (path) {
 }
 
 Router.prototype.prettyPrint = function () {
-  return this.tree.prettyPrint('', true)
+  const root = {
+    prefix: '/',
+    nodes: [],
+    children: {}
+  }
+
+  for (const node of Object.values(this.trees)) {
+    if (node) {
+      flattenNode(root, node)
+    }
+  }
+
+  compressFlattenedNode(root)
+
+  return prettyPrintFlattenedNode(root, '', true)
 }
 
 for (var i in http.METHODS) {
