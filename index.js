@@ -338,7 +338,7 @@ Router.prototype.lookup = function lookup (req, res, ctx) {
 
 Router.prototype.find = function find (method, path, derivedConstraints) {
   var currentNode = this.trees[method]
-  if (typeof currentNode === 'undefined') return null
+  if (currentNode === undefined) return null
 
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')

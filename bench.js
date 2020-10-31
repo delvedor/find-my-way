@@ -23,7 +23,8 @@ findMyWay.on('GET', '/customer/:name-:surname', () => true)
 findMyWay.on('POST', '/customer', () => true)
 findMyWay.on('GET', '/at/:hour(^\\d+)h:minute(^\\d+)m', () => true)
 findMyWay.on('GET', '/abc/def/ghi/lmn/opq/rst/uvz', () => true)
-findMyWay.on('GET', '/', { constraints: { version: '1.2.0' } }, () => true)
+findMyWay.on('GET', '/versioned', () => true)
+findMyWay.on('GET', '/versioned', { constraints: { version: '1.2.0' } }, () => true)
 
 findMyWay.on('GET', '/products', () => true)
 findMyWay.on('GET', '/products/:id', () => true)
@@ -63,10 +64,10 @@ suite
     findMyWay.lookup({ method: 'GET', url: '/user/qwertyuiopasdfghjklzxcvbnm/static', headers: { host: 'fastify.io' } }, null)
   })
   .add('lookup static versioned route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/', headers: { 'accept-version': '1.x', host: 'fastify.io' } }, null)
+    findMyWay.lookup({ method: 'GET', url: '/versioned', headers: { 'accept-version': '1.x', host: 'fastify.io' } }, null)
   })
   .add('lookup static constrained (version & host) route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/', headers: { 'accept-version': '1.x', host: 'google.com' } }, null)
+    findMyWay.lookup({ method: 'GET', url: '/versioned', headers: { 'accept-version': '1.x', host: 'google.com' } }, null)
   })
   .add('find static route', function () {
     findMyWay.find('GET', '/', { host: 'fastify.io' })

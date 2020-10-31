@@ -96,7 +96,7 @@ test('Find with a version but without versioned routes', t => {
 
   findMyWay.on('GET', '/', noop)
 
-  t.notOk(findMyWay.find('GET', '/', { version: '1.x' }))
+  t.notOk(findMyWay.find('GET', '/', { version: '1.x', __hasMustMatchValues: true }))
 })
 
 test('A route could support multiple versions (lookup)', t => {

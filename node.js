@@ -25,7 +25,7 @@ function Node (options) {
   this.wildcardChild = null
   this.parametricBrother = null
   this.constrainer = options.constrainer
-  this.constraintKeys = options.constraintKeys || []
+  this.hasConstraints = false || options.hasConstraints
   this.constrainedHandlerStores = null
 }
 
@@ -107,7 +107,7 @@ Node.prototype.reset = function (prefix, constraints) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
-  this.constraintKeys = []
+  this.hasConstraints = true
   this._decompileGetHandlerMatchingConstraints()
   return this
 }
@@ -121,7 +121,7 @@ Node.prototype.split = function (length) {
       handlers: this.handlers.slice(0),
       regex: this.regex,
       constrainer: this.constrainer,
-      constraintKeys: this.constraintKeys.slice(0)
+      hasConstraints: this.hasConstraints
     }
   )
 
@@ -172,10 +172,12 @@ Node.prototype.addHandler = function (handler, params, store, constraints) {
     paramsLength: params.length
   })
 
-  for (const key in constraints) {
-    if (!this.constraintKeys.includes(key)) {
-      this.constraintKeys.push(key)
-    }
+  if (Object.keys(constraints).length > 0) {
+    this.hasConstraints = true
+  }
+
+  if (this.hasConstraints && this.handlers.length > 32) {
+    throw new Error('find-my-way supports a maximum of 32 route handlers per node when there are constraints, limit reached')
   }
 
   // Note that the fancy constraint handler matcher needs to be recompiled now that the list of handlers has changed
@@ -195,21 +197,20 @@ function compileThenGetHandlerMatchingConstraints (derivedConstraints) {
 
 // This is the hot path for node handler finding -- change with care!
 Node.prototype.getMatchingHandler = function (derivedConstraints) {
-  // If this node has no handlers, it can't ever match anything, so set a function that just returns null
-  if (this.handlers.length === 0) {
-    return null
-  }
-
-  if (this.constraintKeys.length === 0) {
-    // If this node doesn't have any handlers that are constrained, don't spend any time matching constraints.
-    // Use the performant derviedConstraint checker from the constrainer
-    return this.constrainer.mustMatchHandlerMatcher.call(this, derivedConstraints)
-  } else {
+  if (this.hasConstraints) {
     // This node is constrained, use the performant precompiled constraint matcher
     return this._getHandlerMatchingConstraints(derivedConstraints)
+  } else {
+    // This node doesn't have any handlers that are constrained, so they probably match. Ensure the derived constraints have no constraints that *must* match, like version, and then return the first handler.
+    if (derivedConstraints.__hasMustMatchValues) {
+      return null
+    } else {
+      return this.handlers[0]
+    }
   }
 }
 
+// Slot for the compiled constraint matching function
 Node.prototype._getHandlerMatchingConstraints = compileThenGetHandlerMatchingConstraints
 
 Node.prototype._decompileGetHandlerMatchingConstraints = function () {
@@ -258,9 +259,9 @@ Node.prototype._constrainedIndexBitmask = function (constraint) {
 // To implement this efficiently, we use bitmaps so we can use bitwise operations. They're cheap to allocate, let us implement this masking behaviour in one CPU instruction, and are quite compact in memory. We start with a bitmap set to all 1s representing every handler being a candidate, and then for each constraint, see which handlers match using the store, and then mask the result by the mask of handlers that that store applies to, and bitwise AND with the candidate list. Phew.
 Node.prototype._compileGetHandlerMatchingConstraints = function () {
   this.constrainedHandlerStores = {}
+  const constraints = Array.from(new Set(this.handlers.map(handler => Object.keys(handler.constraints)).flat()))
   const lines = []
 
-  const constraints = Array.from(this.constraintKeys)
   // always check the version constraint first as it is the most selective
   constraints.sort((a, b) => a === 'version' ? 1 : 0)
 
