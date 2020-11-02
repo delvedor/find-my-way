@@ -259,7 +259,13 @@ Node.prototype._constrainedIndexBitmask = function (constraint) {
 // To implement this efficiently, we use bitmaps so we can use bitwise operations. They're cheap to allocate, let us implement this masking behaviour in one CPU instruction, and are quite compact in memory. We start with a bitmap set to all 1s representing every handler being a candidate, and then for each constraint, see which handlers match using the store, and then mask the result by the mask of handlers that that store applies to, and bitwise AND with the candidate list. Phew.
 Node.prototype._compileGetHandlerMatchingConstraints = function () {
   this.constrainedHandlerStores = {}
-  const constraints = Array.from(new Set(this.handlers.map(handler => Object.keys(handler.constraints)).flat()))
+  let constraints = new Set()
+  for (const handler of this.handlers) {
+    for (const key of Object.keys(handler.constraints)) {
+      constraints.add(key)
+    }
+  }
+  constraints = Array.from(constraints)
   const lines = []
 
   // always check the version constraint first as it is the most selective
