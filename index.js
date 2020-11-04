@@ -51,7 +51,14 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  this.versioning = opts.versioning || acceptVersionStrategy
+  // TODO: versioning should be disabled by default in the next major
+  if (opts.versioning === false) {
+    this.versioning = acceptVersionStrategy
+    this.versioning.deriveVersion = function (req, ctx) {}
+    this.versioning.disabled = true
+  } else {
+    this.versioning = opts.versioning || acceptVersionStrategy
+  }
   this.trees = {}
   this.routes = []
 }
@@ -111,6 +118,9 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   })
 
   const version = opts.version
+  if (version != null && this.versioning.disabled) {
+    throw new Error('Route versioning is disabled')
+  }
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
