@@ -100,3 +100,12 @@ let http2Res!: Http2ServerResponse;
   expectType<string>(router.prettyPrint())
 
 }
+
+// HTTP1 (no versioning)
+{
+  let handler: Router.Handler<Router.HTTPVersion.V1>
+  const router = Router({
+    versioning: false
+  })
+  expectType<Router.Instance<Router.HTTPVersion.V1>>(router)
+}

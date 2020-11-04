@@ -240,3 +240,32 @@ test('It should throw if you declare multiple times the same route', t => {
     t.is(err.message, 'Method \'GET\' already declared for route \'/\' version \'1.2.3\'')
   }
 })
+
+test('Disable versioning', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay({
+    versioning: false,
+    defaultRoute: (req, res) => {
+      t.fail('We should not be here')
+    }
+  })
+
+  try {
+    findMyWay.on('GET', '/', { version: '1.2.3' }, (req, res) => {
+      t.fail('We should not be here')
+    })
+  } catch (err) {
+    t.is(err.message, 'Route versioning is disabled')
+  }
+
+  findMyWay.on('GET', '/', (req, res) => {
+    t.pass('called')
+  })
+
+  findMyWay.lookup({
+    method: 'GET',
+    url: '/',
+    headers: { 'accept-version': '1.x' }
+  }, null)
+})
