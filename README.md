@@ -124,6 +124,8 @@ The custom strategy object should contain next properties:
 
 The signature of the functions and objects must match the one from the example above.
 
+You can disable the default route versioning by passing `versioning: false`.
+
 
 *Please, be aware, if you use custom versioning strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself*
 
