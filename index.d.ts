@@ -77,7 +77,7 @@ declare namespace Router {
       res: Res<V>
     ): void;
 
-    versioning? : false | {
+      versioning? : boolean | {
       storage() : {
         get(version: String) : Handler<V> | null,
         set(version: String, store: Handler<V>) : void,

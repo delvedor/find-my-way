@@ -31,6 +31,7 @@ function Router (opts) {
   if (!(this instanceof Router)) {
     return new Router(opts)
   }
+
   opts = opts || {}
 
   if (opts.defaultRoute) {
@@ -51,13 +52,14 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  // TODO: versioning should be disabled by default in the next major
-  if (opts.versioning === false) {
-    this.versioning = acceptVersionStrategy
-    this.versioning.deriveVersion = function (req, ctx) {}
-    this.versioning.disabled = true
+  if (typeof opts.versioning === 'boolean' || opts.versioning == null) {
+    this.versioning = acceptVersionStrategy()
+    if (!opts.versioning) {
+      this.versioning.deriveVersion = function (req, ctx) {}
+      this.versioning.disabled = true
+    }
   } else {
-    this.versioning = opts.versioning || acceptVersionStrategy
+    this.versioning = opts.versioning
   }
   this.trees = {}
   this.routes = []
