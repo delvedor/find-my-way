@@ -50,7 +50,7 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  this.versioning = opts.versioning || acceptVersionStrategy
+  this.versioning = opts.versioning || acceptVersionStrategy(false)
   this.tree = new Node({ versions: this.versioning.storage() })
   this.routes = []
 }
@@ -105,6 +105,9 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   })
 
   const version = opts.version
+  if (version != null && this.versioning.disabled) {
+    this.versioning = acceptVersionStrategy(true)
+  }
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
