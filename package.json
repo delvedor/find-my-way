@@ -1,6 +1,6 @@
 {
   "name": "find-my-way",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "Crazy fast http radix based router",
   "main": "index.js",
   "typings": "index.d.ts",
