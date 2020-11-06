@@ -215,12 +215,14 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
     // let's split the node and add a new child
     if (len < prefixLen) {
       node = new Node(
-        { prefix: prefix.slice(len),
+        {
+          prefix: prefix.slice(len),
           children: currentNode.children,
           kind: currentNode.kind,
           handlers: new Node.Handlers(currentNode.handlers),
           regex: currentNode.regex,
-          versions: currentNode.versions }
+          versions: currentNode.versions
+        }
       )
       if (currentNode.wildcardChild !== null) {
         node.wildcardChild = currentNode.wildcardChild
@@ -585,7 +587,7 @@ Router.prototype.prettyPrint = function () {
 }
 
 for (var i in http.METHODS) {
-  if (!http.METHODS.hasOwnProperty(i)) continue
+  if (!http.METHODS.hasOwnProperty(i)) continue // eslint-disable-line
   const m = http.METHODS[i]
   const methodName = m.toLowerCase()
 

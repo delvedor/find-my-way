@@ -17,7 +17,7 @@ const customVersioning = {
     }
   },
   deriveVersion: (req, ctx) => {
-    return req.headers['accept']
+    return req.headers.accept
   }
 }
 
