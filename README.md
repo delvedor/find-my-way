@@ -146,11 +146,12 @@ router.on('GET', '/example', (req, res, params, store) => {
 
 ##### Versioned routes
 
-If needed you can provide a `version` option, which will allow you to declare multiple versions of the same route.
+If needed you can provide a `version` option, which will allow you to declare multiple versions of the same route. By default this feaure is disabled for security reasons, you can enable it with `versioning: true` or by  passing a custom versioning strategy.
+Remember to configure a [`Vary`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) header with the value you are using for deifning the versioniing (e.g.: `'Accept-Version'`), to prevent cache poisoning attacks.
 
 ###### default
 <a name="semver"></a>
-Default versioning strategy is called `accept-version` and it follows the [semver](https://semver.org/) specification.<br/>
+If enabled with `versioning: true`, the default versioning strategy is called `accept-version` and it follows the [semver](https://semver.org/) specification.<br/>
 When using `lookup`, `find-my-way` will automatically detect the `Accept-Version` header and route the request accordingly.<br/>
 Internally `find-my-way` uses the [`semver-store`](https://github.com/delvedor/semver-store) to get the correct version of the route; *advanced ranges* and *pre-releases* currently are not supported.<br/>
 *Be aware that using this feature will cause a degradation of the overall performances of the router.*
