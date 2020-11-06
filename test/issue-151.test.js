@@ -30,6 +30,7 @@ test('Wildcard route should not be blocked by Parametric with different method /
 test('Wildcard route should not be blocked by Parametric with different method / 2', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
+    versioning: true,
     defaultRoute: (req, res) => {
       t.fail('Should not be defaultRoute')
     }

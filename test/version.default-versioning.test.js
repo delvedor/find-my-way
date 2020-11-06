@@ -8,7 +8,7 @@ const noop = () => {}
 test('A route could support multiple versions (find) / 1', t => {
   t.plan(7)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/', { version: '1.2.3' }, noop)
   findMyWay.on('GET', '/', { version: '3.2.0' }, noop)
@@ -25,7 +25,7 @@ test('A route could support multiple versions (find) / 1', t => {
 test('A route could support multiple versions (find) / 2', t => {
   t.plan(7)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/test', { version: '1.2.3' }, noop)
   findMyWay.on('GET', '/test', { version: '3.2.0' }, noop)
@@ -42,7 +42,7 @@ test('A route could support multiple versions (find) / 2', t => {
 test('A route could support multiple versions (find) / 3', t => {
   t.plan(10)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/test/:id/hello', { version: '1.2.3' }, noop)
   findMyWay.on('GET', '/test/:id/hello', { version: '3.2.0' }, noop)
@@ -63,7 +63,7 @@ test('A route could support multiple versions (find) / 3', t => {
 test('A route could support multiple versions (find) / 4', t => {
   t.plan(8)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/test/*', { version: '1.2.3' }, noop)
   findMyWay.on('GET', '/test/hello', { version: '3.2.0' }, noop)
@@ -81,7 +81,7 @@ test('A route could support multiple versions (find) / 4', t => {
 test('A route could support multiple versions (find) / 5', t => {
   t.plan(1)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/', { version: '1.2.3' }, () => false)
   findMyWay.on('GET', '/', { version: '3.2.0' }, () => true)
@@ -103,6 +103,7 @@ test('A route could support multiple versions (lookup)', t => {
   t.plan(7)
 
   const findMyWay = FindMyWay({
+    versioning: true,
     defaultRoute: (req, res) => {
       const versions = ['2.x', '2.3.4', '3.2.1']
       t.ok(versions.indexOf(req.headers['accept-version']) > -1)
@@ -165,7 +166,7 @@ test('A route could support multiple versions (lookup)', t => {
 test('It should always choose the highest version of a route', t => {
   t.plan(3)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/', { version: '2.3.0' }, (req, res) => {
     t.fail('We should not be here')
@@ -217,7 +218,7 @@ test('It should always choose the highest version of a route', t => {
 test('Declare the same route with and without version', t => {
   t.plan(2)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/', noop)
   findMyWay.on('GET', '/', { version: '1.2.0' }, noop)
@@ -229,7 +230,7 @@ test('Declare the same route with and without version', t => {
 test('It should throw if you declare multiple times the same route', t => {
   t.plan(1)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/', { version: '1.2.3' }, noop)
 

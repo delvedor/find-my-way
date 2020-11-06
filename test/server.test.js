@@ -268,7 +268,7 @@ test('does not map // when ignoreTrailingSlash is true', t => {
 test('versioned routes', t => {
   t.plan(5)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/test', { version: '1.2.3' }, (req, res, params) => {
     res.end('ok')

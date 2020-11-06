@@ -8,7 +8,7 @@ const noop = () => {}
 test('Should keep semver store when split node', t => {
   t.plan(4)
 
-  const findMyWay = FindMyWay()
+  const findMyWay = FindMyWay({ versioning: true })
 
   findMyWay.on('GET', '/t1', { version: '1.0.0' }, noop)
   findMyWay.on('GET', '/t2', { version: '2.1.0' }, noop)
