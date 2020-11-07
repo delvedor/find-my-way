@@ -40,28 +40,6 @@ findMyWay.on('GET', '/posts/:id/comments/:id', () => true)
 findMyWay.on('GET', '/posts/:id/comments/:id/author', () => true)
 findMyWay.on('GET', '/posts/:id/counter', () => true)
 
-findMyWay.on('GET', '/pages', () => true)
-findMyWay.on('POST', '/pages', () => true)
-findMyWay.on('GET', '/pages/:id', () => true)
-
-findMyWay.on('GET', '/products', () => true)
-findMyWay.on('GET', '/products/:id', () => true)
-findMyWay.on('GET', '/products/:id/options', () => true)
-
-findMyWay.on('GET', '/posts', () => true)
-findMyWay.on('POST', '/posts', () => true)
-findMyWay.on('GET', '/posts/:id', () => true)
-findMyWay.on('GET', '/posts/:id/author', () => true)
-findMyWay.on('GET', '/posts/:id/comments', () => true)
-findMyWay.on('POST', '/posts/:id/comments', () => true)
-findMyWay.on('GET', '/posts/:id/comments/:id', () => true)
-findMyWay.on('GET', '/posts/:id/comments/:id/author', () => true)
-findMyWay.on('GET', '/posts/:id/counter', () => true)
-
-findMyWay.on('GET', '/pages', () => true)
-findMyWay.on('POST', '/pages', () => true)
-findMyWay.on('GET', '/pages/:id', () => true)
-
 suite
   .add('lookup static route', function () {
     findMyWay.lookup({ method: 'GET', url: '/', headers: { host: 'fastify.io' } }, null)
