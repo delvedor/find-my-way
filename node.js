@@ -18,6 +18,7 @@ function Node (options) {
   this.label = this.prefix[0]
   this.method = options.method // not used for logic, just for debugging and pretty printing
   this.handlers = options.handlers || [] // unoptimized list of handler objects for which the fast matcher function will be compiled
+  this.unconstrainedHandler = options.unconstrainedHandler || null // optimized reference to the handler that will match most of the time
   this.children = options.children || {}
   this.numberOfChildren = Object.keys(this.children).length
   this.kind = options.kind || this.types.STATIC
@@ -103,11 +104,12 @@ Node.prototype.reset = function (prefix, constraints) {
   this.prefix = prefix
   this.children = {}
   this.handlers = []
+  this.unconstrainedHandler = null
   this.kind = this.types.STATIC
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
-  this.hasConstraints = true
+  this.hasConstraints = false
   this._decompileGetHandlerMatchingConstraints()
   return this
 }
@@ -121,7 +123,8 @@ Node.prototype.split = function (length) {
       handlers: this.handlers.slice(0),
       regex: this.regex,
       constrainer: this.constrainer,
-      hasConstraints: this.hasConstraints
+      hasConstraints: this.hasConstraints,
+      unconstrainedHandler: this.unconstrainedHandler
     }
   )
 
@@ -163,17 +166,20 @@ Node.prototype.addHandler = function (handler, params, store, constraints) {
   if (!handler) return
   assert(!this.getHandler(constraints), `There is already a handler with constraints '${JSON.stringify(constraints)}' and method '${this.method}'`)
 
-  this.handlers.push({
-    index: this.handlers.length,
+  const handlerObject = {
     handler: handler,
     params: params,
     constraints: constraints,
     store: store || null,
     paramsLength: params.length
-  })
+  }
+
+  this.handlers.push(handlerObject)
 
   if (Object.keys(constraints).length > 0) {
     this.hasConstraints = true
+  } else {
+    this.unconstrainedHandler = handlerObject
   }
 
   if (this.hasConstraints && this.handlers.length > 32) {
@@ -201,11 +207,11 @@ Node.prototype.getMatchingHandler = function (derivedConstraints) {
     // This node is constrained, use the performant precompiled constraint matcher
     return this._getHandlerMatchingConstraints(derivedConstraints)
   } else {
-    // This node doesn't have any handlers that are constrained, so they probably match. Ensure the derived constraints have no constraints that *must* match, like version, and then return the first handler.
-    if (derivedConstraints.__hasMustMatchValues) {
+    // This node doesn't have any handlers that are constrained, so it's handlers probably match. Some requests have constraint values that *must* match however, like version, so check for those before returning it.
+    if (derivedConstraints && derivedConstraints.__hasMustMatchValues) {
       return null
     } else {
-      return this.handlers[0]
+      return this.unconstrainedHandler
     }
   }
 }

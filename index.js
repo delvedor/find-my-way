@@ -108,6 +108,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   }
 
   this.constrainer.validateConstraints(constraints)
+  // Let the constrainer know if any constraints are being used now
+  this.constrainer.noteUsage(constraints)
 
   const params = []
   var j = 0
@@ -211,6 +213,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
   var max = 0
   var node = null
 
+  // Boot the tree for this method if it doesn't exist yet
   var currentNode = this.trees[method]
   if (typeof currentNode === 'undefined') {
     currentNode = new Node({ method: method, constrainer: this.constrainer })
@@ -368,7 +371,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     var previousPath = path
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = currentNode.getMatchingHandler(derivedConstraints)
+      var handle = derivedConstraints ? currentNode.getMatchingHandler(derivedConstraints) : currentNode.unconstrainedHandler
       if (handle !== null && handle !== undefined) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
