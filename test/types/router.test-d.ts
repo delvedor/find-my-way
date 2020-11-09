@@ -28,6 +28,22 @@ let http2Res!: Http2ServerResponse;
         }
       },
       deriveVersion(req) { return '1.0.0' }
+    },
+    constraints: {
+      foo: {
+        name: 'foo',
+        mustMatchWhenDerived: true,
+        storage () {
+          return {
+            get (version) { return handler },
+            set (version, handler) {},
+            del (version) {},
+            empty () {}
+          }
+        },
+        deriveConstraint(req) { return '1.0.0' },
+        validate(value) { if (typeof value === "string") { throw new Error("invalid")} }
+      }
     }
   })
   expectType<Router.Instance<Router.HTTPVersion.V1>>(router)
@@ -47,6 +63,7 @@ let http2Res!: Http2ServerResponse;
   expectType<void>(router.off(['GET', 'POST'], '/'))
 
   expectType<void>(router.lookup(http1Req, http1Res))
+  expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/'))
   expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/', {}))
   expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/', {version: '1.0.0'}))
 

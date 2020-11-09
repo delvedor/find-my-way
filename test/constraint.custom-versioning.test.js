@@ -36,3 +36,28 @@ test('A route could support multiple versions (find) / 1', t => {
   t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=5' }))
   t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=6' }))
 })
+
+test('Overriding default strategies uses the custom deriveConstraint function', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay({ constraints: { version: customVersioning } })
+
+  findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, (req, res, params) => {
+    t.ok(req.headers.accept, 'application/vnd.example.api+json;version=2')
+  })
+
+  findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, (req, res, params) => {
+    t.ok(req.headers.accept, 'application/vnd.example.api+json;version=3')
+  })
+
+  findMyWay.lookup({
+    method: 'GET',
+    url: '/',
+    headers: { accept: 'application/vnd.example.api+json;version=2' }
+  })
+  findMyWay.lookup({
+    method: 'GET',
+    url: '/',
+    headers: { accept: 'application/vnd.example.api+json;version=3' }
+  })
+})
