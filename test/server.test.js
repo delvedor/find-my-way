@@ -91,6 +91,38 @@ test('default route', t => {
   })
 })
 
+test('default route is updated correctly', t => {
+  t.plan(3)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      res.statusCode = 404
+      res.end()
+    }
+  })
+
+  findMyWay.setDefaultRoute((req, res) => {
+    res.statusCode = 200
+    res.end()
+  })
+
+  const server = http.createServer((req, res) => {
+    findMyWay.lookup(req, res)
+  })
+
+  server.listen(0, err => {
+    t.error(err)
+    server.unref()
+
+    request({
+      method: 'GET',
+      uri: 'http://localhost:' + server.address().port
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+    })
+  })
+})
+
 test('automatic default route', t => {
   t.plan(3)
   const findMyWay = FindMyWay()
