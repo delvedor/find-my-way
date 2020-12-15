@@ -57,6 +57,11 @@ declare namespace Router {
     store: any
   ) => void;
 
+  type DefaultRoute<V extends HTTPVersion> = (
+    req: Req<V>,
+    res: Res<V>,
+  ) => void;
+
   interface Config<V extends HTTPVersion> {
     ignoreTrailingSlash?: boolean;
 
@@ -66,10 +71,7 @@ declare namespace Router {
 
     maxParamLength?: number;
 
-    defaultRoute?(
-      req: Req<V>,
-      res: Res<V>
-    ): void;
+    defaultRoute?: DefaultRoute<V>;
 
     onBadUrl?(
       path: string,
@@ -144,6 +146,10 @@ declare namespace Router {
       path: string,
       version?: string
     ): FindResult<V> | null;
+
+    setDefaultRoute(
+      defaultRoute: DefaultRoute<V>,
+    ): void;
 
     reset(): void;
     prettyPrint(): string;
