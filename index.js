@@ -33,12 +33,8 @@ function Router (opts) {
   }
   opts = opts || {}
 
-  if (opts.defaultRoute) {
-    assert(typeof opts.defaultRoute === 'function', 'The default route must be a function')
-    this.defaultRoute = opts.defaultRoute
-  } else {
-    this.defaultRoute = null
-  }
+  this.defaultRoute = null
+  this.setDefaultRoute(opts.defaultRoute)
 
   if (opts.onBadUrl) {
     assert(typeof opts.onBadUrl === 'function', 'The bad url handler must be a function')
@@ -585,6 +581,13 @@ Router.prototype._defaultRoute = function (req, res, ctx) {
   } else {
     res.statusCode = 404
     res.end()
+  }
+}
+
+Router.prototype.setDefaultRoute = function (defaultRoute) {
+  if (defaultRoute) {
+    assert(typeof defaultRoute === 'function', 'The default route must be a function')
+    this.defaultRoute = defaultRoute
   }
 }
 
