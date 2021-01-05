@@ -123,7 +123,7 @@ Custom constraining strategies can be added and are matched against incoming req
 ```js
 const customResponseTypeStrategy = {
   // strategy name for referencing in the route handler `constraints` options
-  name: "accept",
+  name: 'accept',
   // storage factory for storing routes in the find-my-way route tree
   storage: function () {
     let handlers = {}
@@ -167,7 +167,7 @@ By default, `find-my-way` uses a built in strategies for the version constraint 
 ```js
 const customVersioning = {
   // replace the built in version strategy
-  name: version,
+  name: 'version',
   // storage factory
   storage: function () {
     let versions = {}

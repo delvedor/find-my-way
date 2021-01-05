@@ -43,11 +43,11 @@ test('Overriding default strategies uses the custom deriveConstraint function', 
   const findMyWay = FindMyWay({ constraints: { version: customVersioning } })
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, (req, res, params) => {
-    t.ok(req.headers.accept, 'application/vnd.example.api+json;version=2')
+    t.strictEqual(req.headers.accept, 'application/vnd.example.api+json;version=2')
   })
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, (req, res, params) => {
-    t.ok(req.headers.accept, 'application/vnd.example.api+json;version=3')
+    t.strictEqual(req.headers.accept, 'application/vnd.example.api+json;version=3')
   })
 
   findMyWay.lookup({
