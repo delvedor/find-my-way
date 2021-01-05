@@ -18,17 +18,6 @@ let http2Res!: Http2ServerResponse;
     maxParamLength: 42,
     defaultRoute (http1Req, http1Res) {},
     onBadUrl (path, http1Req, http1Res) {},
-    versioning: {
-      storage () {
-        return {
-          get (version) { return handler },
-          set (version, handler) {},
-          del (version) {},
-          empty () {}
-        }
-      },
-      deriveVersion(req) { return '1.0.0' }
-    },
     constraints: {
       foo: {
         name: 'foo',
@@ -50,14 +39,14 @@ let http2Res!: Http2ServerResponse;
 
   expectType<void>(router.on('GET', '/', () => {}))
   expectType<void>(router.on(['GET', 'POST'], '/', () => {}))
-  expectType<void>(router.on('GET', '/', { version: '1.0.0' }, () => {}))
+  expectType<void>(router.on('GET', '/', { constraints: { version: '1.0.0' }}, () => {}))
   expectType<void>(router.on('GET', '/', () => {}, {}))
-  expectType<void>(router.on('GET', '/', { version: '1.0.0' }, () => {}, {}))
+  expectType<void>(router.on('GET', '/', {constraints: { version: '1.0.0' }}, () => {}, {}))
 
   expectType<void>(router.get('/', () => {}))
-  expectType<void>(router.get('/', { version: '1.0.0' }, () => {}))
+  expectType<void>(router.get('/', { constraints: { version: '1.0.0' }}, () => {}))
   expectType<void>(router.get('/', () => {}, {}))
-  expectType<void>(router.get('/', { version: '1.0.0' }, () => {}, {}))
+  expectType<void>(router.get('/', { constraints: { version: '1.0.0' }}, () => {}, {}))
 
   expectType<void>(router.off('GET', '/'))
   expectType<void>(router.off(['GET', 'POST'], '/'))
@@ -81,30 +70,35 @@ let http2Res!: Http2ServerResponse;
     maxParamLength: 42,
     defaultRoute (http1Req, http1Res) {},
     onBadUrl (path, http1Req, http1Res) {},
-    versioning: {
-      storage () {
-        return {
-          get (version) { return handler },
-          set (version, handler) {},
-          del (version) {},
-          empty () {}
-        }
-      },
-      deriveVersion(req) { return '1.0.0' }
+    constraints: {
+      foo: {
+        name: 'foo',
+        mustMatchWhenDerived: true,
+        storage () {
+          return {
+            get (version) { return handler },
+            set (version, handler) {},
+            del (version) {},
+            empty () {}
+          }
+        },
+        deriveConstraint(req) { return '1.0.0' },
+        validate(value) { if (typeof value === "string") { throw new Error("invalid")} }
+      }
     }
   })
   expectType<Router.Instance<Router.HTTPVersion.V2>>(router)
 
   expectType<void>(router.on('GET', '/', () => {}))
   expectType<void>(router.on(['GET', 'POST'], '/', () => {}))
-  expectType<void>(router.on('GET', '/', { version: '1.0.0' }, () => {}))
+  expectType<void>(router.on('GET', '/', { constraints: { version: '1.0.0' }}, () => {}))
   expectType<void>(router.on('GET', '/', () => {}, {}))
-  expectType<void>(router.on('GET', '/', { version: '1.0.0' }, () => {}, {}))
+  expectType<void>(router.on('GET', '/', { constraints: { version: '1.0.0' }}, () => {}, {}))
 
   expectType<void>(router.get('/', () => {}))
-  expectType<void>(router.get('/', { version: '1.0.0' }, () => {}))
+  expectType<void>(router.get('/', { constraints: { version: '1.0.0' }}, () => {}))
   expectType<void>(router.get('/', () => {}, {}))
-  expectType<void>(router.get('/', { version: '1.0.0' }, () => {}, {}))
+  expectType<void>(router.get('/', { constraints: { version: '1.0.0' }}, () => {}, {}))
 
   expectType<void>(router.off('GET', '/'))
   expectType<void>(router.off(['GET', 'POST'], '/'))

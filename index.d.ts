@@ -90,29 +90,12 @@ declare namespace Router {
       res: Res<V>
     ): void;
 
-    /**
-    * @deprecated  Old way of passing a custom version strategy. Prefer `constraints`.
-    */
-    versioning? : {
-      storage() : {
-        get(version: String) : Handler<V> | null,
-        set(version: String, store: Handler<V>) : void,
-        del(version: String) : void,
-        empty() : void
-      },
-      deriveVersion<Context>(req: Req<V>, ctx?: Context) : String,
-    }
-
     constraints? : {
       [key: string]: ConstraintStrategy<V>
     }
   }
 
   interface RouteOptions {
-    /**
-    * @deprecated Old way of registering a route constrained to a certain version. Prefer `constraints`, like `{constraints: { version: "1.x"}}`
-    */
-    version?: string;
     constraints?: { [key: string]: any }
   }
 

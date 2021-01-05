@@ -51,24 +51,7 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-
-  let constraints = opts.constraints
-  // support the deprecated style of passing a custom versioning strategy
-  if (opts.versioning) {
-    constraints = {
-      ...constraints,
-      version: {
-        name: 'version',
-        mustMatchWhenDerived: true,
-        storage: opts.versioning.storage,
-        deriveConstraint: opts.versioning.deriveVersion,
-        validate (value) {
-          assert(typeof value === 'string', 'Version should be a string')
-        }
-      }
-    }
-  }
-  this.constrainer = new Constrainer(constraints)
+  this.constrainer = new Constrainer(opts.constraints)
   this.trees = {}
   this.routes = []
 }
@@ -116,12 +99,6 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     if (Object.keys(opts.constraints).length !== 0) {
       constraints = opts.constraints
     }
-  }
-
-  // backwards compatability with old style of version constraint definition
-  if (opts.version !== undefined) {
-    assert(!constraints.version, "can't specify a route version option and a route constraints.version option")
-    constraints.version = opts.version
   }
 
   this.constrainer.validateConstraints(constraints)

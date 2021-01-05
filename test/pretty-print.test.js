@@ -116,8 +116,8 @@ test('pretty print - constrained parametric routes', t => {
   findMyWay.on('GET', '/test', () => {})
   findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {})
   findMyWay.on('GET', '/test/:hello', () => {})
-  findMyWay.on('GET', '/test/:hello', { version: '1.1.2' }, () => {})
-  findMyWay.on('GET', '/test/:hello', { version: '2.0.0' }, () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '1.1.2' } }, () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '2.0.0' } }, () => {})
 
   const tree = findMyWay.prettyPrint()
 
