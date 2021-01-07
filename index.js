@@ -353,7 +353,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   var pathLenWildcard = 0
   var decoded = null
   var pindex = 0
-  var params = []
+  var params = null
   var i = 0
   var idxInOriginalPath = 0
 
@@ -454,6 +454,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
           : null
       }
+      params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)
       idxInOriginalPath += i
@@ -468,6 +469,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath))
           : null
       }
+      params || (params = [])
       params[pindex] = decoded
       currentNode = node
       path = ''
@@ -487,6 +489,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
           : null
       }
       if (!node.regex.test(decoded)) return null
+      params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)
       idxInOriginalPath += i
@@ -511,6 +514,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
           : null
       }
+      params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)
       idxInOriginalPath += i
