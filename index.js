@@ -360,12 +360,10 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   while (true) {
     var pathLen = path.length
     var prefix = currentNode.prefix
-    var prefixLen = prefix.length
-    var len = 0
-    var previousPath = path
+
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = derivedConstraints ? currentNode.getMatchingHandler(derivedConstraints) : currentNode.unconstrainedHandler
+      var handle = derivedConstraints !== undefined ? currentNode.getMatchingHandler(derivedConstraints) : currentNode.unconstrainedHandler
       if (handle !== null && handle !== undefined) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
@@ -383,6 +381,10 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         }
       }
     }
+
+    var prefixLen = prefix.length
+    var len = 0
+    var previousPath = path
 
     // search for the longest common prefix
     i = pathLen < prefixLen ? pathLen : prefixLen
