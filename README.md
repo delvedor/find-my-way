@@ -168,12 +168,12 @@ By default, `find-my-way` uses a built in strategies for the version constraint 
 const customVersioning = {
   // replace the built in version strategy
   name: 'version',
-  // storage factory
+  // provide a storage factory to store handlers in a simple way
   storage: function () {
     let versions = {}
     return {
       get: (version) => { return versions[version] || null },
-      set: (version, store) => { versions[version] = store },
+      set: (version, handler) => { versions[version] = handler },
       del: (version) => { delete versions[version] },
       empty: () => { versions = {} }
     }
@@ -188,12 +188,12 @@ const router = FindMyWay({ constraints: { version: customVersioning } });
 ```
 
 The custom strategy object should contain next properties:
-* `storage` - the factory function for the Storage of the handlers based on their version.
-* `deriveConstraint` - the function to determine the version based on the request
+* `storage` - a factory function to store lists of handlers for each possible constraint value. The storage object can use domain-specific storage mechanisms to store handlers in a way that makes sense for the constraint at hand. See `lib/strategies` for examples, like the `version` constraint strategy that matches using semantic versions, or the `host` strategy that allows both exact and regex host constraints.
+* `deriveConstraint` - the function to determine the value of this constraint given a request
 
 The signature of the functions and objects must match the one from the example above.
 
-*Please, be aware, if you use custom versioning strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself*
+*Please, be aware, if you use your own constraining strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself!*
 
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])
@@ -387,10 +387,10 @@ router.lookup(req, res, { greeting: 'Hello, World!' })
 ```
 
 <a name="find"></a>
-#### find(method, path, constraints)
+#### find(method, path, [constraints])
 Return (if present) the route registered in *method:path*.<br>
 The path must be sanitized, all the parameters and wildcards are decoded automatically.<br/>
-The derived routing constraints must also be passed, like the host for the request, or optionally the version for the route to be matched. If the router is using the default versioning strategy, the version value should be conform to the [semver](https://semver.org/) specification. If you want to use the existing constraint strategies to derive the constraint values from an incoming request, use `lookup` instead of `find`.
+An object with routing constraints should usually be passed as `constraints`, containing keys like the `host` for the request, the `version` for the route to be matched, or other custom constraint values. If the router is using the default versioning strategy, the version value should be conform to the [semver](https://semver.org/) specification. If you want to use the existing constraint strategies to derive the constraint values from an incoming request, use `lookup` instead of `find`. If no value is passed for `constraints`, the router won't match any constrained routes. If using constrained routes, passing `undefined` for the constraints leads to undefined behavior and should be avoided.
 
 ```js
 router.find('GET', '/example', { host: 'fastify.io' })
