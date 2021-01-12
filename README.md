@@ -387,10 +387,11 @@ router.lookup(req, res, { greeting: 'Hello, World!' })
 ```
 
 <a name="find"></a>
-#### find(method, path [, version])
+#### find(method, path, constraints)
 Return (if present) the route registered in *method:path*.<br>
 The path must be sanitized, all the parameters and wildcards are decoded automatically.<br/>
-The derived routing constraints must also be passed, like the host for the request, or optionally the version for the route to be matched. In case of the default versioning strategy it should be conform to the [semver](https://semver.org/) specification.
+The derived routing constraints must also be passed, like the host for the request, or optionally the version for the route to be matched. If the router is using the default versioning strategy, the version value should be conform to the [semver](https://semver.org/) specification. If you want to use the existing constraint strategies to derive the constraint values from an incoming request, use `lookup` instead of `find`.
+
 ```js
 router.find('GET', '/example', { host: 'fastify.io' })
 // => { handler: Function, params: Object, store: Object}
