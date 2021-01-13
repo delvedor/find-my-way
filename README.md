@@ -237,6 +237,9 @@ and the URL of the incoming request is /33/foo/bar,
 the second route will be matched because the first chunk (33) matches the static chunk.
 If the URL would have been /32/foo/bar, the first route would have been matched.
 
+> If you just want a path containing a colon without declaring a parameter, use a double colon.
+> For example, `/name::customVerb` will be interpreted as `/name:customVerb`
+
 <a name="supported-methods"></a>
 ##### Supported methods
 The router is able to route all HTTP methods defined by [`http` core module](https://nodejs.org/api/http.html#http_http_methods).

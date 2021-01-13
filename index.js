@@ -119,6 +119,13 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     // search for parametric or wildcard routes
     // parametric route
     if (path.charCodeAt(i) === 58) {
+      if (i !== len - 1 && path.charCodeAt(i + 1) === 58) {
+        // It's a double colon. Let's just replace it with a single colon and go ahead
+        path = path.slice(0, i) + path.slice(i + 1)
+        len = path.length
+        continue
+      }
+
       var nodeType = NODE_TYPES.PARAM
       j = i + 1
       var staticPart = path.slice(0, i)
