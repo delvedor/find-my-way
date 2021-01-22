@@ -78,6 +78,52 @@ test('Multi parametric route with optional param', (t) => {
   findMyWay.lookup({ method: 'GET', url: '/a', headers: {} }, null)
 })
 
+test('Optional Parameter with ignoreTrailingSlash = true', (t) => {
+  t.plan(4)
+  const findMyWay = FindMyWay({
+    ignoreTrailingSlash: true,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/test/hello/:optional?/', (req, res, params) => {
+    if (params.optional) {
+      t.equal(params.optional, 'foo')
+    } else {
+      t.equal(params.optional, undefined)
+    }
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/foo', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/foo/', headers: {} }, null)
+})
+
+test('Optional Parameter with ignoreTrailingSlash = false', (t) => {
+  t.plan(4)
+  const findMyWay = FindMyWay({
+    ignoreTrailingSlash: false,
+    defaultRoute: (req, res) => {
+      t.notMatch(req.url, '.*/$') // urls without trailing slash
+    }
+  })
+
+  findMyWay.on('GET', '/test/hello/:optional?/', (req, res, params) => {
+    if (params.optional) {
+      t.equal(params.optional, 'foo')
+    } else {
+      t.equal(params.optional, undefined)
+    }
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/foo', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/foo/', headers: {} }, null)
+})
+
 test('derigister a route with optional param', (t) => {
   t.plan(4)
   const findMyWay = FindMyWay({
