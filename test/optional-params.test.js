@@ -74,7 +74,6 @@ test('Multi parametric route with optional param', (t) => {
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-bar-baz', headers: {} }, null)
-  // findMyWay.lookup({ method: 'GET', url: '/a/foo', headers: {} }, null)
   findMyWay.lookup({ method: 'GET', url: '/a', headers: {} }, null)
 })
 
