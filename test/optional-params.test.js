@@ -86,7 +86,7 @@ test('Optional Parameter with ignoreTrailingSlash = true', (t) => {
     }
   })
 
-  findMyWay.on('GET', '/test/hello/:optional?/', (req, res, params) => {
+  findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
     if (params.optional) {
       t.equal(params.optional, 'foo')
     } else {
@@ -105,15 +105,16 @@ test('Optional Parameter with ignoreTrailingSlash = false', (t) => {
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false,
     defaultRoute: (req, res) => {
-      t.notMatch(req.url, '.*/$') // urls without trailing slash
+      t.match(req.url, '/test/hello/foo/')
     }
   })
 
-  findMyWay.on('GET', '/test/hello/:optional?/', (req, res, params) => {
+  findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
+    console.log('req', req, 'opt', params.optional)
     if (params.optional) {
       t.equal(params.optional, 'foo')
     } else {
-      t.equal(params.optional, undefined)
+      t.equal(params.optional, req.url === '/test/hello/' ? '' : undefined)
     }
   })
 
