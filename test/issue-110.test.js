@@ -28,5 +28,5 @@ test('Nested static parametric route, url with parameter common prefix > 1', t =
     res.end('{"message":"hello world"}')
   })
 
-  t.deepEqual(findMyWay.find('GET', '/api/foo/b-123/bar', {}).params, { id: 'b-123' })
+  t.deepEqual(findMyWay.find('GET', '/api/foo/b-123/bar').params, { id: 'b-123' })
 })

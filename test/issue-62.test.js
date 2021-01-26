@@ -12,8 +12,8 @@ t.test('issue-62', (t) => {
 
   findMyWay.on('GET', '/foo/:id(([a-f0-9]{3},?)+)', noop)
 
-  t.notOk(findMyWay.find('GET', '/foo/qwerty', {}))
-  t.ok(findMyWay.find('GET', '/foo/bac,1ea', {}))
+  t.notOk(findMyWay.find('GET', '/foo/qwerty'))
+  t.ok(findMyWay.find('GET', '/foo/bac,1ea'))
 })
 
 t.test('issue-62 - escape chars', (t) => {
@@ -23,6 +23,6 @@ t.test('issue-62 - escape chars', (t) => {
 
   findMyWay.get('/foo/:param(\\([a-f0-9]{3}\\))', noop)
 
-  t.notOk(findMyWay.find('GET', '/foo/abc', {}))
+  t.notOk(findMyWay.find('GET', '/foo/abc'))
   t.ok(findMyWay.find('GET', '/foo/(abc)', {}))
 })

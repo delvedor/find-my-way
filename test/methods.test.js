@@ -126,12 +126,12 @@ test('off with nested wildcards with parametric and static', t => {
   findMyWay.on('GET', '/foo3/*', () => {})
   findMyWay.on('GET', '/foo4/param/hello/test/long/route', () => {})
 
-  var route1 = findMyWay.find('GET', '/foo3/first/second', {})
+  var route1 = findMyWay.find('GET', '/foo3/first/second')
   t.is(route1.params['*'], 'first/second')
 
   findMyWay.off('GET', '/foo3/*')
 
-  var route2 = findMyWay.find('GET', '/foo3/first/second', {})
+  var route2 = findMyWay.find('GET', '/foo3/first/second')
   t.is(route2.params['*'], '/foo3/first/second')
 
   findMyWay.off('GET', '/foo2/*')
@@ -176,8 +176,8 @@ test('deregister a route without children', t => {
   findMyWay.on('GET', '/a/b', () => {})
   findMyWay.off('GET', '/a/b')
 
-  t.ok(findMyWay.find('GET', '/a', {}))
-  t.notOk(findMyWay.find('GET', '/a/b', {}))
+  t.ok(findMyWay.find('GET', '/a'))
+  t.notOk(findMyWay.find('GET', '/a/b'))
 })
 
 test('deregister a route with children', t => {
@@ -188,8 +188,8 @@ test('deregister a route with children', t => {
   findMyWay.on('GET', '/a/b', () => {})
   findMyWay.off('GET', '/a')
 
-  t.notOk(findMyWay.find('GET', '/a', {}))
-  t.ok(findMyWay.find('GET', '/a/b', {}))
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.ok(findMyWay.find('GET', '/a/b'))
 })
 
 test('deregister a route by method', t => {
@@ -199,8 +199,8 @@ test('deregister a route by method', t => {
   findMyWay.on(['GET', 'POST'], '/a', () => {})
   findMyWay.off('GET', '/a')
 
-  t.notOk(findMyWay.find('GET', '/a', {}))
-  t.ok(findMyWay.find('POST', '/a', {}))
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.ok(findMyWay.find('POST', '/a'))
 })
 
 test('deregister a route with multiple methods', t => {
@@ -210,8 +210,8 @@ test('deregister a route with multiple methods', t => {
   findMyWay.on(['GET', 'POST'], '/a', () => {})
   findMyWay.off(['GET', 'POST'], '/a')
 
-  t.notOk(findMyWay.find('GET', '/a', {}))
-  t.notOk(findMyWay.find('POST', '/a', {}))
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.notOk(findMyWay.find('POST', '/a'))
 })
 
 test('reset a router', t => {
@@ -221,8 +221,8 @@ test('reset a router', t => {
   findMyWay.on(['GET', 'POST'], '/a', () => {})
   findMyWay.reset()
 
-  t.notOk(findMyWay.find('GET', '/a', {}))
-  t.notOk(findMyWay.find('POST', '/a', {}))
+  t.notOk(findMyWay.find('GET', '/a'))
+  t.notOk(findMyWay.find('POST', '/a'))
 })
 
 test('default route', t => {
@@ -434,7 +434,7 @@ test('find should return the route', t => {
   findMyWay.on('GET', '/test', fn)
 
   t.deepEqual(
-    findMyWay.find('GET', '/test', {}),
+    findMyWay.find('GET', '/test'),
     { handler: fn, params: {}, store: null }
   )
 })
@@ -447,7 +447,7 @@ test('find should return the route with params', t => {
   findMyWay.on('GET', '/test/:id', fn)
 
   t.deepEqual(
-    findMyWay.find('GET', '/test/hello', {}),
+    findMyWay.find('GET', '/test/hello'),
     { handler: fn, params: { id: 'hello' }, store: null }
   )
 })
@@ -457,7 +457,7 @@ test('find should return a null handler if the route does not exist', t => {
   const findMyWay = FindMyWay()
 
   t.deepEqual(
-    findMyWay.find('GET', '/test', {}),
+    findMyWay.find('GET', '/test'),
     null
   )
 })
@@ -470,7 +470,7 @@ test('should decode the uri - parametric', t => {
   findMyWay.on('GET', '/test/:id', fn)
 
   t.deepEqual(
-    findMyWay.find('GET', '/test/he%2Fllo', {}),
+    findMyWay.find('GET', '/test/he%2Fllo'),
     { handler: fn, params: { id: 'he/llo' }, store: null }
   )
 })
@@ -483,7 +483,7 @@ test('should decode the uri - wildcard', t => {
   findMyWay.on('GET', '/test/*', fn)
 
   t.deepEqual(
-    findMyWay.find('GET', '/test/he%2Fllo', {}),
+    findMyWay.find('GET', '/test/he%2Fllo'),
     { handler: fn, params: { '*': 'he/llo' }, store: null }
   )
 })
@@ -496,7 +496,7 @@ test('safe decodeURIComponent', t => {
   findMyWay.on('GET', '/test/:id', fn)
 
   t.deepEqual(
-    findMyWay.find('GET', '/test/hel%"Flo', {}),
+    findMyWay.find('GET', '/test/hel%"Flo'),
     null
   )
 })
@@ -509,7 +509,7 @@ test('safe decodeURIComponent - nested route', t => {
   findMyWay.on('GET', '/test/hello/world/:id/blah', fn)
 
   t.deepEqual(
-    findMyWay.find('GET', '/test/hello/world/hel%"Flo/blah', {}),
+    findMyWay.find('GET', '/test/hello/world/hel%"Flo/blah'),
     null
   )
 })
@@ -522,7 +522,7 @@ test('safe decodeURIComponent - wildcard', t => {
   findMyWay.on('GET', '/test/*', fn)
 
   t.deepEqual(
-    findMyWay.find('GET', '/test/hel%"Flo', {}),
+    findMyWay.find('GET', '/test/hel%"Flo'),
     null
   )
 })
@@ -700,7 +700,7 @@ test('Unsupported method (static find)', t => {
 
   findMyWay.on('GET', '/', () => {})
 
-  t.deepEqual(findMyWay.find('TROLL', '/', {}), null)
+  t.deepEqual(findMyWay.find('TROLL', '/'), null)
 })
 
 test('Unsupported method (wildcard find)', t => {
@@ -709,7 +709,7 @@ test('Unsupported method (wildcard find)', t => {
 
   findMyWay.on('GET', '*', () => {})
 
-  t.deepEqual(findMyWay.find('TROLL', '/hello/world', {}), null)
+  t.deepEqual(findMyWay.find('TROLL', '/hello/world'), null)
 })
 
 test('register all known HTTP methods', t => {
@@ -724,12 +724,12 @@ test('register all known HTTP methods', t => {
     findMyWay.on(m, '/test', handlers[m])
   }
 
-  t.ok(findMyWay.find('COPY', '/test', {}))
-  t.equal(findMyWay.find('COPY', '/test', {}).handler, handlers.COPY)
+  t.ok(findMyWay.find('COPY', '/test'))
+  t.equal(findMyWay.find('COPY', '/test').handler, handlers.COPY)
 
-  t.ok(findMyWay.find('SUBSCRIBE', '/test', {}))
-  t.equal(findMyWay.find('SUBSCRIBE', '/test', {}).handler, handlers.SUBSCRIBE)
+  t.ok(findMyWay.find('SUBSCRIBE', '/test'))
+  t.equal(findMyWay.find('SUBSCRIBE', '/test').handler, handlers.SUBSCRIBE)
 
-  t.ok(findMyWay.find('M-SEARCH', '/test', {}))
-  t.equal(findMyWay.find('M-SEARCH', '/test', {}).handler, handlers['M-SEARCH'])
+  t.ok(findMyWay.find('M-SEARCH', '/test'))
+  t.equal(findMyWay.find('M-SEARCH', '/test').handler, handlers['M-SEARCH'])
 })

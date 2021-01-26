@@ -19,7 +19,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (find
     t.fail('Should not be here')
   })
 
-  const handle = findMyWay.find('GET', '/hello/%world', {})
+  const handle = findMyWay.find('GET', '/hello/%world')
   t.notStrictEqual(handle, null)
 })
 
@@ -53,7 +53,7 @@ test('If onBadUrl is not defined, then we should call the defaultRoute (find)', 
     t.fail('Should not be here')
   })
 
-  const handle = findMyWay.find('GET', '/hello/%world', {})
+  const handle = findMyWay.find('GET', '/hello/%world')
   t.strictEqual(handle, null)
 })
 

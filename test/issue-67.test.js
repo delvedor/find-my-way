@@ -13,7 +13,7 @@ test('static routes', t => {
   findMyWay.on('GET', '/b/bulk', noop)
   findMyWay.on('GET', '/b/ulk', noop)
 
-  t.equal(findMyWay.find('GET', '/bulk', {}), null)
+  t.equal(findMyWay.find('GET', '/bulk'), null)
 })
 
 test('parametric routes', t => {
@@ -27,11 +27,11 @@ test('parametric routes', t => {
   findMyWay.on('GET', '/foo/search', noop)
   findMyWay.on('GET', '/foo/submit', noop)
 
-  t.equal(findMyWay.find('GET', '/foo/awesome-parameter', {}).handler, foo)
-  t.equal(findMyWay.find('GET', '/foo/b-first-character', {}).handler, foo)
-  t.equal(findMyWay.find('GET', '/foo/s-first-character', {}).handler, foo)
-  t.equal(findMyWay.find('GET', '/foo/se-prefix', {}).handler, foo)
-  t.equal(findMyWay.find('GET', '/foo/sx-prefix', {}).handler, foo)
+  t.equal(findMyWay.find('GET', '/foo/awesome-parameter').handler, foo)
+  t.equal(findMyWay.find('GET', '/foo/b-first-character').handler, foo)
+  t.equal(findMyWay.find('GET', '/foo/s-first-character').handler, foo)
+  t.equal(findMyWay.find('GET', '/foo/se-prefix').handler, foo)
+  t.equal(findMyWay.find('GET', '/foo/sx-prefix').handler, foo)
 })
 
 test('parametric with common prefix', t => {
