@@ -175,6 +175,8 @@ Node.prototype.addHandler = function (handler, params, store, constraints) {
   }
 
   this.handlers.push(handlerObject)
+  // Sort the most constrained handlers to the front of the list of handlers so they are tested first.
+  this.handlers.sort((a, b) => Object.keys(a.constraints).length - Object.keys(b.constraints).length)
 
   if (Object.keys(constraints).length > 0) {
     this.hasConstraints = true

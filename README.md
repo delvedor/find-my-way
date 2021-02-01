@@ -114,6 +114,7 @@ findMyWay.on('GET', '/', { constraints: { host: 'example.com' } }, (req, res) =>
 
 Constraints can be combined, and route handlers will only match if __all__ of the constraints for the handler match the request. `find-my-way` does a boolean AND with each route constraint, not an OR.
 
+`find-my-way` will try to match the most constrained handlers first before handler with fewer or no constraints.
 
 <a name="custom-constraint-strategies"></a>
 ### Custom Constraint Strategies
@@ -305,6 +306,8 @@ So if you declare the following routes
 and the URL of the incoming request is /33/foo/bar,
 the second route will be matched because the first chunk (33) matches the static chunk.
 If the URL would have been /32/foo/bar, the first route would have been matched.
+
+Once a url has been matched, `find-my-way` will figure out which handler registered for that path matches the request if there are any constraints. `find-my-way` will check the most constrained handlers first, which means the handlers with the most keys in the `constraints` object.
 
 <a name="supported-methods"></a>
 ##### Supported methods
