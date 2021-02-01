@@ -45,3 +45,25 @@ test('should support `.all` shorthand', t => {
   findMyWay.lookup({ method: 'COPY', url: '/test', headers: {} }, null)
   findMyWay.lookup({ method: 'SUBSCRIBE', url: '/test', headers: {} }, null)
 })
+
+test('should support `.all` shorthand with non-standard http methods', t => {
+  t.plan(12)
+  const findMyWay = FindMyWay({ httpMethods: [].concat(http.METHODS, ['NONSTANDARDMETHOD']) })
+
+  findMyWay.all('/test', () => {
+    t.ok('inside the handler')
+  })
+
+  findMyWay.lookup({ method: 'NONSTANDARDMETHOD', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'DELETE', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'HEAD', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'PATCH', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'POST', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'PUT', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'OPTIONS', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'TRACE', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'CONNECT', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'COPY', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'SUBSCRIBE', url: '/test', headers: {} }, null)
+})
