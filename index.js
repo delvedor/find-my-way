@@ -18,7 +18,7 @@ const isRegexSafe = require('safe-regex2')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode } = require('./lib/pretty-print')
 const Node = require('./node')
 const NODE_TYPES = Node.prototype.types
-const httpMethods = http.METHODS
+const defaultHttpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 
 if (!isRegexSafe(FULL_PATH_REGEXP)) {
@@ -52,6 +52,7 @@ function Router (opts) {
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.versioning = opts.versioning || acceptVersionStrategy(false)
+  this.httpMethods = Array.isArray(opts.httpMethods) ? opts.httpMethods : defaultHttpMethods
   this.trees = {}
   this.routes = []
 }
@@ -92,7 +93,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
   // method validation
   assert(typeof method === 'string', 'Method should be a string')
-  assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
+  assert(this.httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
 
   // version validation
   if (opts.version !== undefined) {
@@ -325,7 +326,7 @@ Router.prototype.off = function off (method, path) {
 
   // method validation
   assert(typeof method === 'string', 'Method should be a string')
-  assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
+  assert(this.httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
   // path validation
   assert(typeof path === 'string', 'Path should be a string')
   assert(path.length > 0, 'The path could not be empty')
@@ -629,7 +630,7 @@ for (var i in http.METHODS) {
 }
 
 Router.prototype.all = function (path, handler, store) {
-  this.on(httpMethods, path, handler, store)
+  this.on(this.httpMethods, path, handler, store)
 }
 
 module.exports = Router

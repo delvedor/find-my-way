@@ -108,3 +108,23 @@ test('pretty print - parametric routes with same parent and followed by a static
   t.is(typeof tree, 'string')
   t.equal(tree, expected)
 })
+
+test('pretty print - non-standard methods', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay({ httpMethods: ['NONSTANDARDMETHOD', 'GET'] })
+  findMyWay.on('NONSTANDARDMETHOD', '/test', () => {})
+  findMyWay.on('GET', '/test/hello', () => {})
+  findMyWay.on('GET', '/hello/world', () => {})
+
+  const tree = findMyWay.prettyPrint()
+
+  const expected = `└── /
+    ├── test (NONSTANDARDMETHOD)
+    │   └── /hello (GET)
+    └── hello/world (GET)
+`
+
+  t.is(typeof tree, 'string')
+  t.equal(tree, expected)
+})

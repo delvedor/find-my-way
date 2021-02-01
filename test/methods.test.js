@@ -55,6 +55,17 @@ test('register a route', t => {
   findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
 })
 
+test('register a route for non-standard method', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({ httpMethods: ['NONSTANDARDMETHOD'] })
+
+  findMyWay.on('NONSTANDARDMETHOD', '/test', () => {
+    t.ok('inside the handler')
+  })
+
+  findMyWay.lookup({ method: 'NONSTANDARDMETHOD', url: '/test', headers: {} }, null)
+})
+
 test('register a route with multiple methods', t => {
   t.plan(2)
   const findMyWay = FindMyWay()
@@ -78,6 +89,17 @@ test('does not register /test/*/ when ignoreTrailingSlash is true', t => {
     findMyWay.routes.filter((r) => r.path.includes('/test')).length,
     1
   )
+})
+
+test('defaults to built-in http METHODS for invalid option', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({ httpMethods: 'invalid' })
+
+  findMyWay.on('GET', '/test', () => {
+    t.ok('inside the handler')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
 })
 
 test('off throws for invalid method', t => {
