@@ -755,3 +755,24 @@ test('register all known HTTP methods', t => {
   t.ok(findMyWay.find('M-SEARCH', '/test'))
   t.equal(findMyWay.find('M-SEARCH', '/test').handler, handlers['M-SEARCH'])
 })
+
+test('shorthands throw if non-standard http methods used', t => {
+  t.plan(34)
+  const findMyWay = FindMyWay({ httpMethods: ['NONSTANDARDMETHOD'] })
+
+  const shorthandMethods = [
+    'acl', 'bind', 'checkout', 'connect', 'copy', 'delete',
+    'get', 'head', 'link', 'lock', 'm-search', 'merge',
+    'mkactivity', 'mkcalendar', 'mkcol', 'move', 'notify',
+    'options', 'patch', 'post', 'propfind', 'proppatch',
+    'purge', 'put', 'rebind', 'report', 'search', 'source',
+    'subscribe', 'trace', 'unbind', 'unlink', 'unlock',
+    'unsubscribe'
+  ]
+
+  for (const shorthandMethod of shorthandMethods) {
+    t.throws(() => {
+      findMyWay[shorthandMethod]('INVALID', '/a/b')
+    })
+  }
+})
