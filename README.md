@@ -127,6 +127,16 @@ The signature of the functions and objects must match the one from the example a
 
 *Please, be aware, if you use custom versioning strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself*
 
+<a name="http-methods"></a>
+By default, the node built-in http methods are supported. Pass an array of httpMethods to change this behavior.
+
+```js
+const router = FindMyWay({ httpMethods: ['SOMETHING', 'ELSE'] })
+router.on('SOMETHING', ...)
+// NOTE: Shorthands are not supported and existing standard shorthands will throw if used
+router.get(...) // throws because "GET" no longer exists
+```
+
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])
 Register a new route.
