@@ -1,52 +1,55 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 
-declare function Router<V extends Router.HTTPVersion = Router.HTTPVersion.V1>(
-  config?: Router.Config<V>
-): Router.Instance<V>;
+type HTTPMethod =
+  | 'ACL'
+  | 'BIND'
+  | 'CHECKOUT'
+  | 'CONNECT'
+  | 'COPY'
+  | 'DELETE'
+  | 'GET'
+  | 'HEAD'
+  | 'LINK'
+  | 'LOCK'
+  | 'M-SEARCH'
+  | 'MERGE'
+  | 'MKACTIVITY'
+  | 'MKCALENDAR'
+  | 'MKCOL'
+  | 'MOVE'
+  | 'NOTIFY'
+  | 'OPTIONS'
+  | 'PATCH'
+  | 'POST'
+  | 'PROPFIND'
+  | 'PROPPATCH'
+  | 'PURGE'
+  | 'PUT'
+  | 'REBIND'
+  | 'REPORT'
+  | 'SEARCH'
+  | 'SOURCE'
+  | 'SUBSCRIBE'
+  | 'TRACE'
+  | 'UNBIND'
+  | 'UNLINK'
+  | 'UNLOCK'
+  | 'UNSUBSCRIBE';
+
+declare function Router<
+  V extends Router.HTTPVersion = Router.HTTPVersion.V1,
+  TMethod extends string = HTTPMethod
+>(
+  config?: Router.Config<V, TMethod>
+): Router.Instance<V, TMethod>;
 
 declare namespace Router {
   enum HTTPVersion {
     V1 = 'http1',
     V2 = 'http2'
   }
-
-  type HTTPMethod =
-    | 'ACL'
-    | 'BIND'
-    | 'CHECKOUT'
-    | 'CONNECT'
-    | 'COPY'
-    | 'DELETE'
-    | 'GET'
-    | 'HEAD'
-    | 'LINK'
-    | 'LOCK'
-    | 'M-SEARCH'
-    | 'MERGE'
-    | 'MKACTIVITY'
-    | 'MKCALENDAR'
-    | 'MKCOL'
-    | 'MOVE'
-    | 'NOTIFY'
-    | 'OPTIONS'
-    | 'PATCH'
-    | 'POST'
-    | 'PROPFIND'
-    | 'PROPPATCH'
-    | 'PURGE'
-    | 'PUT'
-    | 'REBIND'
-    | 'REPORT'
-    | 'SEARCH'
-    | 'SOURCE'
-    | 'SUBSCRIBE'
-    | 'TRACE'
-    | 'UNBIND'
-    | 'UNLINK'
-    | 'UNLOCK'
-    | 'UNSUBSCRIBE';
-
+  
   type Req<V> = V extends HTTPVersion.V1 ? IncomingMessage : Http2ServerRequest;
   type Res<V> = V extends HTTPVersion.V1 ? ServerResponse : Http2ServerResponse;
 
@@ -70,7 +73,7 @@ declare namespace Router {
     deriveConstraint<Context>(req: Req<V>, ctx?: Context) : T,
   }
 
-  interface Config<V extends HTTPVersion> {
+  interface Config<V extends HTTPVersion, TMethod extends string> {
     ignoreTrailingSlash?: boolean;
 
     allowUnsafeRegex?: boolean;
@@ -78,6 +81,8 @@ declare namespace Router {
     caseSensitive?: boolean;
 
     maxParamLength?: number;
+
+    httpMethods?: Readonly<TMethod[]>;
 
     defaultRoute?(
       req: Req<V>,
@@ -112,33 +117,33 @@ declare namespace Router {
     store: any;
   }
 
-  interface Instance<V extends HTTPVersion> {
+  interface Instance<V extends HTTPVersion, TMethod extends string = HTTPMethod> {
     on(
-      method: HTTPMethod | HTTPMethod[],
+      method: TMethod | TMethod[],
       path: string,
       handler: Handler<V>
     ): void;
     on(
-      method: HTTPMethod | HTTPMethod[],
+      method: TMethod | TMethod[],
       path: string,
       options: RouteOptions,
       handler: Handler<V>
     ): void;
     on(
-      method: HTTPMethod | HTTPMethod[],
+      method: TMethod | TMethod[],
       path: string,
       handler: Handler<V>,
       store: any
     ): void;
     on(
-      method: HTTPMethod | HTTPMethod[],
+      method: TMethod | TMethod[],
       path: string,
       options: RouteOptions,
       handler: Handler<V>,
       store: any
     ): void;
 
-    off(method: HTTPMethod | HTTPMethod[], path: string): void;
+    off(method: TMethod | TMethod[], path: string): void;
 
     lookup<Context>(
       req: Req<V>,
@@ -147,7 +152,7 @@ declare namespace Router {
     ): void;
 
     find(
-      method: HTTPMethod,
+      method: TMethod,
       path: string,
       constraints?: { [key: string]: any }
     ): FindResult<V> | null;
