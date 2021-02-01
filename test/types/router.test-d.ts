@@ -98,5 +98,48 @@ let http2Res!: Http2ServerResponse;
 
   expectType<void>(router.reset())
   expectType<string>(router.prettyPrint())
+}
 
+// Non-standard HTTP methods
+{
+  const methods = ['NONSTANDARDMETHOD','SOMETHING'] as const
+  type HTTPMethod = typeof methods[number]
+  let handler: Router.Handler<Router.HTTPVersion.V2>
+  const router = Router<Router.HTTPVersion.V2, HTTPMethod>({
+    ignoreTrailingSlash: true,
+    allowUnsafeRegex: false,
+    caseSensitive: false,
+    maxParamLength: 42,
+    httpMethods: methods,
+    defaultRoute (http1Req, http1Res) {},
+    onBadUrl (path, http1Req, http1Res) {},
+    versioning: {
+      storage () {
+        return {
+          get (version) { return handler },
+          set (version, handler) {},
+          del (version) {},
+          empty () {}
+        }
+      },
+      deriveVersion(req) { return '1.0.0' }
+    }
+  })
+  expectType<Router.Instance<Router.HTTPVersion.V2, HTTPMethod>>(router)
+
+  expectType<void>(router.on('NONSTANDARDMETHOD', '/', () => {}))
+  expectType<void>(router.on(['NONSTANDARDMETHOD', 'SOMETHING'], '/', () => {}))
+  expectType<void>(router.on('NONSTANDARDMETHOD', '/', { version: '1.0.0' }, () => {}))
+  expectType<void>(router.on('NONSTANDARDMETHOD', '/', () => {}, {}))
+  expectType<void>(router.on('NONSTANDARDMETHOD', '/', { version: '1.0.0' }, () => {}, {}))
+
+  expectType<void>(router.off('NONSTANDARDMETHOD', '/'))
+  expectType<void>(router.off(['NONSTANDARDMETHOD', 'SOMETHING'], '/'))
+
+  expectType<void>(router.lookup(http2Req, http2Res))
+  expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('NONSTANDARDMETHOD', '/'))
+  expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('NONSTANDARDMETHOD', '/', '1.0.0'))
+
+  expectType<void>(router.reset())
+  expectType<string>(router.prettyPrint())
 }
