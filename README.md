@@ -174,7 +174,7 @@ const customVersioning = {
     let versions = {}
     return {
       get: (version) => { return versions[version] || null },
-      set: (version, handler) => { versions[version] = handler },
+      set: (version, store) => { versions[version] = store },
       del: (version) => { delete versions[version] },
       empty: () => { versions = {} }
     }
