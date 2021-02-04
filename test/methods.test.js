@@ -769,7 +769,7 @@ test('shorthands throw if non-standard http methods used', t => {
     'subscribe', 'trace', 'unbind', 'unlink', 'unlock',
     'unsubscribe'
   ]
-
+  t.plan(shorthandMethods.length)
   for (const shorthandMethod of shorthandMethods) {
     t.throws(() => {
       findMyWay[shorthandMethod]('INVALID', '/a/b')
