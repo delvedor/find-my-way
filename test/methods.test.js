@@ -757,7 +757,6 @@ test('register all known HTTP methods', t => {
 })
 
 test('shorthands throw if non-standard http methods used', t => {
-  t.plan(34)
   const findMyWay = FindMyWay({ httpMethods: ['NONSTANDARDMETHOD'] })
 
   const shorthandMethods = [
