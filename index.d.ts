@@ -57,6 +57,19 @@ declare namespace Router {
     store: any
   ) => void;
 
+  interface ConstraintStrategy<V extends HTTPVersion> {
+    name: string,
+    mustMatchWhenDerived?: boolean,
+    storage() : {
+      get(version: String) : Handler<V> | null,
+      set(version: String, store: Handler<V>) : void,
+      del(version: String) : void,
+      empty() : void
+    },
+    validate(value: unknown): void,
+    deriveConstraint<Context>(req: Req<V>, ctx?: Context) : String,
+  }
+
   interface Config<V extends HTTPVersion> {
     ignoreTrailingSlash?: boolean;
 
@@ -77,19 +90,13 @@ declare namespace Router {
       res: Res<V>
     ): void;
 
-    versioning? : {
-      storage() : {
-        get(version: String) : Handler<V> | null,
-        set(version: String, store: Handler<V>) : void,
-        del(version: String) : void,
-        empty() : void
-      },
-      deriveVersion<Context>(req: Req<V>, ctx?: Context) : String,
+    constraints? : {
+      [key: string]: ConstraintStrategy<V>
     }
   }
 
   interface RouteOptions {
-    version: string;
+    constraints?: { [key: string]: any }
   }
 
   interface ShortHandRoute<V extends HTTPVersion> {
@@ -142,7 +149,7 @@ declare namespace Router {
     find(
       method: HTTPMethod,
       path: string,
-      version?: string
+      constraints?: { [key: string]: any }
     ): FindResult<V> | null;
 
     reset(): void;

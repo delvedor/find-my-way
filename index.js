@@ -17,6 +17,8 @@ const fastDecode = require('fast-decode-uri-component')
 const isRegexSafe = require('safe-regex2')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode } = require('./lib/pretty-print')
 const Node = require('./node')
+const Constrainer = require('./lib/constrainer')
+
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
@@ -24,8 +26,6 @@ const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 if (!isRegexSafe(FULL_PATH_REGEXP)) {
   throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
 }
-
-const acceptVersionStrategy = require('./lib/accept-version')
 
 function Router (opts) {
   if (!(this instanceof Router)) {
@@ -51,7 +51,7 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  this.versioning = opts.versioning || acceptVersionStrategy(false)
+  this.constrainer = new Constrainer(opts.constraints)
   this.trees = {}
   this.routes = []
 }
@@ -90,14 +90,20 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     return
   }
 
-  // method validation
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
 
-  // version validation
-  if (opts.version !== undefined) {
-    assert(typeof opts.version === 'string', 'Version should be a string')
+  let constraints = {}
+  if (opts.constraints !== undefined) {
+    assert(typeof opts.constraints === 'object' && opts.constraints !== null, 'Constraints should be an object')
+    if (Object.keys(opts.constraints).length !== 0) {
+      constraints = opts.constraints
+    }
   }
+
+  this.constrainer.validateConstraints(constraints)
+  // Let the constrainer know if any constraints are being used now
+  this.constrainer.noteUsage(constraints)
 
   const params = []
   var j = 0
@@ -109,11 +115,6 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     handler: handler,
     store: store
   })
-
-  const version = opts.version
-  if (version != null && this.versioning.disabled) {
-    this.versioning = acceptVersionStrategy(true)
-  }
 
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
@@ -128,7 +129,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       }
 
       // add the static part of the route to the tree
-      this._insert(method, staticPart, NODE_TYPES.STATIC, null, null, null, null, version)
+      this._insert(method, staticPart, NODE_TYPES.STATIC, null, null, null, null, constraints)
 
       // isolate the parameter name
       var isRegex = false
@@ -170,22 +171,22 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         if (this.caseSensitive === false) {
           completedPath = completedPath.toLowerCase()
         }
-        return this._insert(method, completedPath, nodeType, params, handler, store, regex, version)
+        return this._insert(method, completedPath, nodeType, params, handler, store, regex, constraints)
       }
       // add the parameter and continue with the search
       staticPart = path.slice(0, i)
       if (this.caseSensitive === false) {
         staticPart = staticPart.toLowerCase()
       }
-      this._insert(method, staticPart, nodeType, params, null, null, regex, version)
+      this._insert(method, staticPart, nodeType, params, null, null, regex, constraints)
 
       i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
-      this._insert(method, path.slice(0, i), NODE_TYPES.STATIC, null, null, null, null, version)
+      this._insert(method, path.slice(0, i), NODE_TYPES.STATIC, null, null, null, null, constraints)
       // add the wildcard parameter
       params.push('*')
-      return this._insert(method, path.slice(0, len), NODE_TYPES.MATCH_ALL, params, handler, store, null, version)
+      return this._insert(method, path.slice(0, len), NODE_TYPES.MATCH_ALL, params, handler, store, null, constraints)
     }
   }
 
@@ -194,10 +195,10 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   }
 
   // static route
-  this._insert(method, path, NODE_TYPES.STATIC, params, handler, store, null, version)
+  this._insert(method, path, NODE_TYPES.STATIC, params, handler, store, null, constraints)
 }
 
-Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, version) {
+Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, constraints) {
   const route = path
   var prefix = ''
   var pathLen = 0
@@ -206,9 +207,10 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
   var max = 0
   var node = null
 
+  // Boot the tree for this method if it doesn't exist yet
   var currentNode = this.trees[method]
   if (typeof currentNode === 'undefined') {
-    currentNode = new Node({ method: method, versions: this.versioning.storage() })
+    currentNode = new Node({ method: method, constrainer: this.constrainer })
     this.trees[method] = currentNode
   }
 
@@ -225,36 +227,13 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
     // the longest common prefix is smaller than the current prefix
     // let's split the node and add a new child
     if (len < prefixLen) {
-      node = new Node(
-        {
-          method: method,
-          prefix: prefix.slice(len),
-          children: currentNode.children,
-          kind: currentNode.kind,
-          handler: currentNode.handler,
-          regex: currentNode.regex,
-          versions: currentNode.versions
-        }
-      )
-      if (currentNode.wildcardChild !== null) {
-        node.wildcardChild = currentNode.wildcardChild
-      }
-
-      // reset the parent
-      currentNode
-        .reset(prefix.slice(0, len), this.versioning.storage())
-        .addChild(node)
+      node = currentNode.split(len)
 
       // if the longest common prefix has the same length of the current path
       // the handler should be added to the current node, to a child otherwise
       if (len === pathLen) {
-        if (version) {
-          assert(!currentNode.getVersionHandler(version), `Method '${method}' already declared for route '${route}' version '${version}'`)
-          currentNode.setVersionHandler(version, handler, params, store)
-        } else {
-          assert(!currentNode.handler, `Method '${method}' already declared for route '${route}'`)
-          currentNode.setHandler(handler, params, store)
-        }
+        assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
+        currentNode.addHandler(handler, params, store, constraints)
         currentNode.kind = kind
       } else {
         node = new Node({
@@ -263,13 +242,9 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
           kind: kind,
           handlers: null,
           regex: regex,
-          versions: this.versioning.storage()
+          constrainer: this.constrainer
         })
-        if (version) {
-          node.setVersionHandler(version, handler, params, store)
-        } else {
-          node.setHandler(handler, params, store)
-        }
+        node.addHandler(handler, params, store, constraints)
         currentNode.addChild(node)
       }
 
@@ -286,24 +261,14 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         continue
       }
       // there are not children within the given label, let's create a new one!
-      node = new Node({ method: method, prefix: path, kind: kind, regex: regex, versions: this.versioning.storage() })
-      if (version) {
-        node.setVersionHandler(version, handler, params, store)
-      } else {
-        node.setHandler(handler, params, store)
-      }
-
+      node = new Node({ method: method, prefix: path, kind: kind, handlers: null, regex: regex, constrainer: this.constrainer })
+      node.addHandler(handler, params, store, constraints)
       currentNode.addChild(node)
 
     // the node already exist
     } else if (handler) {
-      if (version) {
-        assert(!currentNode.getVersionHandler(version), `Method '${method}' already declared for route '${route}' version '${version}'`)
-        currentNode.setVersionHandler(version, handler, params, store)
-      } else {
-        assert(!currentNode.handler, `Method '${method}' already declared for route '${route}'`)
-        currentNode.setHandler(handler, params, store)
-      }
+      assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
+      currentNode.addHandler(handler, params, store, constraints)
     }
     return
   }
@@ -361,16 +326,16 @@ Router.prototype.off = function off (method, path) {
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, sanitizeUrl(req.url), this.versioning.deriveVersion(req, ctx))
+  var handle = this.find(req.method, sanitizeUrl(req.url), this.constrainer.deriveConstraints(req, ctx))
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
     : handle.handler.call(ctx, req, res, handle.params, handle.store)
 }
 
-Router.prototype.find = function find (method, path, version) {
+Router.prototype.find = function find (method, path, derivedConstraints) {
   var currentNode = this.trees[method]
-  if (!currentNode) return null
+  if (currentNode === undefined) return null
 
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
@@ -388,21 +353,17 @@ Router.prototype.find = function find (method, path, version) {
   var pathLenWildcard = 0
   var decoded = null
   var pindex = 0
-  var params = []
+  var params = null
   var i = 0
   var idxInOriginalPath = 0
 
   while (true) {
     var pathLen = path.length
     var prefix = currentNode.prefix
-    var prefixLen = prefix.length
-    var len = 0
-    var previousPath = path
+
     // found the route
     if (pathLen === 0 || path === prefix) {
-      var handle = version === undefined
-        ? currentNode.handler
-        : currentNode.getVersionHandler(version)
+      var handle = derivedConstraints !== undefined ? currentNode.getMatchingHandler(derivedConstraints) : currentNode.unconstrainedHandler
       if (handle !== null && handle !== undefined) {
         var paramsObj = {}
         if (handle.paramsLength > 0) {
@@ -421,6 +382,10 @@ Router.prototype.find = function find (method, path, version) {
       }
     }
 
+    var prefixLen = prefix.length
+    var len = 0
+    var previousPath = path
+
     // search for the longest common prefix
     i = pathLen < prefixLen ? pathLen : prefixLen
     while (len < i && path.charCodeAt(len) === prefix.charCodeAt(len)) len++
@@ -431,9 +396,7 @@ Router.prototype.find = function find (method, path, version) {
       idxInOriginalPath += len
     }
 
-    var node = version === undefined
-      ? currentNode.findChild(path)
-      : currentNode.findVersionChild(version, path)
+    var node = currentNode.findMatchingChild(derivedConstraints, path)
 
     if (node === null) {
       node = currentNode.parametricBrother
@@ -491,6 +454,7 @@ Router.prototype.find = function find (method, path, version) {
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
           : null
       }
+      params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)
       idxInOriginalPath += i
@@ -505,6 +469,7 @@ Router.prototype.find = function find (method, path, version) {
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath))
           : null
       }
+      params || (params = [])
       params[pindex] = decoded
       currentNode = node
       path = ''
@@ -524,6 +489,7 @@ Router.prototype.find = function find (method, path, version) {
           : null
       }
       if (!node.regex.test(decoded)) return null
+      params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)
       idxInOriginalPath += i
@@ -548,6 +514,7 @@ Router.prototype.find = function find (method, path, version) {
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
           : null
       }
+      params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)
       idxInOriginalPath += i
@@ -566,7 +533,7 @@ Router.prototype._getWildcardNode = function (node, path, len) {
       ? this._onBadUrl(path.slice(-len))
       : null
   }
-  var handle = node.handler
+  var handle = node.handlers[0]
   if (handle !== null && handle !== undefined) {
     return {
       handler: handle.handler,

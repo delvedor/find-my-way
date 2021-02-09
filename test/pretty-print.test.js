@@ -108,3 +108,26 @@ test('pretty print - parametric routes with same parent and followed by a static
   t.is(typeof tree, 'string')
   t.equal(tree, expected)
 })
+
+test('pretty print - constrained parametric routes', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+  findMyWay.on('GET', '/test', () => {})
+  findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {})
+  findMyWay.on('GET', '/test/:hello', () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '1.1.2' } }, () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '2.0.0' } }, () => {})
+
+  const tree = findMyWay.prettyPrint()
+
+  const expected = `└── /test (GET)
+    /test (GET {"host":"auth.fastify.io"})
+    └── /:hello (GET)
+        :hello (GET {"version":"1.1.2"})
+        :hello (GET {"version":"2.0.0"})
+`
+
+  t.is(typeof tree, 'string')
+  t.equal(tree, expected)
+})

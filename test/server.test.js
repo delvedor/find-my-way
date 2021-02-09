@@ -270,7 +270,7 @@ test('versioned routes', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/test', { version: '1.2.3' }, (req, res, params) => {
+  findMyWay.on('GET', '/test', { constraints: { version: '1.2.3' } }, (req, res, params) => {
     res.end('ok')
   })
 

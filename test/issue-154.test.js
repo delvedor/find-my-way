@@ -11,12 +11,12 @@ test('Should throw when not sending a string', t => {
   const findMyWay = FindMyWay()
 
   t.throws(() => {
-    findMyWay.on('GET', '/t1', { version: 42 }, noop)
+    findMyWay.on('GET', '/t1', { constraints: { version: 42 } }, noop)
   })
   t.throws(() => {
-    findMyWay.on('GET', '/t2', { version: null }, noop)
+    findMyWay.on('GET', '/t2', { constraints: { version: null } }, noop)
   })
   t.throws(() => {
-    findMyWay.on('GET', '/t2', { version: true }, noop)
+    findMyWay.on('GET', '/t2', { constraints: { version: true } }, noop)
   })
 })
