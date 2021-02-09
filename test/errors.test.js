@@ -181,7 +181,7 @@ test('Method already declared', t => {
     findMyWay.on('GET', '/test', () => {})
     t.fail('method already declared')
   } catch (e) {
-    t.is(e.message, 'Method \'GET\' already declared for route \'/test\'')
+    t.is(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
   }
 })
 
@@ -198,14 +198,14 @@ test('Method already declared [ignoreTrailingSlash=true]', t => {
       findMyWay.on('GET', '/test', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.is(e.message, 'Method \'GET\' already declared for route \'/test\'')
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test/', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.is(e.message, 'Method \'GET\' already declared for route \'/test/\'')
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test/\' with constraints \'{}\'')
     }
   })
 
@@ -219,14 +219,14 @@ test('Method already declared [ignoreTrailingSlash=true]', t => {
       findMyWay.on('GET', '/test', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.is(e.message, 'Method \'GET\' already declared for route \'/test\'')
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test/', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.is(e.message, 'Method \'GET\' already declared for route \'/test/\'')
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test/\' with constraints \'{}\'')
     }
   })
 })
@@ -243,7 +243,7 @@ test('Method already declared nested route', t => {
     findMyWay.on('GET', '/test/hello', () => {})
     t.fail('method already delcared in nested route')
   } catch (e) {
-    t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello\'')
+    t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
   }
 })
 
@@ -262,14 +262,27 @@ test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
       findMyWay.on('GET', '/test/hello', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello\'')
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test/hello/', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello/\'')
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello/\' with constraints \'{}\'')
+    }
+  })
+
+  test('Method already declared with constraints', t => {
+    t.plan(1)
+    const findMyWay = FindMyWay()
+
+    findMyWay.on('GET', '/test', { constraints: { host: 'fastify.io' } }, () => {})
+    try {
+      findMyWay.on('GET', '/test', { constraints: { host: 'fastify.io' } }, () => {})
+      t.fail('method already declared')
+    } catch (e) {
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{"host":"fastify.io"}\'')
     }
   })
 
@@ -285,14 +298,14 @@ test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
       findMyWay.on('GET', '/test/hello', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello\'')
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test/hello/', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello/\'')
+      t.is(e.message, 'Method \'GET\' already declared for route \'/test/hello/\' with constraints \'{}\'')
     }
   })
 })

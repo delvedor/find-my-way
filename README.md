@@ -96,11 +96,80 @@ const router = require('find-my-way')({
 })
 ```
 
+## Constraints
+
+`find-my-way` supports restricting handlers to only match certain requests for the same path. This can be used to support different versions of the same route that conform to a [semver](#semver) based versioning strategy, or restricting some routes to only be available on hosts. `find-my-way` has the semver based versioning strategy and a regex based hostname constraint strategy built in.
+
+To constrain a route to only match sometimes, pass `constraints` to the route options when registering the route:
+
+```js
+findMyWay.on('GET', '/', { constraints: { version: '1.0.2' } }, (req, res) => {
+  // will only run when the request's Accept-Version header asks for a version semver compatible with 1.0.2, like 1.x, or 1.0.x.
+})
+
+findMyWay.on('GET', '/', { constraints: { host: 'example.com' } }, (req, res) => {
+  // will only run when the request's Host header is `example.com`
+})
+```
+
+Constraints can be combined, and route handlers will only match if __all__ of the constraints for the handler match the request. `find-my-way` does a boolean AND with each route constraint, not an OR.
+
+`find-my-way` will try to match the most constrained handlers first before handler with fewer or no constraints.
+
+<a name="custom-constraint-strategies"></a>
+### Custom Constraint Strategies
+
+Custom constraining strategies can be added and are matched against incoming requests while trying to maintain `find-my-way`'s high performance. To register a new type of constraint, you must add a new constraint strategy that knows how to match values to handlers, and that knows how to get the constraint value from a request. Register strategies when constructing a router:
+
+```js
+const customResponseTypeStrategy = {
+  // strategy name for referencing in the route handler `constraints` options
+  name: 'accept',
+  // storage factory for storing routes in the find-my-way route tree
+  storage: function () {
+    let handlers = {}
+    return {
+      get: (type) => { return handlers[type] || null },
+      set: (type, store) => { handlers[type] = store },
+      del: (type) => { delete handlers[type] },
+      empty: () => { handlers = {} }
+    }
+  },
+  // function to get the value of the constraint from each incoming request
+  deriveConstraint: (req, ctx) => {
+    return req.headers['accept']
+  },
+  // optional flag marking if handlers without constraints can match requests that have a value for this constraint
+  mustMatchWhenDerived: true
+}
+
+const router = FindMyWay({ constraints: { accept: customResponseTypeStrategy } });
+```
+
+Once a custom constraint strategy is registered, routes can be added that are constrained using it:
+
+
+```js
+findMyWay.on('GET', '/', { constraints: { accept: 'application/fancy+json' } }, (req, res) => {
+  // will only run when the request's Accept header asks for 'application/fancy+json'
+})
+
+findMyWay.on('GET', '/', { constraints: { accept: 'application/fancy+xml' } }, (req, res) => {
+  // will only run when the request's Accept header asks for 'application/fancy+xml'
+})
+```
+
+Constraint strategies should be careful to make the `deriveConstraint` function performant as it is run for every request matched by the router. See the `lib/strategies` directory for examples of the built in constraint strategies.
+
+
 <a name="custom-versioning"></a>
-By default `find-my-way` uses [accept-version](./lib/accept-version.js) strategy to match requests with different versions of the handlers. The matching logic of that strategy is explained [below](#semver). It is possible to define the alternative strategy:
+By default, `find-my-way` uses a built in strategies for the version constraint that uses semantic version based matching logic, which is detailed [below](#semver). It is possible to define an alternative strategy:
+
 ```js
 const customVersioning = {
-  // storage factory
+  // replace the built in version strategy
+  name: 'version',
+  // provide a storage factory to store handlers in a simple way
   storage: function () {
     let versions = {}
     return {
@@ -110,22 +179,22 @@ const customVersioning = {
       empty: () => { versions = {} }
     }
   },
-  deriveVersion: (req, ctx) => {
+  deriveConstraint: (req, ctx) => {
     return req.headers['accept']
-  }
+  },
+  mustMatchWhenDerived: true // if the request is asking for a version, don't match un-version-constrained handlers
 }
 
-const router = FindMyWay({ versioning: customVersioning });
+const router = FindMyWay({ constraints: { version: customVersioning } });
 ```
 
 The custom strategy object should contain next properties:
-* `storage` - the factory function for the Storage of the handlers based on their version.
-* `deriveVersion` - the function to determine the version based on the request
+* `storage` - a factory function to store lists of handlers for each possible constraint value. The storage object can use domain-specific storage mechanisms to store handlers in a way that makes sense for the constraint at hand. See `lib/strategies` for examples, like the `version` constraint strategy that matches using semantic versions, or the `host` strategy that allows both exact and regex host constraints.
+* `deriveConstraint` - the function to determine the value of this constraint given a request
 
 The signature of the functions and objects must match the one from the example above.
 
-
-*Please, be aware, if you use custom versioning strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself*
+*Please, be aware, if you use your own constraining strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself!*
 
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])
@@ -144,27 +213,28 @@ router.on('GET', '/example', (req, res, params, store) => {
 
 ##### Versioned routes
 
-If needed you can provide a `version` option, which will allow you to declare multiple versions of the same route. If you never configure a versioned route, the `'Accept-Version'` header will be ignored.
+If needed, you can provide a `version` route constraint, which will allow you to declare multiple versions of the same route that are used selectively when requests ask for different version using the `Accept-Version` header. This is useful if you want to support several different behaviours for a given route and different clients select among them.
 
-Remember to set a [Vary](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) header in your responses with the value you are using for deifning the versioning (e.g.: 'Accept-Version'), to prevent cache poisoning attacks. You can also configure this as part your Proxy/CDN.
+If you never configure a versioned route, the `'Accept-Version'` header will be ignored. Remember to set a [Vary](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) header in your responses with the value you are using for deifning the versioning (e.g.: 'Accept-Version'), to prevent cache poisoning attacks. You can also configure this as part your Proxy/CDN.
 
 ###### default
 <a name="semver"></a>
-Default versioning strategy is called `accept-version` and it follows the [semver](https://semver.org/) specification.<br/>
-When using `lookup`, `find-my-way` will automatically detect the `Accept-Version` header and route the request accordingly.<br/>
-Internally `find-my-way` uses the [`semver-store`](https://github.com/delvedor/semver-store) to get the correct version of the route; *advanced ranges* and *pre-releases* currently are not supported.<br/>
+The default versioning strategy follows the [semver](https://semver.org/) specification. When using `lookup`, `find-my-way` will automatically detect the `Accept-Version` header and route the request accordingly. Internally `find-my-way` uses the [`semver-store`](https://github.com/delvedor/semver-store) to get the correct version of the route; *advanced ranges* and *pre-releases* currently are not supported.
+
 *Be aware that using this feature will cause a degradation of the overall performances of the router.*
+
 ```js
-router.on('GET', '/example', { version: '1.2.0' }, (req, res, params) => {
+router.on('GET', '/example', { constraints: { version: '1.2.0' }}, (req, res, params) => {
   res.end('Hello from 1.2.0!')
 })
 
-router.on('GET', '/example', { version: '2.4.0' }, (req, res, params) => {
+router.on('GET', '/example', { constraints: { version: '2.4.0' }}, (req, res, params) => {
   res.end('Hello from 2.4.0!')
 })
 
 // The 'Accept-Version' header could be '1.2.0' as well as '*', '2.x' or '2.4.x'
 ```
+
 If you declare multiple versions with the same *major* or *minor* `find-my-way` will always choose the highest compatible with the `Accept-Version` header value.
 
 ###### custom
@@ -236,6 +306,8 @@ So if you declare the following routes
 and the URL of the incoming request is /33/foo/bar,
 the second route will be matched because the first chunk (33) matches the static chunk.
 If the URL would have been /32/foo/bar, the first route would have been matched.
+Once a url has been matched, `find-my-way` will figure out which handler registered for that path matches the request if there are any constraints.
+`find-my-way` will check the most constrained handlers first, which means the handlers with the most keys in the `constraints` object.
 
 > If you just want a path containing a colon without declaring a parameter, use a double colon.
 > For example, `/name::customVerb` will be interpreted as `/name:customVerb`
@@ -321,16 +393,17 @@ router.lookup(req, res, { greeting: 'Hello, World!' })
 ```
 
 <a name="find"></a>
-#### find(method, path [, version])
+#### find(method, path, [constraints])
 Return (if present) the route registered in *method:path*.<br>
 The path must be sanitized, all the parameters and wildcards are decoded automatically.<br/>
-You can also pass an optional version string. In case of the default versioning strategy it should be conform to the [semver](https://semver.org/) specification.
+An object with routing constraints should usually be passed as `constraints`, containing keys like the `host` for the request, the `version` for the route to be matched, or other custom constraint values. If the router is using the default versioning strategy, the version value should be conform to the [semver](https://semver.org/) specification. If you want to use the existing constraint strategies to derive the constraint values from an incoming request, use `lookup` instead of `find`. If no value is passed for `constraints`, the router won't match any constrained routes. If using constrained routes, passing `undefined` for the constraints leads to undefined behavior and should be avoided.
+
 ```js
-router.find('GET', '/example')
+router.find('GET', '/example', { host: 'fastify.io' })
 // => { handler: Function, params: Object, store: Object}
 // => null
 
-router.find('GET', '/example', '1.x')
+router.find('GET', '/example', { host: 'fastify.io', version: '1.x' })
 // => { handler: Function, params: Object, store: Object}
 // => null
 ```
