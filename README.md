@@ -306,8 +306,11 @@ So if you declare the following routes
 and the URL of the incoming request is /33/foo/bar,
 the second route will be matched because the first chunk (33) matches the static chunk.
 If the URL would have been /32/foo/bar, the first route would have been matched.
+Once a url has been matched, `find-my-way` will figure out which handler registered for that path matches the request if there are any constraints.
+`find-my-way` will check the most constrained handlers first, which means the handlers with the most keys in the `constraints` object.
 
-Once a url has been matched, `find-my-way` will figure out which handler registered for that path matches the request if there are any constraints. `find-my-way` will check the most constrained handlers first, which means the handlers with the most keys in the `constraints` object.
+> If you just want a path containing a colon without declaring a parameter, use a double colon.
+> For example, `/name::customVerb` will be interpreted as `/name:customVerb`
 
 <a name="supported-methods"></a>
 ##### Supported methods
