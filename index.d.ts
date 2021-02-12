@@ -57,17 +57,17 @@ declare namespace Router {
     store: any
   ) => void;
 
-  interface ConstraintStrategy<V extends HTTPVersion> {
+  interface ConstraintStrategy<V extends HTTPVersion, T = string> {
     name: string,
     mustMatchWhenDerived?: boolean,
     storage() : {
-      get(version: String) : Handler<V> | null,
-      set(version: String, store: Handler<V>) : void,
-      del(version: String) : void,
+      get(version: T) : Handler<V> | null,
+      set(version: T, store: Handler<V>) : void,
+      del(version: T) : void,
       empty() : void
     },
     validate(value: unknown): void,
-    deriveConstraint<Context>(req: Req<V>, ctx?: Context) : String,
+    deriveConstraint<Context>(req: Req<V>, ctx?: Context) : T,
   }
 
   interface Config<V extends HTTPVersion> {
