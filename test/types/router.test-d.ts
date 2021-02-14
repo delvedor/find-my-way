@@ -111,3 +111,61 @@ let http2Res!: Http2ServerResponse;
   expectType<string>(router.prettyPrint())
 
 }
+
+// Custom Constraint
+{
+  let handler: Router.Handler<Router.HTTPVersion.V1>
+
+  interface AcceptAndContentType { accept?: string, contentType?: string }
+
+  const customConstraintWithObject: Router.ConstraintStrategy<Router.HTTPVersion.V1, AcceptAndContentType> = {
+    name: "customConstraintWithObject",
+    deriveConstraint<Context>(req: Router.Req<Router.HTTPVersion.V1>, ctx: Context | undefined): AcceptAndContentType {
+      return {
+        accept: req.headers.accept,
+        contentType: req.headers["content-type"]
+      }
+    },
+    validate(value: unknown): void {},
+    storage () {
+      return {
+        get (version) { return handler },
+        set (version, handler) {},
+        del (version) {},
+        empty () {}
+      }
+    }
+  }
+  const storageWithObject = customConstraintWithObject.storage()
+  const acceptAndContentType: AcceptAndContentType = { accept: 'application/json', contentType: 'application/xml' }
+
+  expectType<AcceptAndContentType>(customConstraintWithObject.deriveConstraint(http1Req, http1Res))
+  expectType<void>(storageWithObject.empty())
+  expectType<void>(storageWithObject.del(acceptAndContentType));
+  expectType<Router.Handler<Router.HTTPVersion.V1> | null>(storageWithObject.get(acceptAndContentType));
+  expectType<void>(storageWithObject.set(acceptAndContentType, () => {}));
+
+  const customConstraintWithDefault: Router.ConstraintStrategy<Router.HTTPVersion.V1> = {
+    name: "customConstraintWithObject",
+    deriveConstraint<Context>(req: Router.Req<Router.HTTPVersion.V1>, ctx: Context | undefined): string {
+      return req.headers.accept ?? ''
+    },
+    validate(value: unknown): void {},
+    storage () {
+      return {
+        get (version) { return handler },
+        set (version, handler) {},
+        del (version) {},
+        empty () {}
+      }
+    }
+  }
+
+  const storageWithDefault = customConstraintWithDefault.storage()
+
+  expectType<string>(customConstraintWithDefault.deriveConstraint(http1Req, http1Res))
+  expectType<void>(storageWithDefault.empty())
+  expectType<void>(storageWithDefault.del(''));
+  expectType<Router.Handler<Router.HTTPVersion.V1> | null>(storageWithDefault.get(''));
+  expectType<void>(storageWithDefault.set('', () => {}));
+}
