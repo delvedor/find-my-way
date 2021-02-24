@@ -61,9 +61,9 @@ declare namespace Router {
     name: string,
     mustMatchWhenDerived?: boolean,
     storage() : {
-      get(version: T) : Handler<V> | null,
-      set(version: T, store: Handler<V>) : void,
-      del(version: T) : void,
+      get(value: T) : Handler<V> | null,
+      set(value: T, handler: Handler<V>) : void,
+      del(value: T) : void,
       empty() : void
     },
     validate(value: unknown): void,
