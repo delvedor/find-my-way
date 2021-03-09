@@ -155,7 +155,7 @@ test('pretty print - multiple parameters are drawn appropriately', t => {
   t.equal(tree, expected)
 })
 
-test('pretty print - use routes array to draw flattened routes', t => {
+test('pretty print commonPrefix - use routes array to draw flattened routes', t => {
   t.plan(4)
 
   const findMyWay = FindMyWay()
@@ -191,7 +191,7 @@ test('pretty print - use routes array to draw flattened routes', t => {
   t.equal(arrayTree, arrayExpected)
 })
 
-test('pretty print - handle wildcard root', t => {
+test('pretty print commonPrefix - handle wildcard root', t => {
   t.plan(2)
 
   const findMyWay = FindMyWay()
@@ -211,6 +211,26 @@ test('pretty print - handle wildcard root', t => {
     └── update (PUT)
 `
 
+  t.is(typeof arrayTree, 'string')
+  t.equal(arrayTree, arrayExpected)
+})
+
+test('pretty print commonPrefix - handle constrained routes', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test', () => {})
+  findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {})
+  findMyWay.on('GET', '/test/:hello', () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '1.1.2' } }, () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '2.0.0' } }, () => {})
+
+  const arrayTree = findMyWay.prettyPrint({ commonPrefix: true })
+  const arrayExpected = `└── / (-)
+    └── test (GET, GET {"host":"auth.fastify.io"})
+        └── /:hello (GET, GET {"version":"1.1.2"}, GET {"version":"2.0.0"})
+`
   t.is(typeof arrayTree, 'string')
   t.equal(arrayTree, arrayExpected)
 })
