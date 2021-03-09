@@ -154,3 +154,39 @@ test('pretty print - multiple parameters are drawn appropriately', t => {
   t.is(typeof tree, 'string')
   t.equal(tree, expected)
 })
+
+test('pretty print - use routes array to draw flattened routes', t => {
+  t.plan(4)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test', () => {})
+  findMyWay.on('GET', '/test/hello', () => {})
+  findMyWay.on('GET', '/testing', () => {})
+  findMyWay.on('GET', '/testing/:param', () => {})
+  findMyWay.on('PUT', '/update', () => {})
+
+  const radixTree = findMyWay.prettyPrint()
+  const arrayTree = findMyWay.prettyPrint({ commonPrefix: true })
+
+  const radixExpected = `└── /
+    ├── test (GET)
+    │   ├── /hello (GET)
+    │   └── ing (GET)
+    │       └── /:param (GET)
+    └── update (PUT)
+`
+  const arrayExpected = `└── / (-)
+    ├── test (GET)
+    │   └── /hello (GET)
+    ├── testing (GET)
+    │   └── /:param (GET)
+    └── update (PUT)
+`
+
+  t.is(typeof radixTree, 'string')
+  t.is(typeof arrayTree, 'string')
+
+  t.equal(radixTree, radixExpected)
+  t.equal(arrayTree, arrayExpected)
+})
