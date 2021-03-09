@@ -190,3 +190,27 @@ test('pretty print - use routes array to draw flattened routes', t => {
   t.equal(radixTree, radixExpected)
   t.equal(arrayTree, arrayExpected)
 })
+
+test('pretty print - handle wildcard root', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('OPTIONS', '*', () => {})
+  findMyWay.on('GET', '/test/hello', () => {})
+  findMyWay.on('GET', '/testing', () => {})
+  findMyWay.on('GET', '/testing/:param', () => {})
+  findMyWay.on('PUT', '/update', () => {})
+
+  const arrayTree = findMyWay.prettyPrint({ commonPrefix: true })
+  const arrayExpected = `├── * (OPTIONS)
+└── / (-)
+    ├── test/hello (GET)
+    ├── testing (GET)
+    │   └── /:param (GET)
+    └── update (PUT)
+`
+
+  t.is(typeof arrayTree, 'string')
+  t.equal(arrayTree, arrayExpected)
+})
