@@ -409,18 +409,34 @@ router.find('GET', '/example', { host: 'fastify.io', version: '1.x' })
 ```
 
 <a name="pretty-print"></a>
-#### prettyPrint()
+#### prettyPrint([{ routesArray: true }])
 Prints the representation of the internal radix tree, useful for debugging.
 ```js
 findMyWay.on('GET', '/test', () => {})
 findMyWay.on('GET', '/test/hello', () => {})
-findMyWay.on('GET', '/hello/world', () => {})
+findMyWay.on('GET', '/testing', () => {})
+findMyWay.on('GET', '/testing/:param', () => {})
+findMyWay.on('PUT', '/update', () => {})
 
 console.log(findMyWay.prettyPrint())
 // └── /
-//   ├── test (GET)
-//   │   └── /hello (GET)
-//   └── hello/world (GET)
+//     ├── test (GET)
+//     │   ├── /hello (GET)
+//     │   └── ing (GET)
+//     │       └── /:param (GET)
+//     └── update (PUT)
+```
+
+`prettyPrint` accepts an optional setting to use the internal routes array to render the tree.
+
+```js
+console.log(findMyWay.prettyPrint({ routesArray: true }))
+// └── / (-)
+//     ├── test (GET)
+//     │   └── /hello (GET)
+//     ├── testing (GET)
+//     │   └── /:param (GET)
+//     └── update (PUT)
 ```
 
 <a name="routes"></a>
