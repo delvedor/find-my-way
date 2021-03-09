@@ -15,7 +15,7 @@ const assert = require('assert')
 const http = require('http')
 const fastDecode = require('fast-decode-uri-component')
 const isRegexSafe = require('safe-regex2')
-const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode } = require('./lib/pretty-print')
+const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
 const Node = require('./node')
 const Constrainer = require('./lib/constrainer')
 
@@ -571,7 +571,8 @@ Router.prototype._onBadUrl = function (path) {
   }
 }
 
-Router.prototype.prettyPrint = function () {
+Router.prototype.prettyPrint = function (opts = {}) {
+  if (opts.routesArray) return prettyPrintRoutesArray(this.routes)
   const root = {
     prefix: '/',
     nodes: [],
