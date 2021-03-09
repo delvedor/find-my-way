@@ -124,8 +124,31 @@ test('pretty print - constrained parametric routes', t => {
   const expected = `└── /test (GET)
     /test (GET {"host":"auth.fastify.io"})
     └── /:hello (GET)
-        :hello (GET {"version":"1.1.2"})
-        :hello (GET {"version":"2.0.0"})
+        /:hello (GET {"version":"1.1.2"})
+        /:hello (GET {"version":"2.0.0"})
+`
+
+  t.is(typeof tree, 'string')
+  t.equal(tree, expected)
+})
+
+test('pretty print - multiple parameters are drawn appropriately', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+  findMyWay.on('GET', '/test', () => {})
+  // routes with a nested parameter (i.e. no handler for the /:param) were breaking the display
+  findMyWay.on('GET', '/test/:hello/there/:ladies', () => {})
+  findMyWay.on('GET', '/test/:hello/there/:ladies/and/:gents', () => {})
+  findMyWay.on('GET', '/test/are/:you/:ready/to/:rock', () => {})
+
+  const tree = findMyWay.prettyPrint()
+
+  const expected = `└── /test (GET)
+    └── /
+        ├── :hello/there/:ladies (GET)
+        │   └── /and/:gents (GET)
+        └── are/:you/:ready/to/:rock (GET)
 `
 
   t.is(typeof tree, 'string')
