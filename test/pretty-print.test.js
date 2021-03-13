@@ -122,10 +122,10 @@ test('pretty print - constrained parametric routes', t => {
   const tree = findMyWay.prettyPrint()
 
   const expected = `└── /test (GET)
-    /test (GET {"host":"auth.fastify.io"})
+    /test (GET) {"host":"auth.fastify.io"}
     └── /:hello (GET)
-        /:hello (GET {"version":"1.1.2"})
-        /:hello (GET {"version":"2.0.0"})
+        /:hello (GET) {"version":"1.1.2"}
+        /:hello (GET) {"version":"2.0.0"}
 `
 
   t.is(typeof tree, 'string')
@@ -223,13 +223,17 @@ test('pretty print commonPrefix - handle constrained routes', t => {
   findMyWay.on('GET', '/test', () => {})
   findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {})
   findMyWay.on('GET', '/test/:hello', () => {})
+  findMyWay.on('PUT', '/test/:hello', () => {})
   findMyWay.on('GET', '/test/:hello', { constraints: { version: '1.1.2' } }, () => {})
   findMyWay.on('GET', '/test/:hello', { constraints: { version: '2.0.0' } }, () => {})
 
   const arrayTree = findMyWay.prettyPrint({ commonPrefix: false })
   const arrayExpected = `└── / (-)
-    └── test (GET, GET {"host":"auth.fastify.io"})
-        └── /:hello (GET, GET {"version":"1.1.2"}, GET {"version":"2.0.0"})
+    └── test (GET)
+        test (GET) {"host":"auth.fastify.io"}
+        └── /:hello (GET, PUT)
+            /:hello (GET) {"version":"1.1.2"}
+            /:hello (GET) {"version":"2.0.0"}
 `
   t.is(typeof arrayTree, 'string')
   t.equal(arrayTree, arrayExpected)
