@@ -10,7 +10,7 @@ declare namespace Router {
     V1 = 'http1',
     V2 = 'http2'
   }
-
+  
   type HTTPMethod =
     | 'ACL'
     | 'BIND'
@@ -57,17 +57,17 @@ declare namespace Router {
     store: any
   ) => void;
 
-  interface ConstraintStrategy<V extends HTTPVersion> {
+  interface ConstraintStrategy<V extends HTTPVersion, ConstraintVersion = string> {
     name: string,
     mustMatchWhenDerived?: boolean,
     storage() : {
-      get(version: String) : Handler<V> | null,
-      set(version: String, store: Handler<V>) : void,
-      del(version: String) : void,
+      get(version: ConstraintVersion) : Handler<V> | null,
+      set(version: ConstraintVersion, store: Handler<V>) : void,
+      del(version: ConstraintVersion) : void,
       empty() : void
     },
-    validate(value: unknown): void,
-    deriveConstraint<Context>(req: Req<V>, ctx?: Context) : String,
+    validate?: (value: unknown) => asserts value is ConstraintVersion,
+    deriveConstraint<Context>(req: Req<V>, ctx?: Context) : ConstraintVersion,
   }
 
   interface Config<V extends HTTPVersion> {
@@ -91,7 +91,7 @@ declare namespace Router {
     ): void;
 
     constraints? : {
-      [key: string]: ConstraintStrategy<V>
+      [key: string]: ConstraintStrategy<V, unknown>
     }
   }
 
