@@ -120,6 +120,7 @@ Node.prototype.split = function (length) {
       prefix: this.prefix.slice(length),
       children: this.children,
       kind: this.kind,
+      method: this.method,
       handlers: this.handlers.slice(0),
       regex: this.regex,
       constrainer: this.constrainer,
