@@ -1,4 +1,4 @@
-import { expectType } from 'tsd'
+import { expectError, expectType } from 'tsd'
 import * as Router from '../../'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 import { IncomingMessage, ServerResponse } from 'http'
@@ -110,4 +110,42 @@ let http2Res!: Http2ServerResponse;
   expectType<void>(router.reset())
   expectType<string>(router.prettyPrint())
 
+}
+
+// non-string versions 
+{
+  let handler: Router.Handler<Router.HTTPVersion.V2>
+
+  const versionConstraint: Router.ConstraintStrategy<Router.HTTPVersion.V2, number> = {
+    name: 'version',
+    deriveConstraint() { return 42 }, 
+    storage() {
+      return {
+        get (version: number) { return handler },
+        set (version: number) {},
+        del (version: number) {},
+        empty () {}
+      }
+    },
+  }
+
+  Router<Router.HTTPVersion.V2>({
+    constraints: {
+      version: versionConstraint
+    }
+  })
+
+  // NOTE: string is the default version type
+  expectError<Router.ConstraintStrategy<Router.HTTPVersion.V2>>({
+    name: 'version',
+    deriveConstraint(): number { return 42 }, 
+    storage() {
+      return {
+        get (version: string) { return handler },
+        set (version: string, handler) {},
+        del (version: string) {},
+        empty () {}
+      }
+    },
+  })
 }
