@@ -47,8 +47,13 @@ test('should support `.all` shorthand', t => {
 })
 
 test('should support `.all` shorthand with non-standard http methods', t => {
-  t.plan(12)
+  t.plan(13)
   const findMyWay = FindMyWay({ httpMethods: [].concat(http.METHODS, ['NONSTANDARDMETHOD']) })
+
+  t.deepEquals(findMyWay.httpMethods.slice().sort(), [
+    ...http.METHODS,
+    'NONSTANDARDMETHOD'
+  ].sort())
 
   findMyWay.all('/test', () => {
     t.ok('inside the handler')

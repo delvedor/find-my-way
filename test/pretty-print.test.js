@@ -110,9 +110,12 @@ test('pretty print - parametric routes with same parent and followed by a static
 })
 
 test('pretty print - non-standard methods', t => {
-  t.plan(2)
+  t.plan(3)
 
   const findMyWay = FindMyWay({ httpMethods: ['NONSTANDARDMETHOD', 'GET'] })
+
+  t.deepEquals(findMyWay.httpMethods.slice().sort(), ['NONSTANDARDMETHOD', 'GET'].sort())
+
   findMyWay.on('NONSTANDARDMETHOD', '/test', () => {})
   findMyWay.on('GET', '/test/hello', () => {})
   findMyWay.on('GET', '/hello/world', () => {})

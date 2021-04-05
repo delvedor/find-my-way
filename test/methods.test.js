@@ -1,6 +1,7 @@
 'use strict'
 
 const t = require('tap')
+const http = require('http')
 const test = t.test
 const FindMyWay = require('../')
 
@@ -56,8 +57,10 @@ test('register a route', t => {
 })
 
 test('register a route for non-standard method', t => {
-  t.plan(1)
+  t.plan(2)
   const findMyWay = FindMyWay({ httpMethods: ['NONSTANDARDMETHOD'] })
+
+  t.deepEquals(findMyWay.httpMethods, ['NONSTANDARDMETHOD'])
 
   findMyWay.on('NONSTANDARDMETHOD', '/test', () => {
     t.ok('inside the handler')
@@ -91,7 +94,14 @@ test('does not register /test/*/ when ignoreTrailingSlash is true', t => {
   )
 })
 
-test('throws if options.httpMethods is invalid', t => {
+test('use default methods if no option provided', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  t.deepEquals(findMyWay.httpMethods.slice().sort(), http.METHODS.slice().sort())
+})
+
+test('throws if httpMethods is invalid', t => {
   t.plan(4)
 
   t.throws(() => {
