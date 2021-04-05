@@ -196,26 +196,6 @@ The signature of the functions and objects must match the one from the example a
 
 *Please, be aware, if you use your own constraining strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself!*
 
-<a name="http-methods"></a>
-By default, the node built-in http methods are supported. Pass an array of httpMethods to change this behavior.
-
-```js
-const router = FindMyWay({ httpMethods: ['SOMETHING', 'ELSE'] })
-router.on('SOMETHING', ...)
-// NOTE: Shorthands are not supported and existing standard shorthands will throw if used
-router.get(...) // throws because "GET" no longer exists
-```
-
-<a name="http-methods"></a>
-By default, the node built-in http methods are supported. Pass an array of httpMethods to change this behavior.
-
-```js
-const router = FindMyWay({ httpMethods: ['SOMETHING', 'ELSE'] })
-router.on('SOMETHING', ...)
-// NOTE: Shorthands are not supported and existing standard shorthands will throw if used
-router.get(...) // throws because "GET" no longer exists
-```
-
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])
 Register a new route.
@@ -335,6 +315,30 @@ Once a url has been matched, `find-my-way` will figure out which handler registe
 <a name="supported-methods"></a>
 ##### Supported methods
 The router is able to route all HTTP methods defined by [`http` core module](https://nodejs.org/api/http.html#http_http_methods).
+
+<a name="custom-methods"></a>
+##### Custom methods
+To change the methods supported you can pass in an array of methods.
+
+To override the built-in methods:
+
+```js
+const router = FindMyWay({ httpMethods: ['SOMETHING', 'ELSE'] })
+router.on('SOMETHING', ...)
+// NOTE: Shorthands are not supported and existing standard shorthands will throw if used
+router.get(...) // throws because "GET" no longer exists
+```
+
+To expand the built-in methods:
+
+```js
+const http = require('http')
+// or you could manually pick and do something like: ['GET','SOMETHING',...]
+const httpMethods = [ ...http.METHODS, 'SOMETHING', 'ELSE' ];
+const router = FindMyWay({ httpMethods }) 
+router.on('SOMETHING', ...)
+router.get(...) // now works. all shorthands work as long as they're defined in httpMethods
+```
 
 <a name="off"></a>
 #### off(method, path)
