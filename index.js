@@ -52,7 +52,9 @@ function Router (opts) {
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.constrainer = new Constrainer(opts.constraints)
-  this.httpMethods = Array.isArray(opts.httpMethods) ? opts.httpMethods : defaultHttpMethods
+  // even though ts type disallows it we'll treat null and undefined as same
+  assert((Array.isArray(opts.httpMethods) && opts.httpMethods.every(v => typeof v === 'string')) || undefined === opts.httpMethods || opts.httpMethods === null, 'httpMethods must be array of strings or undefined')
+  this.httpMethods = opts.httpMethods || defaultHttpMethods
   this.trees = {}
   this.routes = []
 }

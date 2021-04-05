@@ -91,15 +91,24 @@ test('does not register /test/*/ when ignoreTrailingSlash is true', t => {
   )
 })
 
-test('defaults to built-in http METHODS for invalid option', t => {
-  t.plan(1)
-  const findMyWay = FindMyWay({ httpMethods: 'invalid' })
+test('throws if options.httpMethods is invalid', t => {
+  t.plan(4)
 
-  findMyWay.on('GET', '/test', () => {
-    t.ok('inside the handler')
+  t.throws(() => {
+    FindMyWay({ httpMethods: 'invalid' })
   })
 
-  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
+  t.throws(() => {
+    FindMyWay({ httpMethods: false })
+  })
+
+  t.throws(() => {
+    FindMyWay({ httpMethods: '' })
+  })
+
+  t.throws(() => {
+    FindMyWay({ httpMethods: ['', {}] })
+  })
 })
 
 test('off throws for invalid method', t => {
