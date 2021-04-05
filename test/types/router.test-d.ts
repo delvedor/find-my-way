@@ -124,32 +124,37 @@ let http2Res!: Http2ServerResponse;
     httpMethods: methods,
     defaultRoute (http1Req, http1Res) {},
     onBadUrl (path, http1Req, http1Res) {},
-    versioning: {
-      storage () {
-        return {
-          get (version) { return handler },
-          set (version, handler) {},
-          del (version) {},
-          empty () {}
-        }
-      },
-      deriveVersion(req) { return '1.0.0' }
+    constraints: {
+      foo: {
+        name: 'foo',
+        mustMatchWhenDerived: true,
+        storage () {
+          return {
+            get (version) { return handler },
+            set (version, handler) {},
+            del (version) {},
+            empty () {}
+          }
+        },
+        deriveConstraint(req) { return '1.0.0' },
+        validate(value) { if (typeof value === "string") { throw new Error("invalid")} }
+      }
     }
   })
   expectType<Router.Instance<Router.HTTPVersion.V2, HTTPMethod>>(router)
 
   expectType<void>(router.on('NONSTANDARDMETHOD', '/', () => {}))
   expectType<void>(router.on(['NONSTANDARDMETHOD', 'SOMETHING'], '/', () => {}))
-  expectType<void>(router.on('NONSTANDARDMETHOD', '/', { version: '1.0.0' }, () => {}))
+  expectType<void>(router.on('NONSTANDARDMETHOD', '/', { constraints: { version: '1.0.0' } }, () => {}))
   expectType<void>(router.on('NONSTANDARDMETHOD', '/', () => {}, {}))
-  expectType<void>(router.on('NONSTANDARDMETHOD', '/', { version: '1.0.0' }, () => {}, {}))
+  expectType<void>(router.on('NONSTANDARDMETHOD', '/', { constraints: { version: '1.0.0' } }, () => {}, {}))
 
   expectType<void>(router.off('NONSTANDARDMETHOD', '/'))
   expectType<void>(router.off(['NONSTANDARDMETHOD', 'SOMETHING'], '/'))
 
   expectType<void>(router.lookup(http2Req, http2Res))
   expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('NONSTANDARDMETHOD', '/'))
-  expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('NONSTANDARDMETHOD', '/', '1.0.0'))
+  expectType<Router.FindResult<Router.HTTPVersion.V2> | null>(router.find('NONSTANDARDMETHOD', '/', {version: '1.0.0'}))
 
   expectType<void>(router.reset())
   expectType<string>(router.prettyPrint())

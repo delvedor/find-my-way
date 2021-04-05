@@ -206,6 +206,16 @@ router.on('SOMETHING', ...)
 router.get(...) // throws because "GET" no longer exists
 ```
 
+<a name="http-methods"></a>
+By default, the node built-in http methods are supported. Pass an array of httpMethods to change this behavior.
+
+```js
+const router = FindMyWay({ httpMethods: ['SOMETHING', 'ELSE'] })
+router.on('SOMETHING', ...)
+// NOTE: Shorthands are not supported and existing standard shorthands will throw if used
+router.get(...) // throws because "GET" no longer exists
+```
+
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])
 Register a new route.
