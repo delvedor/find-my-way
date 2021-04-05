@@ -72,3 +72,27 @@ test('should support `.all` shorthand with non-standard http methods', t => {
   findMyWay.lookup({ method: 'COPY', url: '/test', headers: {} }, null)
   findMyWay.lookup({ method: 'SUBSCRIBE', url: '/test', headers: {} }, null)
 })
+
+test('should support built-in shorthands when using mixed custom methods', t => {
+  t.plan(4)
+  const findMyWay = FindMyWay({ httpMethods: ['GET', 'NONSTANDARDMETHOD'] })
+
+  t.ok(findMyWay.httpMethods.indexOf('POST') < 0)
+
+  // shorthand should throw because it's not amongst our list of httpMethods
+  t.throws(() => {
+    findMyWay.post('/test', () => {})
+  })
+
+  findMyWay.on('NONSTANDARDMETHOD', '/test', () => {
+    t.ok('inside the NONSTANDARDMETHOD handler')
+  })
+
+  // should not throw because we registered a GET
+  findMyWay.get('/test', () => {
+    t.ok('inside the GET handler')
+  })
+
+  findMyWay.lookup({ method: 'NONSTANDARDMETHOD', url: '/test', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
+})
