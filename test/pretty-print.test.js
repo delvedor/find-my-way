@@ -253,6 +253,8 @@ test('pretty print includeMeta - commonPrefix: true', t => {
     functionMeta: namedFunction
   }
 
+  store[Symbol('symbolKey')] = Symbol('symbolValue')
+
   findMyWay.on('GET', '/test', () => {}, store)
   findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {}, store)
   findMyWay.on('GET', '/testing/:hello', () => {}, store)
@@ -269,6 +271,7 @@ test('pretty print includeMeta - commonPrefix: true', t => {
     │   • (mixedMeta) ["mixed items",{"an":"object"}]
     │   • (objectMeta) {"one":"1","two":2}
     │   • (functionMeta) "namedFunction()"
+    │   • (Symbol(symbolKey)) "Symbol(symbolValue)"
     │   test (GET) {"host":"auth.fastify.io"}
     │   • (onRequest) ["anonymous()","namedFunction()"]
     │   • (onTimeout) ["anonymous()"]
@@ -276,6 +279,7 @@ test('pretty print includeMeta - commonPrefix: true', t => {
     │   • (mixedMeta) ["mixed items",{"an":"object"}]
     │   • (objectMeta) {"one":"1","two":2}
     │   • (functionMeta) "namedFunction()"
+    │   • (Symbol(symbolKey)) "Symbol(symbolValue)"
     │   ├── ing/:hello (GET)
     │   │   • (onRequest) ["anonymous()","namedFunction()"]
     │   │   • (onTimeout) ["anonymous()"]
@@ -283,6 +287,7 @@ test('pretty print includeMeta - commonPrefix: true', t => {
     │   │   • (mixedMeta) ["mixed items",{"an":"object"}]
     │   │   • (objectMeta) {"one":"1","two":2}
     │   │   • (functionMeta) "namedFunction()"
+    │   │   • (Symbol(symbolKey)) "Symbol(symbolValue)"
     │   └── /:hello (GET) {"version":"1.1.2"}
     │       /:hello (GET) {"version":"2.0.0"}
     └── tested/:hello (PUT)
@@ -292,6 +297,7 @@ test('pretty print includeMeta - commonPrefix: true', t => {
         • (mixedMeta) ["mixed items",{"an":"object"}]
         • (objectMeta) {"one":"1","two":2}
         • (functionMeta) "namedFunction()"
+        • (Symbol(symbolKey)) "Symbol(symbolValue)"
 `
   const radixTreeSpecific = findMyWay.prettyPrint({ commonPrefix: true, includeMeta: ['onTimeout', 'objectMeta', 'nonExistent'] })
   const radixTreeSpecificExpected = `└── /
@@ -345,6 +351,8 @@ test('pretty print includeMeta - commonPrefix: false', t => {
     functionMeta: namedFunction
   }
 
+  store[Symbol('symbolKey')] = Symbol('symbolValue')
+
   findMyWay.on('GET', '/test', () => {}, store)
   findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {}, store)
   findMyWay.on('GET', '/test/:hello', () => {}, store)
@@ -361,6 +369,7 @@ test('pretty print includeMeta - commonPrefix: false', t => {
         • (mixedMeta) ["mixed items",{"an":"object"}]
         • (objectMeta) {"one":"1","two":2}
         • (functionMeta) "namedFunction()"
+        • (Symbol(symbolKey)) "Symbol(symbolValue)"
         test (GET) {"host":"auth.fastify.io"}
         • (onRequest) ["anonymous()","namedFunction()"]
         • (onTimeout) ["anonymous()"]
@@ -368,6 +377,7 @@ test('pretty print includeMeta - commonPrefix: false', t => {
         • (mixedMeta) ["mixed items",{"an":"object"}]
         • (objectMeta) {"one":"1","two":2}
         • (functionMeta) "namedFunction()"
+        • (Symbol(symbolKey)) "Symbol(symbolValue)"
         └── /:hello (GET, PUT)
             • (onRequest) ["anonymous()","namedFunction()"]
             • (onTimeout) ["anonymous()"]
@@ -375,6 +385,7 @@ test('pretty print includeMeta - commonPrefix: false', t => {
             • (mixedMeta) ["mixed items",{"an":"object"}]
             • (objectMeta) {"one":"1","two":2}
             • (functionMeta) "namedFunction()"
+            • (Symbol(symbolKey)) "Symbol(symbolValue)"
             /:hello (GET) {"version":"1.1.2"}
             /:hello (GET) {"version":"2.0.0"}
 `
