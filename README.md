@@ -409,8 +409,9 @@ router.find('GET', '/example', { host: 'fastify.io', version: '1.x' })
 ```
 
 <a name="pretty-print"></a>
-#### prettyPrint([{ commonPrefix: false }])
+#### prettyPrint([{ commonPrefix: false, includeMeta: true || [] }])
 Prints the representation of the internal radix tree, useful for debugging.
+
 ```js
 findMyWay.on('GET', '/test', () => {})
 findMyWay.on('GET', '/test/hello', () => {})
@@ -427,13 +428,47 @@ console.log(findMyWay.prettyPrint())
 //     └── update (PUT)
 ```
 
-`prettyPrint` accepts an optional setting to use the internal routes array to render the tree.
+`prettyPrint` accepts an optional setting to use the internal routes array
+to render the tree.
 
 ```js
 console.log(findMyWay.prettyPrint({ commonPrefix: false }))
 // └── / (-)
 //     ├── test (GET)
 //     │   └── /hello (GET)
+//     ├── testing (GET)
+//     │   └── /:param (GET)
+//     └── update (PUT)
+```
+
+To include a display of the `store` data passed to individual routes, the 
+option `includeMeta` may be passed. If set to `true` all items will be
+displayed, this can also be set to an array specifying which keys (if
+present) to be displayed.
+
+```js
+findMyWay.on('GET', '/test', () => {}, { onRequest: () => {}, authIDs => [1,2,3] })
+findMyWay.on('GET', '/test/hello', () => {}, { token: 'df123-4567' })
+findMyWay.on('GET', '/testing', () => {})
+findMyWay.on('GET', '/testing/:param', () => {})
+findMyWay.on('PUT', '/update', () => {})
+
+console.log(findMyWay.prettyPrint({ commonPrefix: false, includeMeta: ['onRequest'] }))
+// └── /
+//     ├── test (GET)
+//     │   • (onRequest) "anonymous()"
+//     │   ├── /hello (GET)
+//     │   └── ing (GET)
+//     │       └── /:param (GET)
+//     └── update (PUT)
+
+console.log(findMyWay.prettyPrint({ commonPrefix: true, includeMeta: true }))
+// └── / (-)
+//     ├── test (GET)
+//     │   • (onRequest) "anonymous()"
+//     │   • (authIDs) [1,2,3]
+//     │   └── /hello (GET)
+//     │       • (token) "df123-4567"
 //     ├── testing (GET)
 //     │   └── /:param (GET)
 //     └── update (PUT)
