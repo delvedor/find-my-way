@@ -239,8 +239,8 @@ test('pretty print commonPrefix - handle constrained routes', t => {
   t.equal(arrayTree, arrayExpected)
 })
 
-test('pretty print includeMeta - commonPrefix: false', t => {
-  t.plan(2)
+test('pretty print includeMeta - commonPrefix: true', t => {
+  t.plan(6)
 
   const findMyWay = FindMyWay()
   const namedFunction = () => {}
@@ -249,7 +249,100 @@ test('pretty print includeMeta - commonPrefix: false', t => {
     onTimeout: [() => {}],
     genericMeta: 'meta',
     mixedMeta: ['mixed items', { an: 'object' }],
-    objectMeta: { one: '1', two: 2 }
+    objectMeta: { one: '1', two: 2 },
+    functionMeta: namedFunction
+  }
+
+  findMyWay.on('GET', '/test', () => {}, store)
+  findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {}, store)
+  findMyWay.on('GET', '/testing/:hello', () => {}, store)
+  findMyWay.on('PUT', '/tested/:hello', () => {}, store)
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '1.1.2' } }, () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '2.0.0' } }, () => {})
+
+  const radixTree = findMyWay.prettyPrint({ commonPrefix: true, includeMeta: true })
+  const radixTreeExpected = `└── /
+    ├── test (GET)
+    │   • (onRequest) ["anonymous()","namedFunction()"]
+    │   • (onTimeout) ["anonymous()"]
+    │   • (genericMeta) "meta"
+    │   • (mixedMeta) ["mixed items",{"an":"object"}]
+    │   • (objectMeta) {"one":"1","two":2}
+    │   • (functionMeta) "namedFunction()"
+    │   test (GET) {"host":"auth.fastify.io"}
+    │   • (onRequest) ["anonymous()","namedFunction()"]
+    │   • (onTimeout) ["anonymous()"]
+    │   • (genericMeta) "meta"
+    │   • (mixedMeta) ["mixed items",{"an":"object"}]
+    │   • (objectMeta) {"one":"1","two":2}
+    │   • (functionMeta) "namedFunction()"
+    │   ├── ing/:hello (GET)
+    │   │   • (onRequest) ["anonymous()","namedFunction()"]
+    │   │   • (onTimeout) ["anonymous()"]
+    │   │   • (genericMeta) "meta"
+    │   │   • (mixedMeta) ["mixed items",{"an":"object"}]
+    │   │   • (objectMeta) {"one":"1","two":2}
+    │   │   • (functionMeta) "namedFunction()"
+    │   └── /:hello (GET) {"version":"1.1.2"}
+    │       /:hello (GET) {"version":"2.0.0"}
+    └── tested/:hello (PUT)
+        • (onRequest) ["anonymous()","namedFunction()"]
+        • (onTimeout) ["anonymous()"]
+        • (genericMeta) "meta"
+        • (mixedMeta) ["mixed items",{"an":"object"}]
+        • (objectMeta) {"one":"1","two":2}
+        • (functionMeta) "namedFunction()"
+`
+  const radixTreeSpecific = findMyWay.prettyPrint({ commonPrefix: true, includeMeta: ['onTimeout', 'objectMeta', 'nonExistent'] })
+  const radixTreeSpecificExpected = `└── /
+    ├── test (GET)
+    │   • (onTimeout) ["anonymous()"]
+    │   • (objectMeta) {"one":"1","two":2}
+    │   test (GET) {"host":"auth.fastify.io"}
+    │   • (onTimeout) ["anonymous()"]
+    │   • (objectMeta) {"one":"1","two":2}
+    │   ├── ing/:hello (GET)
+    │   │   • (onTimeout) ["anonymous()"]
+    │   │   • (objectMeta) {"one":"1","two":2}
+    │   └── /:hello (GET) {"version":"1.1.2"}
+    │       /:hello (GET) {"version":"2.0.0"}
+    └── tested/:hello (PUT)
+        • (onTimeout) ["anonymous()"]
+        • (objectMeta) {"one":"1","two":2}
+`
+
+  const radixTreeNoMeta = findMyWay.prettyPrint({ commonPrefix: true, includeMeta: false })
+  const radixTreeNoMetaExpected = `└── /
+    ├── test (GET)
+    │   test (GET) {"host":"auth.fastify.io"}
+    │   ├── ing/:hello (GET)
+    │   └── /:hello (GET) {"version":"1.1.2"}
+    │       /:hello (GET) {"version":"2.0.0"}
+    └── tested/:hello (PUT)
+`
+
+  t.is(typeof radixTree, 'string')
+  t.equal(radixTree, radixTreeExpected)
+
+  t.is(typeof radixTreeSpecific, 'string')
+  t.equal(radixTreeSpecific, radixTreeSpecificExpected)
+
+  t.is(typeof radixTreeNoMeta, 'string')
+  t.equal(radixTreeNoMeta, radixTreeNoMetaExpected)
+})
+
+test('pretty print includeMeta - commonPrefix: false', t => {
+  t.plan(6)
+
+  const findMyWay = FindMyWay()
+  const namedFunction = () => {}
+  const store = {
+    onRequest: [() => {}, namedFunction],
+    onTimeout: [() => {}],
+    genericMeta: 'meta',
+    mixedMeta: ['mixed items', { an: 'object' }],
+    objectMeta: { one: '1', two: 2 },
+    functionMeta: namedFunction
   }
 
   findMyWay.on('GET', '/test', () => {}, store)
@@ -262,26 +355,59 @@ test('pretty print includeMeta - commonPrefix: false', t => {
   const arrayTree = findMyWay.prettyPrint({ commonPrefix: false, includeMeta: true })
   const arrayExpected = `└── / (-)
     └── test (GET)
-        • (onRequest) ["anonymous","namedFunction"]
-        • (onTimeout) ["anonymous"]
+        • (onRequest) ["anonymous()","namedFunction()"]
+        • (onTimeout) ["anonymous()"]
         • (genericMeta) "meta"
         • (mixedMeta) ["mixed items",{"an":"object"}]
         • (objectMeta) {"one":"1","two":2}
+        • (functionMeta) "namedFunction()"
         test (GET) {"host":"auth.fastify.io"}
-        • (onRequest) ["anonymous","namedFunction"]
-        • (onTimeout) ["anonymous"]
+        • (onRequest) ["anonymous()","namedFunction()"]
+        • (onTimeout) ["anonymous()"]
         • (genericMeta) "meta"
         • (mixedMeta) ["mixed items",{"an":"object"}]
         • (objectMeta) {"one":"1","two":2}
+        • (functionMeta) "namedFunction()"
         └── /:hello (GET, PUT)
-            • (onRequest) ["anonymous","namedFunction"]
-            • (onTimeout) ["anonymous"]
+            • (onRequest) ["anonymous()","namedFunction()"]
+            • (onTimeout) ["anonymous()"]
             • (genericMeta) "meta"
             • (mixedMeta) ["mixed items",{"an":"object"}]
             • (objectMeta) {"one":"1","two":2}
+            • (functionMeta) "namedFunction()"
             /:hello (GET) {"version":"1.1.2"}
             /:hello (GET) {"version":"2.0.0"}
 `
+
+  const arraySpecific = findMyWay.prettyPrint({ commonPrefix: false, includeMeta: ['onRequest', 'mixedMeta', 'nonExistent'] })
+  const arraySpecificExpected = `└── / (-)
+    └── test (GET)
+        • (onRequest) ["anonymous()","namedFunction()"]
+        • (mixedMeta) ["mixed items",{"an":"object"}]
+        test (GET) {"host":"auth.fastify.io"}
+        • (onRequest) ["anonymous()","namedFunction()"]
+        • (mixedMeta) ["mixed items",{"an":"object"}]
+        └── /:hello (GET, PUT)
+            • (onRequest) ["anonymous()","namedFunction()"]
+            • (mixedMeta) ["mixed items",{"an":"object"}]
+            /:hello (GET) {"version":"1.1.2"}
+            /:hello (GET) {"version":"2.0.0"}
+`
+  const arrayNoMeta = findMyWay.prettyPrint({ commonPrefix: false, includeMeta: false })
+  const arrayNoMetaExpected = `└── / (-)
+    └── test (GET)
+        test (GET) {"host":"auth.fastify.io"}
+        └── /:hello (GET, PUT)
+            /:hello (GET) {"version":"1.1.2"}
+            /:hello (GET) {"version":"2.0.0"}
+`
+
   t.is(typeof arrayTree, 'string')
   t.equal(arrayTree, arrayExpected)
+
+  t.is(typeof arraySpecific, 'string')
+  t.equal(arraySpecific, arraySpecificExpected)
+
+  t.is(typeof arrayNoMeta, 'string')
+  t.equal(arrayNoMeta, arrayNoMetaExpected)
 })
