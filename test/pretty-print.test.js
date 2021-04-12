@@ -238,3 +238,50 @@ test('pretty print commonPrefix - handle constrained routes', t => {
   t.is(typeof arrayTree, 'string')
   t.equal(arrayTree, arrayExpected)
 })
+
+test('pretty print includeMeta - commonPrefix: false', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+  const namedFunction = () => {}
+  const store = {
+    onRequest: [() => {}, namedFunction],
+    onTimeout: [() => {}],
+    genericMeta: 'meta',
+    mixedMeta: ['mixed items', { an: 'object' }],
+    objectMeta: { one: '1', two: 2 }
+  }
+
+  findMyWay.on('GET', '/test', () => {}, store)
+  findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {}, store)
+  findMyWay.on('GET', '/test/:hello', () => {}, store)
+  findMyWay.on('PUT', '/test/:hello', () => {}, store)
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '1.1.2' } }, () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '2.0.0' } }, () => {})
+
+  const arrayTree = findMyWay.prettyPrint({ commonPrefix: false, includeMeta: true })
+  const arrayExpected = `└── / (-)
+    └── test (GET)
+        • (onRequest) ["anonymous","namedFunction"]
+        • (onTimeout) ["anonymous"]
+        • (genericMeta) "meta"
+        • (mixedMeta) ["mixed items",{"an":"object"}]
+        • (objectMeta) {"one":"1","two":2}
+        test (GET) {"host":"auth.fastify.io"}
+        • (onRequest) ["anonymous","namedFunction"]
+        • (onTimeout) ["anonymous"]
+        • (genericMeta) "meta"
+        • (mixedMeta) ["mixed items",{"an":"object"}]
+        • (objectMeta) {"one":"1","two":2}
+        └── /:hello (GET, PUT)
+            • (onRequest) ["anonymous","namedFunction"]
+            • (onTimeout) ["anonymous"]
+            • (genericMeta) "meta"
+            • (mixedMeta) ["mixed items",{"an":"object"}]
+            • (objectMeta) {"one":"1","two":2}
+            /:hello (GET) {"version":"1.1.2"}
+            /:hello (GET) {"version":"2.0.0"}
+`
+  t.is(typeof arrayTree, 'string')
+  t.equal(arrayTree, arrayExpected)
+})
