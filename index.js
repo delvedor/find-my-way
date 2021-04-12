@@ -588,7 +588,7 @@ Router.prototype.prettyPrint = function (opts = {}) {
 
   compressFlattenedNode(root)
 
-  return prettyPrintFlattenedNode(root, '', true)
+  return prettyPrintFlattenedNode(root, '', true, opts)
 }
 
 for (var i in http.METHODS) {
