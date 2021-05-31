@@ -47,6 +47,13 @@ function Router (opts) {
     this.onBadUrl = null
   }
 
+  if (opts.buildPrettyMeta) {
+    assert(typeof opts.buildPrettyMeta === 'function', 'buildPrettyMeta must be a function')
+    this.buildPrettyMeta = opts.buildPrettyMeta
+  } else {
+    this.buildPrettyMeta = defaultBuildPrettyMeta
+  }
+
   this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
@@ -573,7 +580,7 @@ Router.prototype._onBadUrl = function (path) {
 
 Router.prototype.prettyPrint = function (opts = {}) {
   opts.commonPrefix = opts.commonPrefix === undefined ? true : opts.commonPrefix // default to original behaviour
-  if (!opts.commonPrefix) return prettyPrintRoutesArray(this.routes, opts)
+  if (!opts.commonPrefix) return prettyPrintRoutesArray(this.routes, opts, this)
   const root = {
     prefix: '/',
     nodes: [],
@@ -588,7 +595,7 @@ Router.prototype.prettyPrint = function (opts = {}) {
 
   compressFlattenedNode(root)
 
-  return prettyPrintFlattenedNode(root, '', true, opts)
+  return prettyPrintFlattenedNode(root, '', true, opts, this)
 }
 
 for (var i in http.METHODS) {
@@ -649,4 +656,11 @@ function getClosingParenthensePosition (path, idx) {
   }
 
   throw new TypeError('Invalid regexp expression in "' + path + '"')
+}
+
+function defaultBuildPrettyMeta (route) {
+  // buildPrettyMeta function must return an object, which will be parsed into key/value pairs for display
+  if (!route) return {}
+  if (!route.store) return {}
+  return Object.assign({}, route.store)
 }
