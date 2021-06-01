@@ -101,7 +101,7 @@ You can assign a `buildPrettyPrint` function to sanitize a route's `store` objec
 ```js
 
 const privateKey = new Symbol('private key')
-const store = { token: '12345' }
+const store = { token: '12345', [privateKey]: 'private value' }
 
 const router = require('find-my-way')({
   buildPrettyMeta: route => {
@@ -112,7 +112,7 @@ const router = require('find-my-way')({
       if (typeof k === 'symbol') delete cleanMeta[k]
     })
 
-    return cleanMeta
+    return cleanMeta // this will show up in the pretty print output!
   }
 })
 
