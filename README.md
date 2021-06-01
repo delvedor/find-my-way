@@ -96,6 +96,37 @@ const router = require('find-my-way')({
 })
 ```
 
+You can assign a `buildPrettyPrint` function to sanitize a route's `store` object to use with the `prettyPrint` functions. This function should accept a single object and return an object.
+
+```js
+
+const privateKey = new Symbol('private key')
+const store = { token: '12345' }
+
+const router = require('find-my-way')({
+  buildPrettyMeta: route => {
+    const cleanMeta = Object.assign({}, route.store)
+
+    // remove private properties
+    Object.keys(cleanMeta).forEach(k => {
+      if (typeof k === 'symbol') delete cleanMeta[k]
+    })
+
+    return cleanMeta
+  }
+})
+
+store[privateKey] = 'private value'
+router.on('GET', '/hello_world', (req, res) => {}, store)
+
+router.prettyPrintRouteArray()
+
+//└── / (-)
+//    └── hello_world (GET)
+//        • (token) "12345"
+
+```
+
 ## Constraints
 
 `find-my-way` supports restricting handlers to only match certain requests for the same path. This can be used to support different versions of the same route that conform to a [semver](#semver) based versioning strategy, or restricting some routes to only be available on hosts. `find-my-way` has the semver based versioning strategy and a regex based hostname constraint strategy built in.
@@ -444,7 +475,9 @@ console.log(findMyWay.prettyPrint({ commonPrefix: false }))
 To include a display of the `store` data passed to individual routes, the 
 option `includeMeta` may be passed. If set to `true` all items will be
 displayed, this can also be set to an array specifying which keys (if
-present) to be displayed.
+present) should be displayed. This information can be further sanitized
+by specifying a `buildPrettyMeta` function which consumes and returns
+an object.
 
 ```js
 findMyWay.on('GET', '/test', () => {}, { onRequest: () => {}, authIDs => [1,2,3] })
