@@ -26,7 +26,7 @@ function Node (options) {
   this.wildcardChild = null
   this.parametricBrother = null
   this.constrainer = options.constrainer
-  this.hasConstraints = false || options.hasConstraints
+  this.hasConstraints = options.hasConstraints || false
   this.constrainedHandlerStores = null
 }
 
