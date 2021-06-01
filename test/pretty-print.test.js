@@ -20,7 +20,7 @@ test('pretty print - static routes', t => {
     └── hello/world (GET)
 `
 
-  t.is(typeof tree, 'string')
+  t.equal(typeof tree, 'string')
   t.equal(tree, expected)
 })
 
@@ -40,7 +40,7 @@ test('pretty print - parametric routes', t => {
     └── hello/:world (GET)
 `
 
-  t.is(typeof tree, 'string')
+  t.equal(typeof tree, 'string')
   t.equal(tree, expected)
 })
 
@@ -62,7 +62,7 @@ test('pretty print - mixed parametric routes', t => {
             └── /world (GET)
 `
 
-  t.is(typeof tree, 'string')
+  t.equal(typeof tree, 'string')
   t.equal(tree, expected)
 })
 
@@ -82,7 +82,7 @@ test('pretty print - wildcard routes', t => {
     └── hello/* (GET)
 `
 
-  t.is(typeof tree, 'string')
+  t.equal(typeof tree, 'string')
   t.equal(tree, expected)
 })
 
@@ -105,7 +105,7 @@ test('pretty print - parametric routes with same parent and followed by a static
         └── world (GET)
 `
 
-  t.is(typeof tree, 'string')
+  t.equal(typeof tree, 'string')
   t.equal(tree, expected)
 })
 
@@ -128,7 +128,7 @@ test('pretty print - constrained parametric routes', t => {
         /:hello (GET) {"version":"2.0.0"}
 `
 
-  t.is(typeof tree, 'string')
+  t.equal(typeof tree, 'string')
   t.equal(tree, expected)
 })
 
@@ -151,7 +151,7 @@ test('pretty print - multiple parameters are drawn appropriately', t => {
         └── are/:you/:ready/to/:rock (GET)
 `
 
-  t.is(typeof tree, 'string')
+  t.equal(typeof tree, 'string')
   t.equal(tree, expected)
 })
 
@@ -184,8 +184,8 @@ test('pretty print commonPrefix - use routes array to draw flattened routes', t 
     └── update (PUT)
 `
 
-  t.is(typeof radixTree, 'string')
-  t.is(typeof arrayTree, 'string')
+  t.equal(typeof radixTree, 'string')
+  t.equal(typeof arrayTree, 'string')
 
   t.equal(radixTree, radixExpected)
   t.equal(arrayTree, arrayExpected)
@@ -211,7 +211,7 @@ test('pretty print commonPrefix - handle wildcard root', t => {
     └── update (PUT)
 `
 
-  t.is(typeof arrayTree, 'string')
+  t.equal(typeof arrayTree, 'string')
   t.equal(arrayTree, arrayExpected)
 })
 
@@ -235,7 +235,7 @@ test('pretty print commonPrefix - handle constrained routes', t => {
             /:hello (GET) {"version":"1.1.2"}
             /:hello (GET) {"version":"2.0.0"}
 `
-  t.is(typeof arrayTree, 'string')
+  t.equal(typeof arrayTree, 'string')
   t.equal(arrayTree, arrayExpected)
 })
 
@@ -327,13 +327,13 @@ test('pretty print includeMeta - commonPrefix: true', t => {
     └── tested/:hello (PUT)
 `
 
-  t.is(typeof radixTree, 'string')
+  t.equal(typeof radixTree, 'string')
   t.equal(radixTree, radixTreeExpected)
 
-  t.is(typeof radixTreeSpecific, 'string')
+  t.equal(typeof radixTreeSpecific, 'string')
   t.equal(radixTreeSpecific, radixTreeSpecificExpected)
 
-  t.is(typeof radixTreeNoMeta, 'string')
+  t.equal(typeof radixTreeNoMeta, 'string')
   t.equal(radixTreeNoMeta, radixTreeNoMetaExpected)
 })
 
@@ -413,12 +413,76 @@ test('pretty print includeMeta - commonPrefix: false', t => {
             /:hello (GET) {"version":"2.0.0"}
 `
 
-  t.is(typeof arrayTree, 'string')
+  t.equal(typeof arrayTree, 'string')
   t.equal(arrayTree, arrayExpected)
 
-  t.is(typeof arraySpecific, 'string')
+  t.equal(typeof arraySpecific, 'string')
   t.equal(arraySpecific, arraySpecificExpected)
 
-  t.is(typeof arrayNoMeta, 'string')
+  t.equal(typeof arrayNoMeta, 'string')
   t.equal(arrayNoMeta, arrayNoMetaExpected)
+})
+
+test('pretty print includeMeta - buildPrettyMeta function', t => {
+  t.plan(4)
+
+  const findMyWay = FindMyWay({
+    buildPrettyMeta: route => {
+      // routes from radix tree do not contain a path element
+      // returns 'no path' to avoid an undefined value
+      return { metaKey: route.path || 'no path' }
+    }
+  })
+  const namedFunction = () => {}
+  const store = {
+    onRequest: [() => {}, namedFunction],
+    onTimeout: [() => {}],
+    genericMeta: 'meta',
+    mixedMeta: ['mixed items', { an: 'object' }],
+    objectMeta: { one: '1', two: 2 },
+    functionMeta: namedFunction
+  }
+
+  store[Symbol('symbolKey')] = Symbol('symbolValue')
+
+  findMyWay.on('GET', '/test', () => {}, store)
+  findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {}, store)
+  findMyWay.on('GET', '/test/:hello', () => {}, store)
+  findMyWay.on('PUT', '/test/:hello', () => {}, store)
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '1.1.2' } }, () => {})
+  findMyWay.on('GET', '/test/:hello', { constraints: { version: '2.0.0' } }, () => {})
+
+  const arrayTree = findMyWay.prettyPrint({ commonPrefix: false, includeMeta: true })
+  const arrayExpected = `└── / (-)
+    └── test (GET)
+        • (metaKey) "/test"
+        test (GET) {"host":"auth.fastify.io"}
+        • (metaKey) "/test"
+        └── /:hello (GET, PUT)
+            • (metaKey) "/test/:hello"
+            /:hello (GET) {"version":"1.1.2"}
+            • (metaKey) "/test/:hello"
+            /:hello (GET) {"version":"2.0.0"}
+            • (metaKey) "/test/:hello"
+`
+  const radixTree = findMyWay.prettyPrint({ includeMeta: true })
+  const radixExpected = `└── /test (GET)
+    • (metaKey) "no path"
+    /test (GET) {"host":"auth.fastify.io"}
+    • (metaKey) "no path"
+    └── /
+        └── :hello (GET)
+            • (metaKey) "no path"
+            :hello (GET) {"version":"1.1.2"}
+            • (metaKey) "no path"
+            :hello (GET) {"version":"2.0.0"}
+            • (metaKey) "no path"
+            :hello (PUT)
+            • (metaKey) "no path"
+`
+  t.equal(typeof arrayTree, 'string')
+  t.equal(arrayTree, arrayExpected)
+
+  t.equal(typeof radixTree, 'string')
+  t.equal(radixTree, radixExpected)
 })
