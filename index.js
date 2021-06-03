@@ -580,7 +580,7 @@ Router.prototype._onBadUrl = function (path) {
 
 Router.prototype.prettyPrint = function (opts = {}) {
   opts.commonPrefix = opts.commonPrefix === undefined ? true : opts.commonPrefix // default to original behaviour
-  if (!opts.commonPrefix) return prettyPrintRoutesArray(this.routes, opts, this)
+  if (!opts.commonPrefix) return prettyPrintRoutesArray.call(this, this.routes, opts)
   const root = {
     prefix: '/',
     nodes: [],
@@ -595,7 +595,7 @@ Router.prototype.prettyPrint = function (opts = {}) {
 
   compressFlattenedNode(root)
 
-  return prettyPrintFlattenedNode(root, '', true, opts, this)
+  return prettyPrintFlattenedNode.call(this, root, '', true, opts)
 }
 
 for (var i in http.METHODS) {
