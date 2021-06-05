@@ -96,7 +96,7 @@ const router = require('find-my-way')({
 })
 ```
 
-You can assign a `buildPrettyPrint` function to sanitize a route's `store` object to use with the `prettyPrint` functions. This function should accept a single object and return an object.
+You can assign a `buildPrettyMeta` function to sanitize a route's `store` object to use with the `prettyPrint` functions. This function should accept a single object and return an object.
 
 ```js
 
