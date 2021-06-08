@@ -96,6 +96,37 @@ const router = require('find-my-way')({
 })
 ```
 
+You can assign a `buildPrettyMeta` function to sanitize a route's `store` object to use with the `prettyPrint` functions. This function should accept a single object and return an object.
+
+```js
+
+const privateKey = new Symbol('private key')
+const store = { token: '12345', [privateKey]: 'private value' }
+
+const router = require('find-my-way')({
+  buildPrettyMeta: route => {
+    const cleanMeta = Object.assign({}, route.store)
+
+    // remove private properties
+    Object.keys(cleanMeta).forEach(k => {
+      if (typeof k === 'symbol') delete cleanMeta[k]
+    })
+
+    return cleanMeta // this will show up in the pretty print output!
+  }
+})
+
+store[privateKey] = 'private value'
+router.on('GET', '/hello_world', (req, res) => {}, store)
+
+router.prettyPrintRouteArray()
+
+//└── / (-)
+//    └── hello_world (GET)
+//        • (token) "12345"
+
+```
+
 ## Constraints
 
 `find-my-way` supports restricting handlers to only match certain requests for the same path. This can be used to support different versions of the same route that conform to a [semver](#semver) based versioning strategy, or restricting some routes to only be available on hosts. `find-my-way` has the semver based versioning strategy and a regex based hostname constraint strategy built in.
@@ -409,8 +440,9 @@ router.find('GET', '/example', { host: 'fastify.io', version: '1.x' })
 ```
 
 <a name="pretty-print"></a>
-#### prettyPrint([{ commonPrefix: false }])
+#### prettyPrint([{ commonPrefix: false, includeMeta: true || [] }])
 Prints the representation of the internal radix tree, useful for debugging.
+
 ```js
 findMyWay.on('GET', '/test', () => {})
 findMyWay.on('GET', '/test/hello', () => {})
@@ -427,13 +459,49 @@ console.log(findMyWay.prettyPrint())
 //     └── update (PUT)
 ```
 
-`prettyPrint` accepts an optional setting to use the internal routes array to render the tree.
+`prettyPrint` accepts an optional setting to use the internal routes array
+to render the tree.
 
 ```js
 console.log(findMyWay.prettyPrint({ commonPrefix: false }))
 // └── / (-)
 //     ├── test (GET)
 //     │   └── /hello (GET)
+//     ├── testing (GET)
+//     │   └── /:param (GET)
+//     └── update (PUT)
+```
+
+To include a display of the `store` data passed to individual routes, the 
+option `includeMeta` may be passed. If set to `true` all items will be
+displayed, this can also be set to an array specifying which keys (if
+present) should be displayed. This information can be further sanitized
+by specifying a `buildPrettyMeta` function which consumes and returns
+an object.
+
+```js
+findMyWay.on('GET', '/test', () => {}, { onRequest: () => {}, authIDs => [1,2,3] })
+findMyWay.on('GET', '/test/hello', () => {}, { token: 'df123-4567' })
+findMyWay.on('GET', '/testing', () => {})
+findMyWay.on('GET', '/testing/:param', () => {})
+findMyWay.on('PUT', '/update', () => {})
+
+console.log(findMyWay.prettyPrint({ commonPrefix: false, includeMeta: ['onRequest'] }))
+// └── /
+//     ├── test (GET)
+//     │   • (onRequest) "anonymous()"
+//     │   ├── /hello (GET)
+//     │   └── ing (GET)
+//     │       └── /:param (GET)
+//     └── update (PUT)
+
+console.log(findMyWay.prettyPrint({ commonPrefix: true, includeMeta: true }))
+// └── / (-)
+//     ├── test (GET)
+//     │   • (onRequest) "anonymous()"
+//     │   • (authIDs) [1,2,3]
+//     │   └── /hello (GET)
+//     │       • (token) "df123-4567"
 //     ├── testing (GET)
 //     │   └── /:param (GET)
 //     └── update (PUT)
