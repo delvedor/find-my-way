@@ -415,7 +415,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     if (node === null) {
       node = currentNode.parametricBrother
       if (node === null) {
-        return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard)
+        return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard, derivedConstraints, params)
       }
 
       var goBack = previousPath.charCodeAt(0) === 47 ? previousPath : '/' + previousPath
@@ -447,7 +447,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     }
 
     if (len !== prefixLen) {
-      return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard)
+      return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard, derivedConstraints, params)
     }
 
     // if exist, save the wildcard child
@@ -539,7 +539,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   }
 }
 
-Router.prototype._getWildcardNode = function (node, path, len) {
+Router.prototype._getWildcardNode = function (node, path, len, derivedConstraints, params) {
   if (node === null) return null
   var decoded = fastDecode(path.slice(-len))
   if (decoded === null) {
@@ -547,11 +547,25 @@ Router.prototype._getWildcardNode = function (node, path, len) {
       ? this._onBadUrl(path.slice(-len))
       : null
   }
-  var handle = node.handlers[0]
+
+  var handle = derivedConstraints !== undefined ? node.getMatchingHandler(derivedConstraints) : node.unconstrainedHandler
+
   if (handle !== null && handle !== undefined) {
+    var paramsObj = {}
+    if (handle.paramsLength > 0 && params !== null) {
+      var paramNames = handle.params
+
+      for (i = 0; i < handle.paramsLength; i++) {
+        paramsObj[paramNames[i]] = params[i]
+      }
+    }
+
+    // we must override params[*] to decoded
+    paramsObj['*'] = decoded
+
     return {
       handler: handle.handler,
-      params: { '*': decoded },
+      params: paramsObj,
       store: handle.store
     }
   }
