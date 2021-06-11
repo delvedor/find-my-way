@@ -5,6 +5,7 @@
     '#': 35
     '*': 42
     '-': 45
+    '.': 46
     '/': 47
     ':': 58
     ';': 59
@@ -152,7 +153,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         if (isRegex) {
           i = getClosingParenthensePosition(path, i) + 1
           break
-        } else if (path.charCodeAt(i) !== 45) {
+        } else if (path.charCodeAt(i) !== 45 && path.charCodeAt(i) !== 46) {
           i++
         } else {
           break
@@ -519,7 +520,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         if (matchedParameter === null) return null
         i = matchedParameter[1].length
       } else {
-        while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45) i++
+        while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45 && path.charCodeAt(i) !== 46) i++
         if (i > maxParamLength) return null
       }
       decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
