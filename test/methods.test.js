@@ -9,10 +9,10 @@ test('the router is an object with methods', t => {
 
   const findMyWay = FindMyWay()
 
-  t.is(typeof findMyWay.on, 'function')
-  t.is(typeof findMyWay.off, 'function')
-  t.is(typeof findMyWay.lookup, 'function')
-  t.is(typeof findMyWay.find, 'function')
+  t.equal(typeof findMyWay.on, 'function')
+  t.equal(typeof findMyWay.off, 'function')
+  t.equal(typeof findMyWay.lookup, 'function')
+  t.equal(typeof findMyWay.find, 'function')
 })
 
 test('on throws for invalid method', t => {
@@ -74,7 +74,7 @@ test('does not register /test/*/ when ignoreTrailingSlash is true', t => {
   })
 
   findMyWay.on('GET', '/test/*', () => {})
-  t.is(
+  t.equal(
     findMyWay.routes.filter((r) => r.path.includes('/test')).length,
     1
   )
@@ -118,7 +118,7 @@ test('off with nested wildcards with parametric and static', t => {
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.is(params['*'], '/foo2/first/second')
+    t.equal(params['*'], '/foo2/first/second')
   })
   findMyWay.on('GET', '/foo1/*', () => {})
   findMyWay.on('GET', '/foo2/*', () => {})
@@ -127,12 +127,12 @@ test('off with nested wildcards with parametric and static', t => {
   findMyWay.on('GET', '/foo4/param/hello/test/long/route', () => {})
 
   var route1 = findMyWay.find('GET', '/foo3/first/second')
-  t.is(route1.params['*'], 'first/second')
+  t.equal(route1.params['*'], 'first/second')
 
   findMyWay.off('GET', '/foo3/*')
 
   var route2 = findMyWay.find('GET', '/foo3/first/second')
-  t.is(route2.params['*'], '/foo3/first/second')
+  t.equal(route2.params['*'], '/foo3/first/second')
 
   findMyWay.off('GET', '/foo2/*')
   findMyWay.lookup(
@@ -148,24 +148,24 @@ test('off removes all routes when ignoreTrailingSlash is true', t => {
   })
 
   findMyWay.on('GET', '/test1/', () => {})
-  t.is(findMyWay.routes.length, 2)
+  t.equal(findMyWay.routes.length, 2)
 
   findMyWay.on('GET', '/test2', () => {})
-  t.is(findMyWay.routes.length, 4)
+  t.equal(findMyWay.routes.length, 4)
 
   findMyWay.off('GET', '/test1')
-  t.is(findMyWay.routes.length, 2)
-  t.is(
+  t.equal(findMyWay.routes.length, 2)
+  t.equal(
     findMyWay.routes.filter((r) => r.path === '/test2').length,
     1
   )
-  t.is(
+  t.equal(
     findMyWay.routes.filter((r) => r.path === '/test2/').length,
     1
   )
 
   findMyWay.off('GET', '/test2/')
-  t.is(findMyWay.routes.length, 0)
+  t.equal(findMyWay.routes.length, 0)
 })
 
 test('deregister a route without children', t => {
@@ -242,7 +242,7 @@ test('parametric route', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
-    t.is(params.id, 'hello')
+    t.equal(params.id, 'hello')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
@@ -253,11 +253,11 @@ test('multiple parametric route', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
-    t.is(params.id, 'hello')
+    t.equal(params.id, 'hello')
   })
 
   findMyWay.on('GET', '/other-test/:id', (req, res, params) => {
-    t.is(params.id, 'world')
+    t.equal(params.id, 'world')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
@@ -269,11 +269,11 @@ test('multiple parametric route with the same prefix', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
-    t.is(params.id, 'hello')
+    t.equal(params.id, 'hello')
   })
 
   findMyWay.on('GET', '/test/:id/world', (req, res, params) => {
-    t.is(params.id, 'world')
+    t.equal(params.id, 'world')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
@@ -285,8 +285,8 @@ test('nested parametric route', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/test/:hello/test/:world', (req, res, params) => {
-    t.is(params.hello, 'hello')
-    t.is(params.world, 'world')
+    t.equal(params.hello, 'hello')
+    t.equal(params.world, 'world')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/hello/test/world', headers: {} }, null)
@@ -301,8 +301,8 @@ test('nested parametric route with same prefix', t => {
   })
 
   findMyWay.on('GET', '/test/:hello/test/:world', (req, res, params) => {
-    t.is(params.hello, 'hello')
-    t.is(params.world, 'world')
+    t.equal(params.hello, 'hello')
+    t.equal(params.world, 'world')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
@@ -325,9 +325,9 @@ test('long parametric route', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/abc/:def/ghi/:lmn/opq/:rst/uvz', (req, res, params) => {
-    t.is(params.def, 'def')
-    t.is(params.lmn, 'lmn')
-    t.is(params.rst, 'rst')
+    t.equal(params.def, 'def')
+    t.equal(params.lmn, 'lmn')
+    t.equal(params.rst, 'rst')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz', headers: {} }, null)
@@ -346,24 +346,24 @@ test('long parametric route with common prefix', t => {
   })
 
   findMyWay.on('GET', '/abc/:def', (req, res, params) => {
-    t.is(params.def, 'def')
+    t.equal(params.def, 'def')
   })
 
   findMyWay.on('GET', '/abc/:def/ghi/:lmn', (req, res, params) => {
-    t.is(params.def, 'def')
-    t.is(params.lmn, 'lmn')
+    t.equal(params.def, 'def')
+    t.equal(params.lmn, 'lmn')
   })
 
   findMyWay.on('GET', '/abc/:def/ghi/:lmn/opq/:rst', (req, res, params) => {
-    t.is(params.def, 'def')
-    t.is(params.lmn, 'lmn')
-    t.is(params.rst, 'rst')
+    t.equal(params.def, 'def')
+    t.equal(params.lmn, 'lmn')
+    t.equal(params.rst, 'rst')
   })
 
   findMyWay.on('GET', '/abc/:def/ghi/:lmn/opq/:rst/uvz', (req, res, params) => {
-    t.is(params.def, 'def')
-    t.is(params.lmn, 'lmn')
-    t.is(params.rst, 'rst')
+    t.equal(params.def, 'def')
+    t.equal(params.lmn, 'lmn')
+    t.equal(params.rst, 'rst')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/abc/def', headers: {} }, null)
@@ -403,7 +403,7 @@ test('wildcard', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/test/*', (req, res, params) => {
-    t.is(params['*'], 'hello')
+    t.equal(params['*'], 'hello')
   })
 
   findMyWay.lookup(
@@ -417,7 +417,7 @@ test('catch all wildcard', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.is(params['*'], '/test/hello')
+    t.equal(params['*'], '/test/hello')
   })
 
   findMyWay.lookup(
@@ -433,7 +433,7 @@ test('find should return the route', t => {
 
   findMyWay.on('GET', '/test', fn)
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test'),
     { handler: fn, params: {}, store: null }
   )
@@ -446,7 +446,7 @@ test('find should return the route with params', t => {
 
   findMyWay.on('GET', '/test/:id', fn)
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test/hello'),
     { handler: fn, params: { id: 'hello' }, store: null }
   )
@@ -456,7 +456,7 @@ test('find should return a null handler if the route does not exist', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test'),
     null
   )
@@ -469,7 +469,7 @@ test('should decode the uri - parametric', t => {
 
   findMyWay.on('GET', '/test/:id', fn)
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test/he%2Fllo'),
     { handler: fn, params: { id: 'he/llo' }, store: null }
   )
@@ -482,7 +482,7 @@ test('should decode the uri - wildcard', t => {
 
   findMyWay.on('GET', '/test/*', fn)
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test/he%2Fllo'),
     { handler: fn, params: { '*': 'he/llo' }, store: null }
   )
@@ -495,7 +495,7 @@ test('safe decodeURIComponent', t => {
 
   findMyWay.on('GET', '/test/:id', fn)
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test/hel%"Flo'),
     null
   )
@@ -508,7 +508,7 @@ test('safe decodeURIComponent - nested route', t => {
 
   findMyWay.on('GET', '/test/hello/world/:id/blah', fn)
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test/hello/world/hel%"Flo/blah'),
     null
   )
@@ -521,7 +521,7 @@ test('safe decodeURIComponent - wildcard', t => {
 
   findMyWay.on('GET', '/test/*', fn)
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test/hel%"Flo'),
     null
   )
@@ -610,7 +610,7 @@ test('Static parametric with shared part of the path', t => {
 
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.is(req.url, '/example/shared/nested/oopss')
+      t.equal(req.url, '/example/shared/nested/oopss')
     }
   })
 
@@ -619,7 +619,7 @@ test('Static parametric with shared part of the path', t => {
   })
 
   findMyWay.on('GET', '/example/:param/nested/oops', (req, res, params) => {
-    t.is(params.param, 'other')
+    t.equal(params.param, 'other')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/oopss', headers: {} }, null)
@@ -631,11 +631,11 @@ test('parametric route with different method', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
-    t.is(params.id, 'hello')
+    t.equal(params.id, 'hello')
   })
 
   findMyWay.on('POST', '/test/:other', (req, res, params) => {
-    t.is(params.other, 'world')
+    t.equal(params.other, 'world')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
@@ -650,11 +650,11 @@ test('params does not keep the object reference', t => {
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
     if (first) {
       setTimeout(() => {
-        t.is(params.id, 'hello')
+        t.equal(params.id, 'hello')
       }, 10)
     } else {
       setTimeout(() => {
-        t.is(params.id, 'world')
+        t.equal(params.id, 'world')
       }, 10)
     }
     first = false
@@ -700,7 +700,7 @@ test('Unsupported method (static find)', t => {
 
   findMyWay.on('GET', '/', () => {})
 
-  t.deepEqual(findMyWay.find('TROLL', '/'), null)
+  t.same(findMyWay.find('TROLL', '/'), null)
 })
 
 test('Unsupported method (wildcard find)', t => {
@@ -709,7 +709,7 @@ test('Unsupported method (wildcard find)', t => {
 
   findMyWay.on('GET', '*', () => {})
 
-  t.deepEqual(findMyWay.find('TROLL', '/hello/world'), null)
+  t.same(findMyWay.find('TROLL', '/hello/world'), null)
 })
 
 test('register all known HTTP methods', t => {

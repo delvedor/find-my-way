@@ -58,8 +58,8 @@ test('mixed nested route with matching regex', t => {
   })
 
   findMyWay.on('GET', '/test/:id(^\\d+$)/hello/:world', (req, res, params) => {
-    t.is(params.id, '12')
-    t.is(params.world, 'world')
+    t.equal(params.id, '12')
+    t.equal(params.world, 'world')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/12/hello/world', headers: {} }, null)
@@ -74,8 +74,8 @@ test('mixed nested route with double matching regex', t => {
   })
 
   findMyWay.on('GET', '/test/:id(^\\d+$)/hello/:world(^\\d+$)', (req, res, params) => {
-    t.is(params.id, '12')
-    t.is(params.world, '15')
+    t.equal(params.id, '12')
+    t.equal(params.world, '15')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/12/hello/15', headers: {} }, null)
@@ -138,7 +138,7 @@ test('safe decodeURIComponent', t => {
     t.fail('we should not be here')
   })
 
-  t.deepEqual(
+  t.same(
     findMyWay.find('GET', '/test/hel%"Flo', {}),
     null
   )

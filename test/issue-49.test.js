@@ -82,7 +82,7 @@ test('Should produce the same tree - 1', t => {
   findMyWay2.on('GET', '/:param', noop)
   findMyWay2.on('GET', '/static', noop)
 
-  t.deepEqual(findMyWay1.tree, findMyWay2.tree)
+  t.equal(findMyWay1.tree, findMyWay2.tree)
 })
 
 test('Should produce the same tree - 2', t => {
@@ -103,7 +103,7 @@ test('Should produce the same tree - 2', t => {
   findMyWay3.on('GET', '/other', noop)
   findMyWay3.on('GET', '/:param', noop)
 
-  t.deepEqual(findMyWay1.tree, findMyWay2.tree)
-  t.deepEqual(findMyWay2.tree, findMyWay3.tree)
-  t.deepEqual(findMyWay1.tree, findMyWay3.tree)
+  t.equal(findMyWay1.tree, findMyWay2.tree)
+  t.equal(findMyWay2.tree, findMyWay3.tree)
+  t.equal(findMyWay1.tree, findMyWay3.tree)
 })

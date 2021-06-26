@@ -32,8 +32,8 @@ test('A route could support a custom constraint strategy', t => {
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, alpha)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, beta)
 
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'curl' }).handler, alpha)
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'wget' }).handler, beta)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl' }).handler, alpha)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget' }).handler, beta)
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
 })
 
@@ -47,10 +47,10 @@ test('A route could support a custom constraint strategy while versioned', t => 
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget', version: '2.0.0' } }, gamma)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget', version: '3.0.0' } }, delta)
 
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }).handler, alpha)
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }).handler, beta)
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '2.x' }).handler, gamma)
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '3.x' }).handler, delta)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }).handler, alpha)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }).handler, beta)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '2.x' }).handler, gamma)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '3.x' }).handler, delta)
 
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
@@ -68,9 +68,9 @@ test('A route could support a custom constraint strategy while versioned and hos
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '2.0.0', host: 'fastify.io' } }, beta)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '2.0.0', host: 'example.io' } }, delta)
 
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'fastify.io' }).handler, alpha)
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'fastify.io' }).handler, beta)
-  t.strictEqual(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'example.io' }).handler, delta)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'fastify.io' }).handler, alpha)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'fastify.io' }).handler, beta)
+  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'example.io' }).handler, delta)
 
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
