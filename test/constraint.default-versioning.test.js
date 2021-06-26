@@ -237,7 +237,7 @@ test('It should throw if you declare multiple times the same route', t => {
     findMyWay.on('GET', '/', { constraints: { version: '1.2.3' } }, noop)
     t.fail('It should throw')
   } catch (err) {
-    t.is(err.message, 'Method \'GET\' already declared for route \'/\' with constraints \'{"version":"1.2.3"}\'')
+    t.equal(err.message, 'Method \'GET\' already declared for route \'/\' with constraints \'{"version":"1.2.3"}\'')
   }
 })
 

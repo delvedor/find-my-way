@@ -18,6 +18,6 @@ t.test('issue-63', (t) => {
     fmw.on('GET', '/foo/:id(a', noop)
     t.fail('should fail')
   } catch (err) {
-    t.is(err.message, 'Invalid regexp expression in "/foo/:id(a"')
+    t.equal(err.message, 'Invalid regexp expression in "/foo/:id(a"')
   }
 })

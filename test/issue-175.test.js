@@ -11,7 +11,7 @@ test('double colon is replaced with single colon, no parameters', t => {
   })
 
   function handler (req, res, params) {
-    t.deepEqual(params, {})
+    t.same(params, {})
   }
 
   findMyWay.on('GET', '/name::customVerb', handler)

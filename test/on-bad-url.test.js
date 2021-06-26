@@ -11,7 +11,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (find
       t.fail('Should not be defaultRoute')
     },
     onBadUrl: (path, req, res) => {
-      t.strictEqual(path, '/%world')
+      t.equal(path, '/%world')
     }
   })
 
@@ -20,7 +20,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (find
   })
 
   const handle = findMyWay.find('GET', '/hello/%world')
-  t.notStrictEqual(handle, null)
+  t.not(handle, null)
 })
 
 test('If onBadUrl is defined, then a bad url should be handled differently (lookup)', t => {
@@ -30,7 +30,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (look
       t.fail('Should not be defaultRoute')
     },
     onBadUrl: (path, req, res) => {
-      t.strictEqual(path, '%world')
+      t.equal(path, '%world')
     }
   })
 
@@ -54,7 +54,7 @@ test('If onBadUrl is not defined, then we should call the defaultRoute (find)', 
   })
 
   const handle = findMyWay.find('GET', '/hello/%world')
-  t.strictEqual(handle, null)
+  t.equal(handle, null)
 })
 
 test('If onBadUrl is not defined, then we should call the defaultRoute (lookup)', t => {

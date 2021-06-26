@@ -19,9 +19,9 @@ test('verify routes registered', t => {
   const defaultHandler = (req, res, params) => res.end(JSON.stringify({ hello: 'world' }))
 
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
-  t.strictEqual(findMyWay.routes.length, quantity)
+  t.equal(findMyWay.routes.length, quantity)
   findMyWay.routes.map((route, idx) => {
-    t.deepEqual(route, {
+    t.same(route, {
       method: 'GET',
       path: '/test-route-' + idx,
       opts: {},
@@ -40,7 +40,7 @@ test('verify routes registered and deregister', t => {
   const defaultHandler = (req, res, params) => res.end(JSON.stringify({ hello: 'world' }))
 
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
-  t.strictEqual(findMyWay.routes.length, quantity)
+  t.equal(findMyWay.routes.length, quantity)
   findMyWay.off('GET', '/test-route-0')
-  t.strictEqual(findMyWay.routes.length, quantity - 1)
+  t.equal(findMyWay.routes.length, quantity - 1)
 })
