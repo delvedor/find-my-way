@@ -265,3 +265,26 @@ test('Versioning won\'t work if there are no versioned routes', t => {
     url: '/'
   }, null)
 })
+
+test('Unversioned routes aren\'t triggered when unknown versions are requested', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.ok('We should be here')
+    }
+  })
+
+  findMyWay.on('GET', '/', (req, res) => {
+    t.fail('unversioned route shouldnt be hit!')
+  })
+  findMyWay.on('GET', '/', { constraints: { version: '1.0.0' } }, (req, res) => {
+    t.fail('versioned route shouldnt be hit for wrong version!')
+  })
+
+  findMyWay.lookup({
+    method: 'GET',
+    url: '/',
+    headers: { 'accept-version': '2.x' }
+  }, null)
+})

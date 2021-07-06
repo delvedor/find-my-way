@@ -80,7 +80,7 @@ test('A route could support a custom constraint strategy while versioned and hos
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'example.io' }))
 })
 
-test('Custom constraint strategies can set mustMatchWhenDerived flag to true which prevents matches to routes when a constraint is derived', t => {
+test('Custom constraint strategies can set mustMatchWhenDerived flag to true which prevents matches to unconstrained routes when a constraint is derived and there are no other routes', t => {
   t.plan(1)
 
   const findMyWay = FindMyWay({
@@ -96,6 +96,28 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
   })
 
   findMyWay.on('GET', '/', {}, () => t.fail())
+
+  findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
+})
+
+test('Custom constraint strategies can set mustMatchWhenDerived flag to true which prevents matches to unconstrained routes when a constraint is derived when there are constrained routes', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    constraints: {
+      requestedBy: {
+        ...customHeaderConstraint,
+        mustMatchWhenDerived: true
+      }
+    },
+    defaultRoute (req, res) {
+      t.pass()
+    }
+  })
+
+  findMyWay.on('GET', '/', {}, () => t.fail())
+  findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, () => t.fail())
+  findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, () => t.fail())
 
   findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
 })
