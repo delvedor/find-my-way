@@ -310,7 +310,11 @@ Node.prototype._compileGetHandlerMatchingConstraints = function () {
   }
   // Return the first handler who's bit is set in the candidates https://stackoverflow.com/questions/18134985/how-to-find-index-of-first-set-bit
   lines.push(`
-  return this.handlers[Math.floor(Math.log2(candidates))]
+  const handler = this.handlers[Math.floor(Math.log2(candidates))]
+  if (handler && derivedConstraints.__hasMustMatchValues && handler === this.unconstrainedHandler) {
+    return null;
+  }
+  return handler;
   `)
 
   this._getHandlerMatchingConstraints = new Function('derivedConstraints', lines.join('\n')) // eslint-disable-line

@@ -20,7 +20,7 @@ const customHeaderConstraint = {
     }
   },
   deriveConstraint: (req, ctx) => {
-    return req.headers.accept
+    return req.headers['user-agent']
   }
 }
 
@@ -78,4 +78,66 @@ test('A route could support a custom constraint strategy while versioned and hos
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }))
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x', host: 'fastify.io' }))
   t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'example.io' }))
+})
+
+test('Custom constraint strategies can set mustMatchWhenDerived flag to true which prevents matches to unconstrained routes when a constraint is derived and there are no other routes', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    constraints: {
+      requestedBy: {
+        ...customHeaderConstraint,
+        mustMatchWhenDerived: true
+      }
+    },
+    defaultRoute (req, res) {
+      t.pass()
+    }
+  })
+
+  findMyWay.on('GET', '/', {}, () => t.fail())
+
+  findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
+})
+
+test('Custom constraint strategies can set mustMatchWhenDerived flag to true which prevents matches to unconstrained routes when a constraint is derived when there are constrained routes', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    constraints: {
+      requestedBy: {
+        ...customHeaderConstraint,
+        mustMatchWhenDerived: true
+      }
+    },
+    defaultRoute (req, res) {
+      t.pass()
+    }
+  })
+
+  findMyWay.on('GET', '/', {}, () => t.fail())
+  findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, () => t.fail())
+  findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, () => t.fail())
+
+  findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
+})
+
+test('Custom constraint strategies can set mustMatchWhenDerived flag to false which allows matches to unconstrained routes when a constraint is derived', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    constraints: {
+      requestedBy: {
+        ...customHeaderConstraint,
+        mustMatchWhenDerived: false
+      }
+    },
+    defaultRoute (req, res) {
+      t.fail()
+    }
+  })
+
+  findMyWay.on('GET', '/', {}, () => t.pass())
+
+  findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
 })
