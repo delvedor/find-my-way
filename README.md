@@ -36,7 +36,7 @@ server.listen(3000, err => {
 <a name="api"></a>
 ## API
 <a name="constructor"></a>
-#### FindMyway([options])
+#### FindMyWay([options])
 Instance a new router.<br>
 You can pass a default route with the option `defaultRoute`.
 ```js
