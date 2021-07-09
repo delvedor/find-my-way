@@ -119,7 +119,7 @@ const router = require('find-my-way')({
 store[privateKey] = 'private value'
 router.on('GET', '/hello_world', (req, res) => {}, store)
 
-router.prettyPrintRouteArray()
+router.prettyPrint()
 
 //└── / (-)
 //    └── hello_world (GET)
