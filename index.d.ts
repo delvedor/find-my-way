@@ -154,6 +154,7 @@ declare namespace Router {
 
     reset(): void;
     prettyPrint(): string;
+    prettyPrint(opts: { commonPrefix?: boolean }): string;
 
     all: ShortHandRoute<V>;
 
