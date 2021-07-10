@@ -58,6 +58,8 @@ let http2Res!: Http2ServerResponse;
 
   expectType<void>(router.reset())
   expectType<string>(router.prettyPrint())
+  expectType<string>(router.prettyPrint({ commonPrefix: false }))
+  expectType<string>(router.prettyPrint({ commonPrefix: true }))
 }
 
 // HTTP2
