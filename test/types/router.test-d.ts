@@ -60,6 +60,8 @@ let http2Res!: Http2ServerResponse;
   expectType<string>(router.prettyPrint())
   expectType<string>(router.prettyPrint({ commonPrefix: false }))
   expectType<string>(router.prettyPrint({ commonPrefix: true }))
+  expectType<string>(router.prettyPrint({ includeMeta: true }))
+  expectType<string>(router.prettyPrint({ includeMeta: ['test', Symbol('test')] }))
 }
 
 // HTTP2
