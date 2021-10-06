@@ -462,7 +462,7 @@ test('find should return a null handler if the route does not exist', t => {
   )
 })
 
-test('should decode the uri - parametric', t => {
+test('should decode the uri - parametric', { todo: 'check RFC' }, t => {
   t.plan(1)
   const findMyWay = FindMyWay()
   const fn = () => {}

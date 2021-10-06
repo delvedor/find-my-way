@@ -356,6 +356,14 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
 
+  var decoded = fastDecode(path)
+  if (decoded === null) {
+    return this.onBadUrl !== null
+      ? this._onBadUrl(path)
+      : null
+  }
+  path = decoded
+
   var originalPath = path
   var originalPathLength = path.length
 
@@ -366,7 +374,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   var maxParamLength = this.maxParamLength
   var wildcardNode = null
   var pathLenWildcard = 0
-  var decoded = null
   var pindex = 0
   var params = null
   var i = 0
@@ -463,12 +470,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-      if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
-      }
+      decoded = originalPath.slice(idxInOriginalPath, idxInOriginalPath + i)
       params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)
@@ -478,12 +480,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     // wildcard route
     if (kind === NODE_TYPES.MATCH_ALL) {
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath))
-      if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath))
-          : null
-      }
+      decoded = originalPath.slice(idxInOriginalPath)
       params || (params = [])
       params[pindex] = decoded
       currentNode = node
@@ -497,12 +494,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-      if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
-      }
+      decoded = originalPath.slice(idxInOriginalPath, idxInOriginalPath + i)
       if (!node.regex.test(decoded)) return null
       params || (params = [])
       params[pindex++] = decoded
@@ -523,12 +515,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45 && path.charCodeAt(i) !== 46) i++
         if (i > maxParamLength) return null
       }
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-      if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
-      }
+      decoded = originalPath.slice(idxInOriginalPath, idxInOriginalPath + i)
       params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)
