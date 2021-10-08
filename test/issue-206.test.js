@@ -50,7 +50,7 @@ test('Special chars on path parameter', t => {
   findMyWay.lookup(get('/[...].html'), null, { expect: { pathParam: '[...].html' }, handler: pathParam })
   findMyWay.lookup(get('/reg%252F123 .png'), null, { expect: { pathParam: 'reg/123 .png' }, handler: pathParam })
   findMyWay.lookup(get('/reg/123 .png'), null, { expect: { regExeParam: '123' }, handler: regexPathParam })
-  findMyWay.lookup(get('/reg%2F123 .png'), null, { expect: { regExeParam: '123' }, handler: regexPathParam })
+  findMyWay.lookup(get('/reg%2F123 .png'), null, { expect: { pathParam: 'reg/123 .png' }, handler: pathParam }) // en encoded / is always a parameter
   findMyWay.lookup(get('/reg/123%20.png'), null, { expect: { regExeParam: '123' }, handler: regexPathParam })
 
   function get (url) {

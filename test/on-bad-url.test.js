@@ -11,7 +11,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (find
       t.fail('Should not be defaultRoute')
     },
     onBadUrl: (path, req, res) => {
-      t.equal(path, '/hello/%world')
+      t.equal(path, '%world')
     }
   })
 
@@ -30,7 +30,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (look
       t.fail('Should not be defaultRoute')
     },
     onBadUrl: (path, req, res) => {
-      t.equal(path, '/hello/%world')
+      t.equal(path, '%world')
     }
   })
 
