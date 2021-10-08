@@ -356,6 +356,8 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
 
+  // The URL must be decoded first:
+  // https://datatracker.ietf.org/doc/html/rfc2616#section-5.1.2
   var decoded = fastDecode(path)
   if (decoded === null) {
     return this.onBadUrl !== null
@@ -470,7 +472,12 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = originalPath.slice(idxInOriginalPath, idxInOriginalPath + i)
+      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      if (decoded === null) {
+        return this.onBadUrl !== null
+          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+          : null
+      }
       params || (params = [])
       params[pindex++] = decoded
       path = path.slice(i)

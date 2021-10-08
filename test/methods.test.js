@@ -462,16 +462,18 @@ test('find should return a null handler if the route does not exist', t => {
   )
 })
 
-test('should decode the uri - parametric', { todo: 'check RFC' }, t => {
+test('should decode the uri - parametric', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
   const fn = () => {}
 
   findMyWay.on('GET', '/test/:id', fn)
 
+  // https://www.rfc-editor.org/rfc/rfc3986#section-3.3
   t.same(
-    findMyWay.find('GET', '/test/he%2Fllo'),
-    { handler: fn, params: { id: 'he/llo' }, store: null }
+    findMyWay.find('GET', '/test/he%252Fllo'),
+    { handler: fn, params: { id: 'he/llo' }, store: null },
+    'the path parameter with special chars needs a double encoding'
   )
 })
 
