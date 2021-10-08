@@ -471,9 +471,8 @@ test('should decode the uri - parametric', t => {
 
   // https://www.rfc-editor.org/rfc/rfc3986#section-3.3
   t.same(
-    findMyWay.find('GET', '/test/he%252Fllo'),
-    { handler: fn, params: { id: 'he/llo' }, store: null },
-    'the path parameter with special chars needs a double encoding'
+    findMyWay.find('GET', '/test/he%2Fllo'),
+    { handler: fn, params: { id: 'he/llo' }, store: null }
   )
 })
 
