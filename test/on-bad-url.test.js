@@ -11,7 +11,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (find
       t.fail('Should not be defaultRoute')
     },
     onBadUrl: (path, req, res) => {
-      t.equal(path, '%world', { todo: 'this is not executed' })
+      t.equal(path, '/%world', { todo: 'this is not executed' })
     }
   })
 

@@ -469,7 +469,6 @@ test('should decode the uri - parametric', t => {
 
   findMyWay.on('GET', '/test/:id', fn)
 
-  // https://www.rfc-editor.org/rfc/rfc3986#section-3.3
   t.same(
     findMyWay.find('GET', '/test/he%2Fllo'),
     { handler: fn, params: { id: 'he/llo' }, store: null }
