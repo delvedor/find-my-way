@@ -357,7 +357,13 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
 
-  path = sanitizeUrl(path)
+  try {
+    path = sanitizeUrl(path)
+  } catch (error) {
+    return this.onBadUrl !== null
+      ? this._onBadUrl(path)
+      : null
+  }
 
   var originalPath = path
   var originalPathLength = path.length
@@ -636,28 +642,17 @@ Router.prototype.all = function (path, handler, store) {
 module.exports = Router
 
 function sanitizeUrl (url) {
-  var routingUrl = ''
+  url = decodeURI(url)
   for (var i = 0, len = url.length; i < len; i++) {
     var charCode = url.charCodeAt(i)
-    if (charCode === 37 && i + 2 < url.length) {
-      const decodedChar = fastDecode(`%${url[i + 1]}${url[i + 2]}`)
-      if (decodedChar && decodedChar !== '/') {
-        routingUrl += decodedChar
-        i += 2
-        continue
-      }
-    }
-
     // Some systems do not follow RFC and separate the path and query
     // string with a `;` character (code 59), e.g. `/foo;jsessionid=123456`.
     // Thus, we need to split on `;` as well as `?` and `#`.
     if (charCode === 63 || charCode === 59 || charCode === 35) {
-      break
+      return url.slice(0, i)
     }
-
-    routingUrl += url[i]
   }
-  return routingUrl
+  return url
 }
 
 function getClosingParenthensePosition (path, idx) {
