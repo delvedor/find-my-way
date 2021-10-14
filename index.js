@@ -357,13 +357,16 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
 
+  let sanitizedPath
   try {
-    path = sanitizeUrl(path)
+    sanitizedPath = sanitizeUrl(path)
+    path = sanitizedPath.path
   } catch (error) {
     return this.onBadUrl !== null
       ? this._onBadUrl(path)
       : null
   }
+  // console.log(sanitizedPath)
 
   var originalPath = path
   var originalPathLength = path.length
@@ -472,7 +475,10 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      decoded = sanitizedPath.containsEncodedComponents
+        ? fastDecode(sanitizedPath.originPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+        : originalPath.slice(idxInOriginalPath, idxInOriginalPath + i)
+
       if (decoded === null) {
         return this.onBadUrl !== null
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
@@ -506,7 +512,9 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      decoded = sanitizedPath.containsEncodedComponents
+        ? fastDecode(sanitizedPath.originPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+        : originalPath.slice(idxInOriginalPath, idxInOriginalPath + i)
       if (decoded === null) {
         return this.onBadUrl !== null
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
@@ -642,17 +650,23 @@ Router.prototype.all = function (path, handler, store) {
 module.exports = Router
 
 function sanitizeUrl (url) {
-  url = decodeURI(url)
+  let originPath = url
   for (var i = 0, len = url.length; i < len; i++) {
     var charCode = url.charCodeAt(i)
     // Some systems do not follow RFC and separate the path and query
     // string with a `;` character (code 59), e.g. `/foo;jsessionid=123456`.
     // Thus, we need to split on `;` as well as `?` and `#`.
     if (charCode === 63 || charCode === 59 || charCode === 35) {
-      return url.slice(0, i)
+      originPath = url.slice(0, i)
+      break
     }
   }
-  return url
+  const decoded = decodeURI(originPath)
+  return {
+    path: decoded,
+    originPath,
+    containsEncodedComponents: decoded !== decodeURIComponent(originPath)
+  }
 }
 
 function getClosingParenthensePosition (path, idx) {
