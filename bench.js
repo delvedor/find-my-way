@@ -79,6 +79,9 @@ suite
   .add('find dynamic route', function () {
     findMyWay.find('GET', '/user/tomas', undefined)
   })
+  .add('find dynamic route with encoded parameter', function () {
+    findMyWay.find('GET', '/user/maintainer%20tomas', undefined)
+  })
   .add('find dynamic multi-parametric route', function () {
     findMyWay.find('GET', '/customer/john-doe', undefined)
   })
@@ -93,6 +96,9 @@ suite
   })
   .add('find long nested dynamic route', function () {
     findMyWay.find('GET', '/posts/10/comments/42/author', undefined)
+  })
+  .add('find long nested dynamic route with encoded parameter', function () {
+    findMyWay.find('GET', '/posts/10%2C10/comments/42%2C42/author', undefined)
   })
   .add('find long nested dynamic route with other method', function () {
     findMyWay.find('POST', '/posts/10/comments', undefined)
