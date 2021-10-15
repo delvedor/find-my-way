@@ -27,7 +27,6 @@
 
 const assert = require('assert')
 const http = require('http')
-const fastDecode = require('fast-decode-uri-component')
 const isRegexSafe = require('safe-regex2')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
 const Node = require('./node')
@@ -765,4 +764,14 @@ function defaultBuildPrettyMeta (route) {
   if (!route) return {}
   if (!route.store) return {}
   return Object.assign({}, route.store)
+}
+
+function fastDecode (path) {
+  // this function is executed when we are sure there is already some content to decode
+  // it does not require any additional checks
+  try {
+    return decodeURIComponent(path)
+  } catch (error) {
+    return null
+  }
 }
