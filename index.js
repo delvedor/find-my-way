@@ -698,12 +698,14 @@ function sanitizeUrl (url) {
   for (var i = 0, len = url.length; i < len; i++) {
     var charCode = url.charCodeAt(i)
 
-    if (!containsEncodedComponents) {
+    if (shouldDecode && !containsEncodedComponents) {
       if (highChar === 0 && uriComponentsCharMap.has(charCode)) {
         highChar = charCode
         lowChar = 0x00
+        continue
       } else if (highChar && lowChar === 0 && uriComponentsCharMap.get(highChar).has(charCode)) {
         containsEncodedComponents = true
+        continue
       } else {
         highChar = undefined
         lowChar = undefined
