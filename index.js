@@ -665,29 +665,30 @@ module.exports = Router
 
 // It must spot all the chars where decodeURIComponent(x) !== decodeURI(x)
 // The chars are: # $ & + , / : ; = ? @
-const uriComponentsCharMap = new Map()
-uriComponentsCharMap.set(50, new Map([
-  [51, true], // # '%23'
-  [52, true], // $ '%24'
-  [54, true], // & '%26'
-  [66, true], // + '%2B'
-  [98, true], // + '%2b'
-  [67, true], // , '%2C'
-  [99, true], // , '%2c'
-  [70, true], // / '%2F'
-  [102, true] // / '%2f'
-]))
-uriComponentsCharMap.set(51, new Map([
-  [65, true], // : '%3A'
-  [97, true], // : '%3a'
-  [66, true], // ; '%3B'
-  [98, true], // ; '%3b'
-  [68, true], // = '%3D'
-  [100, true], // = '%3d'
-  [70, true], // ? '%3F'
-  [102, true] // ? '%3f'
-]))
-uriComponentsCharMap.set(52, new Map([[48, true]])) // @ '%40'
+const uriComponentsCharMap = new Array(53).fill(0x00)
+uriComponentsCharMap[50] = new Array(103).fill(0x00)
+uriComponentsCharMap[50][51] = true // # '%23'
+uriComponentsCharMap[50][52] = true // $ '%24'
+uriComponentsCharMap[50][54] = true // & '%26'
+uriComponentsCharMap[50][66] = true // + '%2B'
+uriComponentsCharMap[50][98] = true // + '%2b'
+uriComponentsCharMap[50][67] = true // , '%2C'
+uriComponentsCharMap[50][99] = true // , '%2c'
+uriComponentsCharMap[50][70] = true // / '%2F'
+uriComponentsCharMap[50][102] = true // / '%2f'
+
+uriComponentsCharMap[51] = new Array(103).fill(0x00)
+uriComponentsCharMap[51][65] = true // : '%3A'
+uriComponentsCharMap[51][97] = true // : '%3a'
+uriComponentsCharMap[51][66] = true // ; '%3B'
+uriComponentsCharMap[51][98] = true // ; '%3b'
+uriComponentsCharMap[51][68] = true // = '%3D'
+uriComponentsCharMap[51][100] = true // = '%3d'
+uriComponentsCharMap[51][70] = true // ? '%3F'
+uriComponentsCharMap[51][102] = true // ? '%3f'
+
+uriComponentsCharMap[52] = new Array(49).fill(0x00)
+uriComponentsCharMap[52][48] = true // @ '%40'
 
 function sanitizeUrl (url) {
   let originPath = url
@@ -699,11 +700,11 @@ function sanitizeUrl (url) {
     var charCode = url.charCodeAt(i)
 
     if (shouldDecode && !containsEncodedComponents) {
-      if (highChar === 0 && uriComponentsCharMap.has(charCode)) {
+      if (highChar === 0 && uriComponentsCharMap[charCode]) {
         highChar = charCode
         lowChar = 0x00
         continue
-      } else if (highChar && lowChar === 0 && uriComponentsCharMap.get(highChar).has(charCode)) {
+      } else if (highChar && lowChar === 0 && uriComponentsCharMap[highChar][charCode]) {
         containsEncodedComponents = true
         continue
       } else {
