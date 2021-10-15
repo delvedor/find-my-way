@@ -27,8 +27,50 @@ test('Decode the URL before the routing', t => {
   t.equal(findMyWay.find('GET', '/static/%25E0%A4%A'), null, 'invalid encoded path param')
 })
 
+test('double encoding', t => {
+  t.plan(8)
+  const findMyWay = FindMyWay()
+
+  function pathParam (req, res, params) {
+    t.same(params, this.expect, 'path param')
+    t.same(pathParam, this.handler, 'match handler')
+  }
+  function regexPathParam (req, res, params) {
+    t.same(params, this.expect, 'regex param')
+    t.same(regexPathParam, this.handler, 'match handler')
+  }
+  function wildcard (req, res, params) {
+    t.same(params, this.expect, 'wildcard param')
+    t.same(wildcard, this.handler, 'match handler')
+  }
+
+  findMyWay.on('GET', '/:pathParam', pathParam)
+  findMyWay.on('GET', '/reg/:regExeParam(^.*$)', regexPathParam)
+  findMyWay.on('GET', '/wild/*', wildcard)
+
+  findMyWay.lookup(get('/' + doubleEncode('reg/hash# .png')), null,
+    { expect: { pathParam: singleEncode('reg/hash# .png') }, handler: pathParam }
+  )
+  findMyWay.lookup(get('/' + doubleEncode('special # $ & + , / : ; = ? @')), null,
+    { expect: { pathParam: singleEncode('special # $ & + , / : ; = ? @') }, handler: pathParam }
+  )
+  findMyWay.lookup(get('/reg/' + doubleEncode('hash# .png')), null,
+    { expect: { regExeParam: singleEncode('hash# .png') }, handler: regexPathParam }
+  )
+  findMyWay.lookup(get('/wild/' + doubleEncode('mail@mail.it')), null,
+    { expect: { '*': singleEncode('mail@mail.it') }, handler: wildcard }
+  )
+
+  function doubleEncode (str) {
+    return encodeURIComponent(encodeURIComponent(str))
+  }
+  function singleEncode (str) {
+    return encodeURIComponent(str)
+  }
+})
+
 test('Special chars on path parameter', t => {
-  t.plan(14)
+  t.plan(10)
   const findMyWay = FindMyWay()
 
   function pathParam (req, res, params) {
@@ -49,17 +91,15 @@ test('Special chars on path parameter', t => {
   findMyWay.on('GET', '/[...]/a%2520.html', staticEncoded)
 
   findMyWay.lookup(get('/%5B...%5D/a%252520.html'), null, { expect: {}, handler: staticEncoded })
-  findMyWay.lookup(get('/%252E%252E%252F'), null, { expect: { pathParam: '%2E%2E%2F' }, handler: pathParam }) // must decode only once
   findMyWay.lookup(get('/[...].html'), null, { expect: { pathParam: '[...].html' }, handler: pathParam })
-  findMyWay.lookup(get('/reg%252F123 .png'), null, { expect: { pathParam: 'reg%2F123 .png' }, handler: pathParam }) // must decode only once
   findMyWay.lookup(get('/reg/123 .png'), null, { expect: { regExeParam: '123' }, handler: regexPathParam })
-  findMyWay.lookup(get('/reg%2F123 .png'), null, { expect: { pathParam: 'reg/123 .png' }, handler: pathParam }) // en encoded / is always a parameter
+  findMyWay.lookup(get('/reg%2F123 .png'), null, { expect: { pathParam: 'reg/123 .png' }, handler: pathParam }) // en encoded / is considered a parameter
   findMyWay.lookup(get('/reg/123%20.png'), null, { expect: { regExeParam: '123' }, handler: regexPathParam })
-
-  function get (url) {
-    return { method: 'GET', url, headers: {} }
-  }
 })
+
+function get (url) {
+  return { method: 'GET', url, headers: {} }
+}
 
 // http://localhost:3000/parameter with / in it
 // http://localhost:3000/parameter%20with%20%2F%20in%20it

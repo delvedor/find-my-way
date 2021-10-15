@@ -2,15 +2,27 @@
 
 /*
   Char codes:
+    '!': 33 - !
     '#': 35 - %23
+    '$': 36 - %24
     '%': 37 - %25
-    '*': 42
-    '-': 45
-    '.': 46
+    '&': 38 - %26
+    ''': 39 - '
+    '(': 40 - (
+    ')': 41 - )
+    '*': 42 - *
+    '+': 43 - %2B
+    ',': 44 - %2C
+    '-': 45 - -
+    '.': 46 - .
     '/': 47 - %2F
     ':': 58 - %3A
-    ';': 59
+    ';': 59 - %3B
+    '=': 61 - %3D
     '?': 63 - %3F
+    '@': 64 - %40
+    '_': 95 - _
+    '~': 126 - ~
 */
 
 const assert = require('assert')
@@ -366,7 +378,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       ? this._onBadUrl(path)
       : null
   }
-  // console.log(sanitizedPath)
 
   var originalPath = path
   var originalPathLength = path.length
@@ -493,7 +504,10 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     // wildcard route
     if (kind === NODE_TYPES.MATCH_ALL) {
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath))
+      decoded = sanitizedPath.containsEncodedComponents
+        ? fastDecode(sanitizedPath.originPath.slice(idxInOriginalPath))
+        : originalPath.slice(idxInOriginalPath)
+
       if (decoded === null) {
         return this.onBadUrl !== null
           ? this._onBadUrl(originalPath.slice(idxInOriginalPath))
@@ -649,11 +663,52 @@ Router.prototype.all = function (path, handler, store) {
 
 module.exports = Router
 
+// It must spot all the chars where decodeURIComponent(x) !== decodeURI(x)
+// The chars are: # $ & + , / : ; = ? @
+const uriComponentsCharMap = new Map()
+uriComponentsCharMap.set(50, new Map([
+  [51, true], // # '%23'
+  [52, true], // $ '%24'
+  [54, true], // & '%26'
+  [66, true], // + '%2B'
+  [98, true], // + '%2b'
+  [67, true], // , '%2C'
+  [99, true], // , '%2c'
+  [70, true], // / '%2F'
+  [102, true] // / '%2f'
+]))
+uriComponentsCharMap.set(51, new Map([
+  [65, true], // : '%3A'
+  [97, true], // : '%3a'
+  [66, true], // ; '%3B'
+  [98, true], // ; '%3b'
+  [68, true], // = '%3D'
+  [100, true], // = '%3d'
+  [70, true], // ? '%3F'
+  [102, true] // ? '%3f'
+]))
+uriComponentsCharMap.set(52, new Map([[48, true]])) // @ '%40'
+
 function sanitizeUrl (url) {
   let originPath = url
   let shouldDecode = false
+  let containsEncodedComponents = false
+  let highChar
+  let lowChar
   for (var i = 0, len = url.length; i < len; i++) {
     var charCode = url.charCodeAt(i)
+
+    if (!containsEncodedComponents) {
+      if (highChar === 0 && uriComponentsCharMap.has(charCode)) {
+        highChar = charCode
+        lowChar = 0x00
+      } else if (highChar && lowChar === 0 && uriComponentsCharMap.get(highChar).has(charCode)) {
+        containsEncodedComponents = true
+      } else {
+        highChar = undefined
+        lowChar = undefined
+      }
+    }
 
     // Some systems do not follow RFC and separate the path and query
     // string with a `;` character (code 59), e.g. `/foo;jsessionid=123456`.
@@ -663,13 +718,14 @@ function sanitizeUrl (url) {
       break
     } else if (charCode === 37) {
       shouldDecode = true
+      highChar = 0x00
     }
   }
   const decoded = shouldDecode ? decodeURI(originPath) : originPath
   return {
     path: decoded,
     originPath,
-    containsEncodedComponents: shouldDecode && decoded !== decodeURIComponent(originPath)
+    containsEncodedComponents
   }
 }
 
