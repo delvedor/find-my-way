@@ -374,9 +374,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     sanitizedUrl = sanitizeUrl(path)
     path = sanitizedUrl.path
   } catch (error) {
-    return this.onBadUrl !== null
-      ? this._onBadUrl(path)
-      : null
+    return this._onBadUrl(path)
   }
 
   var originalPath = path
@@ -488,9 +486,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       if (i > maxParamLength) return null
       decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
       if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
+        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
       params || (params = [])
       params[pindex++] = decoded
@@ -503,9 +499,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     if (kind === NODE_TYPES.MATCH_ALL) {
       decoded = sanitizedUrl.sliceParameter(idxInOriginalPath)
       if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath))
-          : null
+        return this._onBadUrl(originalPath.slice(idxInOriginalPath))
       }
       params || (params = [])
       params[pindex] = decoded
@@ -522,9 +516,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       if (i > maxParamLength) return null
       decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
       if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
+        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
       if (!node.regex.test(decoded)) return null
       params || (params = [])
@@ -548,9 +540,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       }
       decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
       if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
+        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
       params || (params = [])
       params[pindex++] = decoded
@@ -567,9 +557,7 @@ Router.prototype._getWildcardNode = function (node, sanitizedUrl, len, derivedCo
   if (node === null) return null
   var decoded = sanitizedUrl.slice(-len)
   if (decoded === null) {
-    return this.onBadUrl !== null
-      ? this._onBadUrl(sanitizedUrl.slice(-len))
-      : null
+    return this._onBadUrl(sanitizedUrl.slice(-len))
   }
 
   var handle = derivedConstraints !== undefined ? node.getMatchingHandler(derivedConstraints) : node.unconstrainedHandler
@@ -608,6 +596,9 @@ Router.prototype._defaultRoute = function (req, res, ctx) {
 }
 
 Router.prototype._onBadUrl = function (path) {
+  if (this.onBadUrl === null) {
+    return null
+  }
   const onBadUrl = this.onBadUrl
   return {
     handler: (req, res, ctx) => onBadUrl(path, req, res),
