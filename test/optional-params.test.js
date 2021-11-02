@@ -110,7 +110,6 @@ test('Optional Parameter with ignoreTrailingSlash = false', (t) => {
   })
 
   findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
-    console.log('req', req, 'opt', params.optional)
     if (params.optional) {
       t.equal(params.optional, 'foo')
     } else {
