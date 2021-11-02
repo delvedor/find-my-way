@@ -9,7 +9,7 @@ test('handler should have the store object', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/test', (req, res, params, store) => {
-    t.is(store.hello, 'world')
+    t.equal(store.hello, 'world')
   }, { hello: 'world' })
 
   findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
@@ -22,7 +22,7 @@ test('find a store object', t => {
 
   findMyWay.on('GET', '/test', fn, { hello: 'world' })
 
-  t.deepEqual(findMyWay.find('GET', '/test'), {
+  t.same(findMyWay.find('GET', '/test'), {
     handler: fn,
     params: {},
     store: { hello: 'world' }
@@ -36,12 +36,12 @@ test('update the store', t => {
 
   findMyWay.on('GET', '/test', (req, res, params, store) => {
     if (!bool) {
-      t.is(store.hello, 'world')
+      t.equal(store.hello, 'world')
       store.hello = 'hello'
       bool = true
       findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)
     } else {
-      t.is(store.hello, 'hello')
+      t.equal(store.hello, 'hello')
     }
   }, { hello: 'world' })
 

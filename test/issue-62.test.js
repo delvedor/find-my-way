@@ -24,5 +24,5 @@ t.test('issue-62 - escape chars', (t) => {
   findMyWay.get('/foo/:param(\\([a-f0-9]{3}\\))', noop)
 
   t.notOk(findMyWay.find('GET', '/foo/abc'))
-  t.ok(findMyWay.find('GET', '/foo/(abc)'))
+  t.ok(findMyWay.find('GET', '/foo/(abc)', {}))
 })

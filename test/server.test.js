@@ -29,8 +29,8 @@ test('basic router with http server', t => {
       uri: 'http://localhost:' + server.address().port + '/test'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
-      t.deepEqual(JSON.parse(body), { hello: 'world' })
+      t.equal(response.statusCode, 200)
+      t.same(JSON.parse(body), { hello: 'world' })
     })
   })
 })
@@ -41,7 +41,7 @@ test('router with params with http server', t => {
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
     t.ok(req)
     t.ok(res)
-    t.is(params.id, 'hello')
+    t.equal(params.id, 'hello')
     res.end(JSON.stringify({ hello: 'world' }))
   })
 
@@ -58,8 +58,8 @@ test('router with params with http server', t => {
       uri: 'http://localhost:' + server.address().port + '/test/hello'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
-      t.deepEqual(JSON.parse(body), { hello: 'world' })
+      t.equal(response.statusCode, 200)
+      t.same(JSON.parse(body), { hello: 'world' })
     })
   })
 })
@@ -86,7 +86,7 @@ test('default route', t => {
       uri: 'http://localhost:' + server.address().port
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 404)
+      t.equal(response.statusCode, 404)
     })
   })
 })
@@ -108,7 +108,7 @@ test('automatic default route', t => {
       uri: 'http://localhost:' + server.address().port
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 404)
+      t.equal(response.statusCode, 404)
     })
   })
 })
@@ -148,8 +148,8 @@ test('maps two routes when trailing slash should be trimmed', t => {
       uri: baseURL + '/test/'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
-      t.strictEqual(body, 'test')
+      t.equal(response.statusCode, 200)
+      t.equal(body, 'test')
     })
 
     request({
@@ -157,8 +157,8 @@ test('maps two routes when trailing slash should be trimmed', t => {
       uri: baseURL + '/test'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
-      t.strictEqual(body, 'test')
+      t.equal(response.statusCode, 200)
+      t.equal(body, 'test')
     })
 
     request({
@@ -166,8 +166,8 @@ test('maps two routes when trailing slash should be trimmed', t => {
       uri: baseURL + '/othertest'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
-      t.strictEqual(body, 'othertest')
+      t.equal(response.statusCode, 200)
+      t.equal(body, 'othertest')
     })
 
     request({
@@ -175,8 +175,8 @@ test('maps two routes when trailing slash should be trimmed', t => {
       uri: baseURL + '/othertest/'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
-      t.strictEqual(body, 'othertest')
+      t.equal(response.statusCode, 200)
+      t.equal(body, 'othertest')
     })
   })
 })
@@ -209,8 +209,8 @@ test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
       uri: baseURL + '/test/'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
-      t.strictEqual(body, 'test')
+      t.equal(response.statusCode, 200)
+      t.equal(body, 'test')
     })
 
     request({
@@ -218,7 +218,7 @@ test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
       uri: baseURL + '/test'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 404)
+      t.equal(response.statusCode, 404)
     })
   })
 })
@@ -251,8 +251,8 @@ test('does not map // when ignoreTrailingSlash is true', t => {
       uri: baseURL + '/'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
-      t.strictEqual(body, 'test')
+      t.equal(response.statusCode, 200)
+      t.equal(body, 'test')
     })
 
     request({
@@ -260,7 +260,7 @@ test('does not map // when ignoreTrailingSlash is true', t => {
       uri: baseURL + '//'
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 404)
+      t.equal(response.statusCode, 404)
     })
   })
 })
@@ -270,7 +270,7 @@ test('versioned routes', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/test', { version: '1.2.3' }, (req, res, params) => {
+  findMyWay.on('GET', '/test', { constraints: { version: '1.2.3' } }, (req, res, params) => {
     res.end('ok')
   })
 
@@ -288,7 +288,7 @@ test('versioned routes', t => {
       headers: { 'Accept-Version': '1.x' }
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 200)
+      t.equal(response.statusCode, 200)
     })
 
     request({
@@ -297,7 +297,7 @@ test('versioned routes', t => {
       headers: { 'Accept-Version': '2.x' }
     }, (err, response, body) => {
       t.error(err)
-      t.strictEqual(response.statusCode, 404)
+      t.equal(response.statusCode, 404)
     })
   })
 })
