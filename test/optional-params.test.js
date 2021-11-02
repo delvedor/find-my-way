@@ -38,7 +38,7 @@ test('Test for duplicate route with optional param', (t) => {
     findMyWay.on('GET', '/foo', (req, res, params) => {})
     t.fail('method is already declared for route with optional param')
   } catch (e) {
-    t.is(e.message, 'Method \'GET\' already declared for route \'/foo\'')
+    t.equal(e.message, 'Method \'GET\' already declared for route \'/foo\' with constraints \'{}\'')
   }
 })
 
@@ -54,7 +54,7 @@ test('Test for param with ? not at the end', (t) => {
     findMyWay.on('GET', '/foo/:bar?/baz', (req, res, params) => {})
     t.fail('Optional Param in the middle of the path is not allowed')
   } catch (e) {
-    t.is(e.message, 'Optional Parameter needs to be the last parameter of the path')
+    t.equal(e.message, 'Optional Parameter needs to be the last parameter of the path')
   }
 })
 

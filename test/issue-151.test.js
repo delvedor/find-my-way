@@ -17,7 +17,7 @@ test('Wildcard route should not be blocked by Parametric with different method /
   })
 
   findMyWay.on('OPTIONS', '/obj/*', (req, res, params) => {
-    t.strictEqual(req.method, 'OPTIONS')
+    t.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('GET', '/obj/:id', (req, res, params) => {
@@ -40,7 +40,7 @@ test('Wildcard route should not be blocked by Parametric with different method /
   })
 
   findMyWay.on('OPTIONS', '/obj/*', { version: '1.2.3' }, (req, res, params) => {
-    t.strictEqual(req.method, 'OPTIONS')
+    t.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('GET', '/obj/:id', { version: '1.2.3' }, (req, res, params) => {

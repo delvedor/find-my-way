@@ -40,7 +40,7 @@ test('parametric with common prefix', t => {
 
   findMyWay.on('GET', '/test', noop)
   findMyWay.on('GET', '/:test', (req, res, params) => {
-    t.deepEqual(
+    t.same(
       { test: 'text' },
       params
     )

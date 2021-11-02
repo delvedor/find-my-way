@@ -13,19 +13,19 @@ test('Wildcard mixed with dynamic and common prefix / 1', t => {
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
-    t.strictEqual(req.method, 'OPTIONS')
+    t.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('GET', '/obj/params/*', (req, res, params) => {
-    t.strictEqual(req.method, 'GET')
+    t.equal(req.method, 'GET')
   })
 
   findMyWay.on('GET', '/obj/:id', (req, res, params) => {
-    t.strictEqual(req.method, 'GET')
+    t.equal(req.method, 'GET')
   })
 
   findMyWay.on('GET', '/obj_params/*', (req, res, params) => {
-    t.strictEqual(req.method, 'GET')
+    t.equal(req.method, 'GET')
   })
 
   findMyWay.lookup({ method: 'OPTIONS', url: '/obj/params', headers: {} }, null)
@@ -48,23 +48,23 @@ test('Wildcard mixed with dynamic and common prefix / 2', t => {
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
-    t.strictEqual(req.method, 'OPTIONS')
+    t.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('OPTIONS', '/obj/*', (req, res, params) => {
-    t.strictEqual(req.method, 'OPTIONS')
+    t.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('GET', '/obj/params/*', (req, res, params) => {
-    t.strictEqual(req.method, 'GET')
+    t.equal(req.method, 'GET')
   })
 
   findMyWay.on('GET', '/obj/:id', (req, res, params) => {
-    t.strictEqual(req.method, 'GET')
+    t.equal(req.method, 'GET')
   })
 
   findMyWay.on('GET', '/obj_params/*', (req, res, params) => {
-    t.strictEqual(req.method, 'GET')
+    t.equal(req.method, 'GET')
   })
 
   findMyWay.lookup({ method: 'OPTIONS', url: '/obj_params/params', headers: {} }, null)
