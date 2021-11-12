@@ -321,6 +321,8 @@ In this case you can request `/example/posts` as well as `/example/posts/1`. The
 
 Having a route with multiple parameters may affect negatively the performance, so prefer single parameter approach whenever possible, especially on routes which are on the hot path of your application.
 
+**Note** that you must encode the parameters containing [reserved characters](https://www.rfc-editor.org/rfc/rfc3986#section-2.2).
+
 <a name="match-order"></a>
 ##### Match order
 

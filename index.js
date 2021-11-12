@@ -2,23 +2,36 @@
 
 /*
   Char codes:
-    '#': 35
-    '*': 42
-    '-': 45
-    '.': 46
-    '/': 47
-    ':': 58
-    ';': 59
-    '?': 63
+    '!': 33 - !
+    '#': 35 - %23
+    '$': 36 - %24
+    '%': 37 - %25
+    '&': 38 - %26
+    ''': 39 - '
+    '(': 40 - (
+    ')': 41 - )
+    '*': 42 - *
+    '+': 43 - %2B
+    ',': 44 - %2C
+    '-': 45 - -
+    '.': 46 - .
+    '/': 47 - %2F
+    ':': 58 - %3A
+    ';': 59 - %3B
+    '=': 61 - %3D
+    '?': 63 - %3F
+    '@': 64 - %40
+    '_': 95 - _
+    '~': 126 - ~
 */
 
 const assert = require('assert')
 const http = require('http')
-const fastDecode = require('fast-decode-uri-component')
 const isRegexSafe = require('safe-regex2')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
 const Node = require('./node')
 const Constrainer = require('./lib/constrainer')
+const sanitizeUrl = require('./lib/url-sanitizer')
 
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
@@ -372,7 +385,7 @@ Router.prototype.off = function off (method, path) {
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, sanitizeUrl(req.url), this.constrainer.deriveConstraints(req, ctx))
+  var handle = this.find(req.method, req.url, this.constrainer.deriveConstraints(req, ctx))
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store)
@@ -385,6 +398,14 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
+  }
+
+  let sanitizedUrl
+  try {
+    sanitizedUrl = sanitizeUrl(path)
+    path = sanitizedUrl.path
+  } catch (error) {
+    return this._onBadUrl(path)
   }
 
   var originalPath = path
@@ -494,11 +515,9 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
       if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
+        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
       params || (params = [])
       params[pindex++] = decoded
@@ -509,11 +528,9 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     // wildcard route
     if (kind === NODE_TYPES.MATCH_ALL) {
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath))
+      decoded = sanitizedUrl.sliceParameter(idxInOriginalPath)
       if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath))
-          : null
+        return this._onBadUrl(originalPath.slice(idxInOriginalPath))
       }
       params || (params = [])
       params[pindex] = decoded
@@ -528,11 +545,9 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       i = path.indexOf('/')
       if (i === -1) i = pathLen
       if (i > maxParamLength) return null
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
       if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
+        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
       if (!node.regex.test(decoded)) return null
       params || (params = [])
@@ -554,11 +569,9 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45 && path.charCodeAt(i) !== 46) i++
         if (i > maxParamLength) return null
       }
-      decoded = fastDecode(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
       if (decoded === null) {
-        return this.onBadUrl !== null
-          ? this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-          : null
+        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
       params || (params = [])
       params[pindex++] = decoded
@@ -571,13 +584,11 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   }
 }
 
-Router.prototype._getWildcardNode = function (node, path, len, derivedConstraints, params) {
+Router.prototype._getWildcardNode = function (node, sanitizedUrl, len, derivedConstraints, params) {
   if (node === null) return null
-  var decoded = fastDecode(path.slice(-len))
+  var decoded = sanitizedUrl.slice(-len)
   if (decoded === null) {
-    return this.onBadUrl !== null
-      ? this._onBadUrl(path.slice(-len))
-      : null
+    return this._onBadUrl(sanitizedUrl.slice(-len))
   }
 
   var handle = derivedConstraints !== undefined ? node.getMatchingHandler(derivedConstraints) : node.unconstrainedHandler
@@ -616,6 +627,9 @@ Router.prototype._defaultRoute = function (req, res, ctx) {
 }
 
 Router.prototype._onBadUrl = function (path) {
+  if (this.onBadUrl === null) {
+    return null
+  }
   const onBadUrl = this.onBadUrl
   return {
     handler: (req, res, ctx) => onBadUrl(path, req, res),
@@ -662,19 +676,6 @@ Router.prototype.all = function (path, handler, store) {
 }
 
 module.exports = Router
-
-function sanitizeUrl (url) {
-  for (var i = 0, len = url.length; i < len; i++) {
-    var charCode = url.charCodeAt(i)
-    // Some systems do not follow RFC and separate the path and query
-    // string with a `;` character (code 59), e.g. `/foo;jsessionid=123456`.
-    // Thus, we need to split on `;` as well as `?` and `#`.
-    if (charCode === 63 || charCode === 59 || charCode === 35) {
-      return url.slice(0, i)
-    }
-  }
-  return url
-}
 
 function getClosingParenthensePosition (path, idx) {
   // `path.indexOf()` will always return the first position of the closing parenthese,
