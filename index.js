@@ -23,9 +23,14 @@ const Constrainer = require('./lib/constrainer')
 const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
+const OPTIONAL_PARAM_REGEXP = /(\/:[^/()]*?)\?(\/?)/
 
 if (!isRegexSafe(FULL_PATH_REGEXP)) {
   throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
+}
+
+if (!isRegexSafe(OPTIONAL_PARAM_REGEXP)) {
+  throw new Error('the OPTIONAL_PARAM_REGEXP is not safe, update this module')
 }
 
 function Router (opts) {
@@ -78,6 +83,19 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
   assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
   // handler validation
   assert(typeof handler === 'function', 'Handler should be a function')
+
+  // path ends with optional parameter
+  const optionalParamMatch = path.match(OPTIONAL_PARAM_REGEXP)
+  if (optionalParamMatch) {
+    assert(path.length === optionalParamMatch.index + optionalParamMatch[0].length, 'Optional Parameter needs to be the last parameter of the path')
+
+    const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
+    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
+
+    this.on(method, pathFull, opts, handler, store)
+    this.on(method, pathOptional, opts, handler, store)
+    return
+  }
 
   this._on(method, path, opts, handler, store)
 
@@ -310,6 +328,19 @@ Router.prototype.off = function off (method, path) {
   assert(typeof path === 'string', 'Path should be a string')
   assert(path.length > 0, 'The path could not be empty')
   assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
+
+  // path ends with optional parameter
+  const optionalParamMatch = path.match(OPTIONAL_PARAM_REGEXP)
+  if (optionalParamMatch) {
+    assert(path.length === optionalParamMatch.index + optionalParamMatch[0].length, 'Optional Parameter needs to be the last parameter of the path')
+
+    const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
+    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
+
+    this.off(method, pathFull)
+    this.off(method, pathOptional)
+    return
+  }
 
   // Rebuild tree without the specific route
   const ignoreTrailingSlash = this.ignoreTrailingSlash
