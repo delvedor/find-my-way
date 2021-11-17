@@ -323,7 +323,7 @@ Having a route with multiple parameters may affect negatively the performance, s
 
 **Note** that you must encode the parameters containing [reserved characters](https://www.rfc-editor.org/rfc/rfc3986#section-2.2).
 
-For [some use cases](https://github.com/delvedor/find-my-way/issues/208), you can customize the way the parameters are parsed by passing a custom decoding function.
+For [some use cases](https://github.com/delvedor/find-my-way/pull/211), you can customize the way the parameters are parsed by passing a custom decoding function.
 The parsing function is called when the request URL contains one or more encoded special characters: `# $ & + , / : ; = ? @`.
 
 ```js
