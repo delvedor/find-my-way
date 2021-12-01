@@ -29,7 +29,7 @@ const assert = require('assert')
 const http = require('http')
 const isRegexSafe = require('safe-regex2')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
-const Node = require('./node')
+const Node = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
 const sanitizeUrl = require('./lib/url-sanitizer')
 
