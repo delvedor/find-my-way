@@ -3,7 +3,7 @@
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
-const Node = require('../node')
+const Node = require('../custom_node')
 
 test('Nested static parametric route, url with parameter common prefix > 1', t => {
   t.plan(1)
