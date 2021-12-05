@@ -323,6 +323,20 @@ Having a route with multiple parameters may affect negatively the performance, s
 
 **Note** that you must encode the parameters containing [reserved characters](https://www.rfc-editor.org/rfc/rfc3986#section-2.2).
 
+If your routes' parameters are not Basic Latin charaters, you may face a performance drop. To avoid it, you can customize the way the parameters are parsed by passing a custom decoding function. Read more about it [here](https://github.com/delvedor/find-my-way/pull/211).
+The parsing function is called when the request URL contains one or more encoded special characters: `# $ & + , / : ; = ? @`.
+
+```js
+const router = require('find-my-way')({
+  decodeUriParameters: (stringToDecode) => {
+    // called when the request URL contains st least one special character: `# $ & + , / : ; = ? @`
+    return decodeURIComponent(stringToDecode)
+  }
+})
+```
+
+By default, this module relies on [fast-decode-uri-component`](https://www.npmjs.com/package/fast-decode-uri-component) to parse the encoded path parameters.
+
 <a name="match-order"></a>
 ##### Match order
 

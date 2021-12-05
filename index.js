@@ -73,6 +73,11 @@ function Router (opts) {
     this.buildPrettyMeta = defaultBuildPrettyMeta
   }
 
+  if (opts.decodeUriParameters) {
+    assert(typeof opts.decodeUriParameters === 'function', 'decodeUriParameters must be a function')
+    this.decodeUriParameters = opts.decodeUriParameters
+  }
+
   this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
@@ -402,7 +407,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
   let sanitizedUrl
   try {
-    sanitizedUrl = sanitizeUrl(path)
+    sanitizedUrl = sanitizeUrl(path, this.decodeUriParameters)
     path = sanitizedUrl.path
   } catch (error) {
     return this._onBadUrl(path)
