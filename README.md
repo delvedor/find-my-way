@@ -246,7 +246,7 @@ router.on('GET', '/example', (req, res, params, store) => {
 
 If needed, you can provide a `version` route constraint, which will allow you to declare multiple versions of the same route that are used selectively when requests ask for different version using the `Accept-Version` header. This is useful if you want to support several different behaviours for a given route and different clients select among them.
 
-If you never configure a versioned route, the `'Accept-Version'` header will be ignored. Remember to set a [Vary](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) header in your responses with the value you are using for deifning the versioning (e.g.: 'Accept-Version'), to prevent cache poisoning attacks. You can also configure this as part your Proxy/CDN.
+If you never configure a versioned route, the `'Accept-Version'` header will be ignored. Remember to set a [Vary](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) header in your responses with the value you are using for defining the versioning (e.g.: 'Accept-Version'), to prevent cache poisoning attacks. You can also configure this as part your Proxy/CDN.
 
 ###### default
 <a name="semver"></a>
