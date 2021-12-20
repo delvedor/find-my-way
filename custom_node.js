@@ -69,7 +69,7 @@ Node.prototype.addChild = function (node) {
   var parametricBrother = this.parametricBrother
   for (var i = 0; i < labels.length; i++) {
     const child = this.children[labels[i]]
-    if (child.label === ':') {
+    if (child.prefix === ':') {
       parametricBrother = child
       break
     }
