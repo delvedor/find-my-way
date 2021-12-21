@@ -63,41 +63,35 @@ Node.prototype.addChild = function (node) {
   )
 
   this.children[label] = node
-  this.numberOfChildren = Object.keys(this.children).length
 
-  const labels = Object.keys(this.children)
-  var parametricBrother = this.parametricBrother
-  for (var i = 0; i < labels.length; i++) {
-    const child = this.children[labels[i]]
-    if (child.prefix === ':') {
-      parametricBrother = child
-      break
+  const nodeChildren = Object.values(this.children)
+  this.numberOfChildren = nodeChildren.length
+
+  if (this.kind === this.types.STATIC) {
+    let parametricBrother = this.parametricBrother
+    for (const child of nodeChildren) {
+      if (child.prefix === ':') {
+        parametricBrother = child
+        break
+      }
+    }
+
+    // Save the parametric brother inside static children
+    if (parametricBrother) {
+      this._saveParametricBrother(parametricBrother)
     }
   }
-
-  // Save the parametric brother inside static children
-  const iterate = (node) => {
-    if (!node) {
-      return
-    }
-
-    if (node.kind !== this.types.STATIC) {
-      return
-    }
-
-    if (node !== this) {
-      node.parametricBrother = parametricBrother || node.parametricBrother
-    }
-
-    const labels = Object.keys(node.children)
-    for (var i = 0; i < labels.length; i++) {
-      iterate(node.children[labels[i]])
-    }
-  }
-
-  iterate(this)
 
   return this
+}
+
+Node.prototype._saveParametricBrother = function (parametricBrother) {
+  for (const child of Object.values(this.children)) {
+    if (child && child.kind === this.types.STATIC) {
+      child.parametricBrother = parametricBrother
+      child._saveParametricBrother(parametricBrother)
+    }
+  }
 }
 
 Node.prototype.reset = function (prefix) {
