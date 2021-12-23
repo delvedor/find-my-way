@@ -67,29 +67,27 @@ Node.prototype.addChild = function (node) {
   const nodeChildren = Object.values(this.children)
   this.numberOfChildren = nodeChildren.length
 
-  if (this.kind === this.types.STATIC) {
-    let parametricBrother = this.parametricBrother
-    for (const child of nodeChildren) {
-      if (child.prefix === ':') {
-        parametricBrother = child
-        break
-      }
-    }
-
-    // Save the parametric brother inside static children
-    if (parametricBrother) {
-      this._saveParametricBrother(parametricBrother)
-    }
-  }
+  this._saveParametricBrother()
 
   return this
 }
 
-Node.prototype._saveParametricBrother = function (parametricBrother) {
+Node.prototype._saveParametricBrother = function () {
+  let parametricBrother = this.parametricBrother
   for (const child of Object.values(this.children)) {
-    if (child && child.kind === this.types.STATIC) {
-      child.parametricBrother = parametricBrother
-      child._saveParametricBrother(parametricBrother)
+    if (child.prefix === ':') {
+      parametricBrother = child
+      break
+    }
+  }
+
+  // Save the parametric brother inside static children
+  if (parametricBrother) {
+    for (const child of Object.values(this.children)) {
+      if (child && child.kind === this.types.STATIC) {
+        child.parametricBrother = parametricBrother
+        child._saveParametricBrother(parametricBrother)
+      }
     }
   }
 }
