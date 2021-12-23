@@ -424,10 +424,12 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   var wildcardNode = null
   var pathLenWildcard = 0
   var decoded = null
-  var pindex = 0
-  var params = null
+  const params = []
   var i = 0
   var idxInOriginalPath = 0
+
+  let lastParametricBrother = null
+  const parametricBrothersStack = []
 
   while (true) {
     var pathLen = path.length
@@ -454,9 +456,21 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       }
     }
 
+    const parameterBrother = currentNode.parametricBrother
+    if (
+      path !== '' &&
+      parameterBrother !== null &&
+      parameterBrother !== lastParametricBrother
+    ) {
+      parametricBrothersStack.push({
+        pathPointer: originalPathLength - pathLen,
+        paramsCount: params.length
+      })
+      lastParametricBrother = parameterBrother
+    }
+
     var prefixLen = prefix.length
     var len = 0
-    var previousPath = path
 
     // search for the longest common prefix
     i = pathLen < prefixLen ? pathLen : prefixLen
@@ -476,18 +490,14 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard, derivedConstraints, params)
       }
 
-      var goBack = previousPath.charCodeAt(0) === 47 ? previousPath : '/' + previousPath
-      if (originalPath.indexOf(goBack) === -1) {
-        // we need to know the outstanding path so far from the originalPath since the last encountered "/" and assign it to previousPath.
-        // e.g originalPath: /aa/bbb/cc, path: bb/cc
-        // outstanding path: /bbb/cc
-        var pathDiff = originalPath.slice(0, originalPathLength - pathLen)
-        previousPath = pathDiff.slice(pathDiff.lastIndexOf('/') + 1, pathDiff.length) + path
-      }
+      const { pathPointer, paramsCount } = parametricBrothersStack.pop()
+      const parametricBrotherPath = originalPath.slice(pathPointer)
+      params.splice(paramsCount)
+
       idxInOriginalPath = idxInOriginalPath -
-        (previousPath.length - path.length)
-      path = previousPath
-      pathLen = previousPath.length
+        (parametricBrotherPath.length - path.length)
+      path = parametricBrotherPath
+      pathLen = parametricBrotherPath.length
       len = prefixLen
     }
 
@@ -524,8 +534,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       if (decoded === null) {
         return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
-      params || (params = [])
-      params[pindex++] = decoded
+      params.push(decoded)
       path = path.slice(i)
       idxInOriginalPath += i
       continue
@@ -537,8 +546,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       if (decoded === null) {
         return this._onBadUrl(originalPath.slice(idxInOriginalPath))
       }
-      params || (params = [])
-      params[pindex] = decoded
+      params.push(decoded)
       currentNode = node
       path = ''
       continue
@@ -555,8 +563,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
       if (!node.regex.test(decoded)) return null
-      params || (params = [])
-      params[pindex++] = decoded
+      params.push(decoded)
       path = path.slice(i)
       idxInOriginalPath += i
       continue
@@ -578,8 +585,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       if (decoded === null) {
         return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
       }
-      params || (params = [])
-      params[pindex++] = decoded
+      params.push(decoded)
       path = path.slice(i)
       idxInOriginalPath += i
       continue
