@@ -147,6 +147,29 @@ test('Mixed routes, url with parameter common prefix > 1', t => {
   t.same(findMyWay.find('GET', '/te/hellos/testy'), null)
 })
 
+test('Parent parametric brother should not rewrite child node parametric brother', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/text/hello', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  findMyWay.on('GET', '/text/:e/test', (req, res, params) => {
+    res.end('{"winter":"is here"}')
+  })
+
+  findMyWay.on('GET', '/:c', (req, res, params) => {
+    res.end('{"hello":"world"}')
+  })
+
+  t.same(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
+})
+
 test('Mixed parametric routes, with last defined route being static', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
