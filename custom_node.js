@@ -135,16 +135,24 @@ Node.prototype.findByLabel = function (path) {
   return this.children[path[0]]
 }
 
-Node.prototype.findMatchingChild = function (derivedConstraints, path) {
-  var child = this.children[path[0]]
+Node.prototype.findMatchingChild = function (derivedConstraints, path, pathIndex) {
+  var child = this.children[path[pathIndex]]
   if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
-    if (path.slice(0, child.prefix.length) === child.prefix) {
+    let isPathStartsWithPrefix = true
+    for (let i = 0; i < child.prefix.length; i++) {
+      if (path.charCodeAt(pathIndex + i) !== child.prefix.charCodeAt(i)) {
+        isPathStartsWithPrefix = false
+        break
+      }
+    }
+
+    if (isPathStartsWithPrefix) {
       return child
     }
   }
 
-  child = this.children[':']
-  if (child !== undefined && path[0] !== ':' && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
+  child = path[pathIndex] !== ':' ? this.children[':'] : undefined
+  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
     return child
   }
 
