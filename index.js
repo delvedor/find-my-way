@@ -426,7 +426,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   let wildcardNode = null
   let wildcardNodePathIndex = 0
 
-  let lastParametricBrother = null
   const parametricBrothersStack = []
 
   while (true) {
@@ -465,14 +464,12 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       params.splice(paramsCount)
     } else if (
       pathIndex < pathLen &&
-      node.parametricBrother !== null &&
-      node.parametricBrother !== lastParametricBrother
+      currentNode.parametricChild !== null
     ) {
       parametricBrothersStack.push({
         brotherPathIndex: pathIndex,
         paramsCount: params.length
       })
-      lastParametricBrother = node.parametricBrother
     }
 
     // if exist, save the wildcard child
