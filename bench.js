@@ -15,6 +15,7 @@ const FindMyWay = require('./')
 
 const findMyWay = new FindMyWay()
 findMyWay.on('GET', '/', () => true)
+findMyWay.on('GET', '/a', () => true)
 findMyWay.on('GET', '/user/:id', () => true)
 findMyWay.on('GET', '/user/:id/static', () => true)
 findMyWay.on('POST', '/user/:id', () => true)
@@ -46,8 +47,11 @@ constrained.on('GET', '/versioned', { constraints: { version: '2.0.0', host: 'ex
 constrained.on('GET', '/versioned', { constraints: { version: '2.0.0', host: 'fastify.io' } }, () => true)
 
 suite
-  .add('lookup static route', function () {
+  .add('lookup root "/" route', function () {
     findMyWay.lookup({ method: 'GET', url: '/', headers: { host: 'fastify.io' } }, null)
+  })
+  .add('lookup static route', function () {
+    findMyWay.lookup({ method: 'GET', url: '/a', headers: { host: 'fastify.io' } }, null)
   })
   .add('lookup dynamic route', function () {
     findMyWay.lookup({ method: 'GET', url: '/user/tomas', headers: { host: 'fastify.io' } }, null)
@@ -73,8 +77,11 @@ suite
   .add('lookup static constrained (version & host) route', function () {
     constrained.lookup({ method: 'GET', url: '/versioned', headers: { 'accept-version': '2.x', host: 'fastify.io' } }, null)
   })
-  .add('find static route', function () {
+  .add('find root "/" route', function () {
     findMyWay.find('GET', '/', undefined)
+  })
+  .add('find static route', function () {
+    findMyWay.find('GET', '/a', undefined)
   })
   .add('find dynamic route', function () {
     findMyWay.find('GET', '/user/tomas', undefined)
