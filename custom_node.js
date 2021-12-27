@@ -24,6 +24,7 @@ function Node (options) {
   this.kind = options.kind || this.types.STATIC
   this.regex = options.regex || null
   this.wildcardChild = null
+  this.parametricChild = null
   this.parametricBrother = null
   this.constrainer = options.constrainer
   this.hasConstraints = options.hasConstraints || false
@@ -34,19 +35,16 @@ Object.defineProperty(Node.prototype, 'types', {
   value: types
 })
 
-Node.prototype.getLabel = function () {
-  return this.prefix[0]
-}
-
 Node.prototype.addChild = function (node) {
   var label = ''
   switch (node.kind) {
     case this.types.STATIC:
-      label = node.getLabel()
+      label = node.prefix[0]
       break
     case this.types.PARAM:
     case this.types.REGEX:
     case this.types.MULTI_PARAM:
+      this.parametricChild = node
       label = ':'
       break
     case this.types.MATCH_ALL:
@@ -63,9 +61,7 @@ Node.prototype.addChild = function (node) {
   )
 
   this.children[label] = node
-
-  const nodeChildren = Object.values(this.children)
-  this.numberOfChildren = nodeChildren.length
+  this.numberOfChildren++
 
   this._saveParametricBrother()
 
@@ -74,12 +70,9 @@ Node.prototype.addChild = function (node) {
 
 Node.prototype._saveParametricBrother = function () {
   let parametricBrother = this.parametricBrother
-  for (const child of Object.values(this.children)) {
-    if (child.prefix === ':') {
-      child.parametricBrother = parametricBrother
-      parametricBrother = child
-      break
-    }
+  if (this.parametricChild !== null) {
+    this.parametricChild.parametricBrother = parametricBrother
+    parametricBrother = this.parametricChild
   }
 
   // Save the parametric brother inside static children
@@ -102,6 +95,7 @@ Node.prototype.reset = function (prefix) {
   this.numberOfChildren = 0
   this.regex = null
   this.wildcardChild = null
+  this.parametricChild = null
   this.hasConstraints = false
   this._decompileGetHandlerMatchingConstraints()
   return this
@@ -124,6 +118,10 @@ Node.prototype.split = function (length) {
 
   if (this.wildcardChild !== null) {
     newChild.wildcardChild = this.wildcardChild
+  }
+
+  if (this.parametricChild !== null) {
+    newChild.parametricChild = this.parametricChild
   }
 
   this.reset(this.prefix.slice(0, length))
@@ -151,13 +149,13 @@ Node.prototype.findMatchingChild = function (derivedConstraints, path, pathIndex
     }
   }
 
-  child = path[pathIndex] !== ':' ? this.children[':'] : undefined
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
+  child = this.parametricChild
+  if (child !== null && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
     return child
   }
 
-  child = this.children['*']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
+  child = this.wildcardChild
+  if (child !== null && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
     return child
   }
 
