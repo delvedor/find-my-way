@@ -76,6 +76,7 @@ Node.prototype._saveParametricBrother = function () {
   let parametricBrother = this.parametricBrother
   for (const child of Object.values(this.children)) {
     if (child.prefix === ':') {
+      child.parametricBrother = parametricBrother
       parametricBrother = child
       break
     }
@@ -84,7 +85,7 @@ Node.prototype._saveParametricBrother = function () {
   // Save the parametric brother inside static children
   if (parametricBrother) {
     for (const child of Object.values(this.children)) {
-      if (child && child.kind === this.types.STATIC) {
+      if (child && child !== parametricBrother) {
         child.parametricBrother = parametricBrother
         child._saveParametricBrother(parametricBrother)
       }
@@ -143,7 +144,7 @@ Node.prototype.findMatchingChild = function (derivedConstraints, path) {
   }
 
   child = this.children[':']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
+  if (child !== undefined && path[0] !== ':' && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
     return child
   }
 
