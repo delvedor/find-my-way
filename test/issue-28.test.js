@@ -575,3 +575,29 @@ test('Nested wildcards with parametric and static - 8', t => {
     null
   )
 })
+
+test('Wildcard node with constraints', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('we should not be here, the url is: ' + req.url)
+    }
+  })
+
+  findMyWay.on('GET', '*', (req, res, params) => {
+    t.equal(params['*'], '/foo1/foo3')
+  })
+
+  findMyWay.on('GET', '/foo1/*', { constraints: { host: 'fastify.io' } }, (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.on('GET', '/foo1/foo2', (req, res, params) => {
+    t.fail('we should not be here, the url is: ' + req.url)
+  })
+
+  findMyWay.lookup(
+    { method: 'GET', url: '/foo1/foo3', headers: {} },
+    null
+  )
+})
