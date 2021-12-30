@@ -137,7 +137,7 @@ Node.prototype.findByLabel = function (path) {
 
 Node.prototype.findMatchingChild = function (derivedConstraints, path, pathIndex) {
   var child = this.children[path[pathIndex]]
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
+  if (child !== undefined) {
     let isPathStartsWithPrefix = true
     for (let i = 0; i < child.prefix.length; i++) {
       if (path.charCodeAt(pathIndex + i) !== child.prefix.charCodeAt(i)) {
@@ -152,12 +152,12 @@ Node.prototype.findMatchingChild = function (derivedConstraints, path, pathIndex
   }
 
   child = path[pathIndex] !== ':' ? this.children[':'] : undefined
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
+  if (child !== undefined) {
     return child
   }
 
   child = this.children['*']
-  if (child !== undefined && (child.numberOfChildren > 0 || child.getMatchingHandler(derivedConstraints) !== null)) {
+  if (child !== undefined) {
     return child
   }
 
@@ -207,17 +207,21 @@ function compileThenGetHandlerMatchingConstraints (derivedConstraints) {
 
 // This is the hot path for node handler finding -- change with care!
 Node.prototype.getMatchingHandler = function (derivedConstraints) {
+  if (derivedConstraints === undefined) {
+    return this.unconstrainedHandler
+  }
+
   if (this.hasConstraints) {
     // This node is constrained, use the performant precompiled constraint matcher
     return this._getHandlerMatchingConstraints(derivedConstraints)
-  } else {
-    // This node doesn't have any handlers that are constrained, so it's handlers probably match. Some requests have constraint values that *must* match however, like version, so check for those before returning it.
-    if (derivedConstraints && derivedConstraints.__hasMustMatchValues) {
-      return null
-    } else {
-      return this.unconstrainedHandler
-    }
   }
+
+  // This node doesn't have any handlers that are constrained, so it's handlers probably match. Some requests have constraint values that *must* match however, like version, so check for those before returning it.
+  if (!derivedConstraints.__hasMustMatchValues) {
+    return this.unconstrainedHandler
+  }
+
+  return null
 }
 
 // Slot for the compiled constraint matching function
