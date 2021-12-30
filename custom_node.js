@@ -25,6 +25,7 @@ function Node (options) {
   this.regex = options.regex || null
   this.wildcardChild = null
   this.parametricChild = null
+  this.wildcardBrother = null
   this.parametricBrother = null
   this.constrainer = options.constrainer
   this.hasConstraints = options.hasConstraints || false
@@ -64,6 +65,7 @@ Node.prototype.addChild = function (node) {
   this.numberOfChildren++
 
   this._saveParametricBrother()
+  this._saveWildcardBrother()
 
   return this
 }
@@ -81,6 +83,24 @@ Node.prototype._saveParametricBrother = function () {
       if (child && child !== parametricBrother) {
         child.parametricBrother = parametricBrother
         child._saveParametricBrother(parametricBrother)
+      }
+    }
+  }
+}
+
+Node.prototype._saveWildcardBrother = function () {
+  let wildcardBrother = this.wildcardBrother
+  if (this.wildcardChild !== null) {
+    this.wildcardChild.wildcardBrother = wildcardBrother
+    wildcardBrother = this.wildcardChild
+  }
+
+  // Save the wildcard brother inside static children
+  if (wildcardBrother) {
+    for (const child of Object.values(this.children)) {
+      if (child && child !== wildcardBrother) {
+        child.wildcardBrother = wildcardBrother
+        child._saveWildcardBrother(wildcardBrother)
       }
     }
   }
@@ -133,32 +153,16 @@ Node.prototype.findByLabel = function (path) {
   return this.children[path[0]]
 }
 
-Node.prototype.findMatchingChild = function (derivedConstraints, path, pathIndex) {
-  var child = this.children[path[pathIndex]]
+Node.prototype.findStaticMatchingChild = function (path, pathIndex) {
+  const child = this.children[path[pathIndex]]
   if (child !== undefined) {
-    let isPathStartsWithPrefix = true
     for (let i = 0; i < child.prefix.length; i++) {
       if (path.charCodeAt(pathIndex + i) !== child.prefix.charCodeAt(i)) {
-        isPathStartsWithPrefix = false
-        break
+        return null
       }
     }
-
-    if (isPathStartsWithPrefix) {
-      return child
-    }
-  }
-
-  child = this.parametricChild
-  if (child !== null) {
     return child
   }
-
-  child = this.wildcardChild
-  if (child !== null) {
-    return child
-  }
-
   return null
 }
 
