@@ -85,6 +85,7 @@ function Router (opts) {
   this.constrainer = new Constrainer(opts.constraints)
   this.trees = {}
   this.routes = []
+  this.staticRoutesMaps = {}
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -160,6 +161,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     store: store
   })
 
+  let isStaticRoute = true
+
   for (var i = 0, len = path.length; i < len; i++) {
     // search for parametric or wildcard routes
     // parametric route
@@ -170,6 +173,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         len = path.length
         continue
       }
+
+      isStaticRoute = false
 
       var nodeType = NODE_TYPES.PARAM
       j = i + 1
@@ -234,6 +239,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       i--
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
+      isStaticRoute = false
+
       this._insert(method, path.slice(0, i), NODE_TYPES.STATIC, null, null, null, null, constraints)
       // add the wildcard parameter
       params.push('*')
@@ -246,7 +253,11 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   }
 
   // static route
-  this._insert(method, path, NODE_TYPES.STATIC, params, handler, store, null, constraints)
+  const node = this._insert(method, path, NODE_TYPES.STATIC, params, handler, store, null, constraints)
+
+  if (isStaticRoute) {
+    this.staticRoutesMaps[method].set(path, node)
+  }
 }
 
 Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, constraints) {
@@ -263,6 +274,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
   if (typeof currentNode === 'undefined') {
     currentNode = new Node({ method: method, constrainer: this.constrainer })
     this.trees[method] = currentNode
+    this.staticRoutesMaps[method] = new Map()
   }
 
   while (true) {
@@ -286,6 +298,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
         currentNode.addHandler(handler, params, store, constraints)
         currentNode.kind = kind
+        return currentNode
       } else {
         node = new Node({
           method: method,
@@ -297,6 +310,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
         })
         node.addHandler(handler, params, store, constraints)
         currentNode.addChild(node)
+        return node
       }
 
     // the longest common prefix is smaller than the path length,
@@ -315,11 +329,12 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
       node = new Node({ method: method, prefix: path, kind: kind, handlers: null, regex: regex, constrainer: this.constrainer })
       node.addHandler(handler, params, store, constraints)
       currentNode.addChild(node)
-
+      return node
     // the node already exist
     } else if (handler) {
       assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
       currentNode.addHandler(handler, params, store, constraints)
+      return currentNode
     }
     return
   }
@@ -328,6 +343,7 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 Router.prototype.reset = function reset () {
   this.trees = {}
   this.routes = []
+  this.staticRoutesMaps = new Map()
 }
 
 Router.prototype.off = function off (method, path) {
@@ -415,6 +431,18 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
   if (this.caseSensitive === false) {
     path = path.toLowerCase()
+  }
+
+  const staticNode = this.staticRoutesMaps[method].get(path)
+  if (staticNode) {
+    const handle = staticNode.getMatchingHandler(derivedConstraints)
+    if (handle !== null && handle !== undefined) {
+      return {
+        handler: handle.handler,
+        params: {},
+        store: handle.store
+      }
+    }
   }
 
   const maxParamLength = this.maxParamLength
