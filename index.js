@@ -398,7 +398,7 @@ Router.prototype.lookup = function lookup (req, res, ctx) {
 }
 
 Router.prototype.find = function find (method, path, derivedConstraints) {
-  var currentNode = this.trees[method]
+  let currentNode = this.trees[method]
   if (currentNode === undefined) return null
 
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
@@ -413,37 +413,35 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     return this._onBadUrl(path)
   }
 
-  var originalPath = path
-  var originalPathLength = path.length
-
   if (this.caseSensitive === false) {
     path = path.toLowerCase()
   }
 
-  var maxParamLength = this.maxParamLength
-  var wildcardNode = null
-  var pathLenWildcard = 0
-  var decoded = null
+  const maxParamLength = this.maxParamLength
+
+  let pathIndex = currentNode.prefix.length
   const params = []
-  var i = 0
-  var idxInOriginalPath = 0
+  const pathLen = path.length
+
+  let wildcardNode = null
+  let wildcardNodePathIndex = 0
 
   let lastParametricBrother = null
   const parametricBrothersStack = []
 
   while (true) {
-    var pathLen = path.length
-    var prefix = currentNode.prefix
-
     // found the route
-    if (pathLen === 0 || path === prefix) {
-      var handle = derivedConstraints !== undefined ? currentNode.getMatchingHandler(derivedConstraints) : currentNode.unconstrainedHandler
-      if (handle !== null && handle !== undefined) {
-        var paramsObj = {}
-        if (handle.paramsLength > 0) {
-          var paramNames = handle.params
+    if (pathIndex === pathLen) {
+      const handle = derivedConstraints !== undefined
+        ? currentNode.getMatchingHandler(derivedConstraints)
+        : currentNode.unconstrainedHandler
 
-          for (i = 0; i < handle.paramsLength; i++) {
+      if (handle !== null && handle !== undefined) {
+        const paramsObj = {}
+        if (handle.paramsLength > 0) {
+          const paramNames = handle.params
+
+          for (let i = 0; i < handle.paramsLength; i++) {
             paramsObj[paramNames[i]] = params[i]
           }
         }
@@ -456,150 +454,107 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       }
     }
 
-    const parameterBrother = currentNode.parametricBrother
-    if (
-      path !== '' &&
-      parameterBrother !== null &&
-      parameterBrother !== lastParametricBrother
-    ) {
-      parametricBrothersStack.push({
-        pathPointer: originalPathLength - pathLen,
-        paramsCount: params.length
-      })
-      lastParametricBrother = parameterBrother
-    }
-
-    var prefixLen = prefix.length
-    var len = 0
-
-    // search for the longest common prefix
-    i = pathLen < prefixLen ? pathLen : prefixLen
-    while (len < i && path.charCodeAt(len) === prefix.charCodeAt(len)) len++
-
-    if (len === prefixLen) {
-      path = path.slice(len)
-      pathLen = path.length
-      idxInOriginalPath += len
-    }
-
-    var node = currentNode.findMatchingChild(derivedConstraints, path)
+    let node = currentNode.findMatchingChild(derivedConstraints, path, pathIndex)
 
     if (node === null) {
       node = currentNode.parametricBrother
       if (node === null) {
-        return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard, derivedConstraints, params)
+        return this._getWildcardNode(wildcardNode, path, wildcardNodePathIndex, derivedConstraints, params)
       }
 
-      const { pathPointer, paramsCount } = parametricBrothersStack.pop()
-      const parametricBrotherPath = originalPath.slice(pathPointer)
+      const { brotherPathIndex, paramsCount } = parametricBrothersStack.pop()
+      pathIndex = brotherPathIndex
       params.splice(paramsCount)
-
-      idxInOriginalPath = idxInOriginalPath -
-        (parametricBrotherPath.length - path.length)
-      path = parametricBrotherPath
-      pathLen = parametricBrotherPath.length
-      len = prefixLen
-    }
-
-    var kind = node.kind
-
-    // static route
-    if (kind === NODE_TYPES.STATIC) {
-      // if exist, save the wildcard child
-      if (currentNode.wildcardChild !== null) {
-        wildcardNode = currentNode.wildcardChild
-        pathLenWildcard = pathLen
-      }
-      currentNode = node
-      continue
-    }
-
-    if (len !== prefixLen) {
-      return this._getWildcardNode(wildcardNode, originalPath, pathLenWildcard, derivedConstraints, params)
+    } else if (
+      pathIndex < pathLen &&
+      node.parametricBrother !== null &&
+      node.parametricBrother !== lastParametricBrother
+    ) {
+      parametricBrothersStack.push({
+        brotherPathIndex: pathIndex,
+        paramsCount: params.length
+      })
+      lastParametricBrother = node.parametricBrother
     }
 
     // if exist, save the wildcard child
     if (currentNode.wildcardChild !== null) {
       wildcardNode = currentNode.wildcardChild
-      pathLenWildcard = pathLen
+      wildcardNodePathIndex = pathIndex
     }
+
+    currentNode = node
+    const kind = node.kind
+
+    // static route
+    if (kind === NODE_TYPES.STATIC) {
+      pathIndex += node.prefix.length
+      continue
+    }
+
+    let paramEndIndex = pathIndex
 
     // parametric route
     if (kind === NODE_TYPES.PARAM) {
-      currentNode = node
-      i = path.indexOf('/')
-      if (i === -1) i = pathLen
-      if (i > maxParamLength) return null
-      decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
-      if (decoded === null) {
-        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      for (; paramEndIndex < pathLen; paramEndIndex++) {
+        if (path.charCodeAt(paramEndIndex) === 47) {
+          break
+        }
       }
-      params.push(decoded)
-      path = path.slice(i)
-      idxInOriginalPath += i
-      continue
     }
 
     // wildcard route
     if (kind === NODE_TYPES.MATCH_ALL) {
-      decoded = sanitizedUrl.sliceParameter(idxInOriginalPath)
-      if (decoded === null) {
-        return this._onBadUrl(originalPath.slice(idxInOriginalPath))
-      }
-      params.push(decoded)
-      currentNode = node
-      path = ''
-      continue
+      paramEndIndex = pathLen
     }
 
     // parametric(regex) route
     if (kind === NODE_TYPES.REGEX) {
-      currentNode = node
-      i = path.indexOf('/')
-      if (i === -1) i = pathLen
-      if (i > maxParamLength) return null
-      decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
-      if (decoded === null) {
-        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
+      for (; paramEndIndex < pathLen; paramEndIndex++) {
+        if (path.charCodeAt(paramEndIndex) === 47) {
+          break
+        }
       }
-      if (!node.regex.test(decoded)) return null
-      params.push(decoded)
-      path = path.slice(i)
-      idxInOriginalPath += i
-      continue
+      if (!node.regex.test(path.slice(pathIndex, paramEndIndex))) {
+        return null
+      }
     }
 
     // multiparametric route
     if (kind === NODE_TYPES.MULTI_PARAM) {
-      currentNode = node
-      i = 0
       if (node.regex !== null) {
-        var matchedParameter = path.match(node.regex)
+        const matchedParameter = node.regex.exec(path.slice(pathIndex))
         if (matchedParameter === null) return null
-        i = matchedParameter[1].length
+        paramEndIndex = pathIndex + matchedParameter[1].length
       } else {
-        while (i < pathLen && path.charCodeAt(i) !== 47 && path.charCodeAt(i) !== 45 && path.charCodeAt(i) !== 46) i++
-        if (i > maxParamLength) return null
+        for (; paramEndIndex < pathLen; paramEndIndex++) {
+          const charCode = path.charCodeAt(paramEndIndex)
+          if (charCode === 47 || charCode === 45 || charCode === 46) {
+            break
+          }
+        }
       }
-      decoded = sanitizedUrl.sliceParameter(idxInOriginalPath, idxInOriginalPath + i)
-      if (decoded === null) {
-        return this._onBadUrl(originalPath.slice(idxInOriginalPath, idxInOriginalPath + i))
-      }
-      params.push(decoded)
-      path = path.slice(i)
-      idxInOriginalPath += i
-      continue
     }
 
-    wildcardNode = null
+    if (paramEndIndex > pathIndex + maxParamLength) {
+      return null
+    }
+
+    const decoded = sanitizedUrl.sliceParameter(pathIndex, paramEndIndex)
+    if (decoded === null) {
+      return this._onBadUrl(path.slice(pathIndex, paramEndIndex))
+    }
+
+    params.push(decoded)
+    pathIndex = paramEndIndex
   }
 }
 
 Router.prototype._getWildcardNode = function (node, sanitizedUrl, len, derivedConstraints, params) {
   if (node === null) return null
-  var decoded = sanitizedUrl.slice(-len)
+  var decoded = sanitizedUrl.slice(len)
   if (decoded === null) {
-    return this._onBadUrl(sanitizedUrl.slice(-len))
+    return this._onBadUrl(sanitizedUrl.slice(len))
   }
 
   var handle = derivedConstraints !== undefined ? node.getMatchingHandler(derivedConstraints) : node.unconstrainedHandler
