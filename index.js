@@ -432,9 +432,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   while (true) {
     // found the route
     if (pathIndex === pathLen) {
-      const handle = derivedConstraints !== undefined
-        ? currentNode.getMatchingHandler(derivedConstraints)
-        : currentNode.unconstrainedHandler
+      const handle = currentNode.getMatchingHandler(derivedConstraints)
 
       if (handle !== null && handle !== undefined) {
         const paramsObj = {}
@@ -557,7 +555,7 @@ Router.prototype._getWildcardNode = function (node, sanitizedUrl, len, derivedCo
     return this._onBadUrl(sanitizedUrl.slice(len))
   }
 
-  var handle = derivedConstraints !== undefined ? node.getMatchingHandler(derivedConstraints) : node.unconstrainedHandler
+  var handle = node.getMatchingHandler(derivedConstraints)
 
   if (handle !== null && handle !== undefined) {
     var paramsObj = {}
