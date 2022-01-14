@@ -527,7 +527,19 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       } else {
         for (; paramEndIndex < pathLen; paramEndIndex++) {
           const charCode = path.charCodeAt(paramEndIndex)
-          if (charCode === 47 || charCode === 45 || charCode === 46) {
+          // Always break on /
+          if (charCode === 47) {
+            break
+          }
+          // Params start where next children begins
+          let isChildrenStartCharCode = false
+          for (let i = 0; i < node.childrenStartCodes.length; i++) {
+            if (charCode === node.childrenStartCodes[i]) {
+              isChildrenStartCharCode = true
+              break
+            }
+          }
+          if (isChildrenStartCharCode) {
             break
           }
         }

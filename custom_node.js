@@ -20,7 +20,6 @@ function Node (options) {
   this.handlers = options.handlers || [] // unoptimized list of handler objects for which the fast matcher function will be compiled
   this.unconstrainedHandler = options.unconstrainedHandler || null // optimized reference to the handler that will match most of the time
   this.children = options.children || {}
-  this.numberOfChildren = Object.keys(this.children).length
   this.kind = options.kind || this.types.STATIC
   this.regex = options.regex || null
   this.wildcardChild = null
@@ -28,6 +27,8 @@ function Node (options) {
   this.constrainer = options.constrainer
   this.hasConstraints = options.hasConstraints || false
   this.constrainedHandlerStores = null
+
+  this._saveChildrenInfo()
 }
 
 Object.defineProperty(Node.prototype, 'types', {
@@ -64,9 +65,7 @@ Node.prototype.addChild = function (node) {
 
   this.children[label] = node
 
-  const nodeChildren = Object.values(this.children)
-  this.numberOfChildren = nodeChildren.length
-
+  this._saveChildrenInfo()
   this._saveParametricBrother()
 
   return this
@@ -93,6 +92,16 @@ Node.prototype._saveParametricBrother = function () {
   }
 }
 
+Node.prototype._saveChildrenInfo = function () {
+  const childrenKeys = Object.keys(this.children)
+  this.numberOfChildren = childrenKeys.length
+
+  this.childrenStartCodes = []
+  for (let i = 0; i < this.numberOfChildren; i++) {
+    this.childrenStartCodes.push(childrenKeys[i].charCodeAt(0))
+  }
+}
+
 Node.prototype.reset = function (prefix) {
   this.prefix = prefix
   this.children = {}
@@ -100,6 +109,7 @@ Node.prototype.reset = function (prefix) {
   this.unconstrainedHandler = null
   this.kind = this.types.STATIC
   this.numberOfChildren = 0
+  this.childrenStartCodes = []
   this.regex = null
   this.wildcardChild = null
   this.hasConstraints = false

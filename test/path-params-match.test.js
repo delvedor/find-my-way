@@ -35,3 +35,18 @@ t.test('path params match', (t) => {
   t.equal(trailingSlashRet.handler, paramPath)
   t.same(trailingSlashRet.params, { pam: 'abcdef' })
 })
+
+t.test('should handles "-" in parameters', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test/:id.jpg', () => {})
+
+  t.same(findMyWay.find('GET', '/test/123456.jpg').params, {
+    id: '123456'
+  })
+
+  t.same(findMyWay.find('GET', '/test/123456-78.jpg').params, {
+    id: '123456-78'
+  })
+})
