@@ -584,11 +584,11 @@ test('Wildcard node with constraints', t => {
     }
   })
 
-  findMyWay.on('GET', '*', (req, res, params) => {
+  findMyWay.on('GET', '*', { constraints: { host: 'fastify.io' } }, (req, res, params) => {
     t.equal(params['*'], '/foo1/foo3')
   })
 
-  findMyWay.on('GET', '/foo1/*', { constraints: { host: 'fastify.io' } }, (req, res, params) => {
+  findMyWay.on('GET', '/foo1/*', { constraints: { host: 'something-else.io' } }, (req, res, params) => {
     t.fail('we should not be here, the url is: ' + req.url)
   })
 
@@ -597,7 +597,7 @@ test('Wildcard node with constraints', t => {
   })
 
   findMyWay.lookup(
-    { method: 'GET', url: '/foo1/foo3', headers: {} },
+    { method: 'GET', url: '/foo1/foo3', headers: { host: 'fastify.io' } },
     null
   )
 })
