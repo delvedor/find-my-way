@@ -1,129 +1,238 @@
 'use strict'
 
-const Benchmark = require('benchmark')
-// The default number of samples for Benchmark seems to be low enough that it
-// can generate results with significant variance (~2%) for this benchmark
-// suite. This makes it sometimes a bit confusing to actually evaluate impact of
-// changes on performance. Setting the minimum of samples to 500 results in
-// significantly lower variance on my local setup for this tests suite, and
-// gives me higher confidence in benchmark results.
-Benchmark.options.minSamples = 500
+const path = require('path')
+const { Worker } = require('worker_threads')
 
-const suite = Benchmark.Suite()
+const BENCH_THREAD_PATH = path.join(__dirname, 'bench-thread.js')
 
-const FindMyWay = require('./')
+const testCases = [
+  {
+    name: 'lookup root "/" route',
+    setupURLs: [{ method: 'GET', url: '/' }],
+    testingMethodName: 'lookup',
+    args: [
+      { method: 'GET', url: '/', headers: { host: 'fastify.io' } },
+      null
+    ]
+  },
+  {
+    name: 'lookup static route',
+    setupURLs: [{ method: 'GET', url: '/a' }],
+    testingMethodName: 'lookup',
+    args: [
+      { method: 'GET', url: '/a', headers: { host: 'fastify.io' } },
+      null
+    ]
+  },
+  {
+    name: 'lookup dynamic route',
+    setupURLs: [{ method: 'GET', url: '/user/:id' }],
+    testingMethodName: 'lookup',
+    args: [
+      { method: 'GET', url: '/user/tomas', headers: { host: 'fastify.io' } },
+      null
+    ]
+  },
+  {
+    name: 'lookup dynamic multi-parametric route',
+    setupURLs: [{ method: 'GET', url: '/customer/:name-:surname' }],
+    testingMethodName: 'lookup',
+    args: [
+      { method: 'GET', url: '/customer/john-doe', headers: { host: 'fastify.io' } },
+      null
+    ]
+  },
+  {
+    name: 'lookup dynamic multi-parametric route with regex',
+    setupURLs: [{ method: 'GET', url: '/at/:hour(^\\d+)h:minute(^\\d+)m' }],
+    testingMethodName: 'lookup',
+    args: [
+      { method: 'GET', url: '/at/12h00m', headers: { host: 'fastify.io' } },
+      null
+    ]
+  },
+  {
+    name: 'lookup long static route',
+    setupURLs: [{ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }],
+    testingMethodName: 'lookup',
+    args: [
+      { method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz', headers: { host: 'fastify.io' } },
+      null
+    ]
+  },
+  {
+    name: 'lookup long dynamic route',
+    setupURLs: [{ method: 'GET', url: '/user/:id/static' }],
+    testingMethodName: 'lookup',
+    args: [
+      {
+        method: 'GET',
+        url: '/user/qwertyuiopasdfghjklzxcvbnm/static',
+        headers: { host: 'fastify.io' }
+      },
+      null
+    ]
+  },
+  {
+    name: 'lookup static route on constrained router',
+    setupURLs: [
+      { method: 'GET', url: '/' },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '1.2.0' } } },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
+    ],
+    testingMethodName: 'lookup',
+    args: [
+      {
+        method: 'GET',
+        url: '/',
+        headers: { host: 'fastify.io' }
+      },
+      null
+    ]
+  },
+  {
+    name: 'lookup static versioned route',
+    setupURLs: [
+      { method: 'GET', url: '/' },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '1.2.0' } } },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
+    ],
+    testingMethodName: 'lookup',
+    args: [
+      {
+        method: 'GET',
+        url: '/versioned',
+        headers: { 'accept-version': '1.x', host: 'fastify.io' }
+      },
+      null
+    ]
+  },
+  {
+    name: 'lookup static constrained (version & host) route',
+    setupURLs: [
+      { method: 'GET', url: '/' },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '1.2.0' } } },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
+      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
+    ],
+    testingMethodName: 'lookup',
+    args: [
+      {
+        method: 'GET',
+        url: '/versioned',
+        headers: { 'accept-version': '2.x', host: 'fastify.io' }
+      },
+      null
+    ]
+  },
+  {
+    name: 'find root "/" route',
+    setupURLs: [{ method: 'GET', url: '/' }],
+    testingMethodName: 'find',
+    args: ['GET', '/']
+  },
+  {
+    name: 'find static route',
+    setupURLs: [{ method: 'GET', url: '/a' }],
+    testingMethodName: 'find',
+    args: ['GET', '/a']
+  },
+  {
+    name: 'find dynamic route',
+    setupURLs: [{ method: 'GET', url: '/user/:id' }],
+    testingMethodName: 'find',
+    args: ['GET', '/user/tomas']
+  },
+  {
+    name: 'find dynamic route with encoded parameter unoptimized',
+    setupURLs: [{ method: 'GET', url: '/user/:id' }],
+    testingMethodName: 'find',
+    args: ['GET', '/user/maintainer%2Btomas']
+  },
+  {
+    name: 'find dynamic route with encoded parameter optimized',
+    setupURLs: [{ method: 'GET', url: '/user/:id' }],
+    testingMethodName: 'find',
+    args: ['GET', '/user/maintainer%20tomas']
+  },
+  {
+    name: 'find dynamic multi-parametric route',
+    setupURLs: [{ method: 'GET', url: '/customer/:name-:surname' }],
+    testingMethodName: 'find',
+    args: ['GET', '/customer/john-doe']
+  },
+  {
+    name: 'find dynamic multi-parametric route with regex',
+    setupURLs: [{ method: 'GET', url: '/at/:hour(^\\d+)h:minute(^\\d+)m' }],
+    testingMethodName: 'find',
+    args: ['GET', '/at/12h00m']
+  },
+  {
+    name: 'find long static route',
+    setupURLs: [{ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }],
+    testingMethodName: 'find',
+    args: ['GET', '/abc/def/ghi/lmn/opq/rst/uvz']
+  },
+  {
+    name: 'find long dynamic route',
+    setupURLs: [{ method: 'GET', url: '/user/:id/static' }],
+    testingMethodName: 'find',
+    args: ['GET', '/user/qwertyuiopasdfghjklzxcvbnm/static']
+  },
+  {
+    name: 'find long nested dynamic route',
+    setupURLs: [{ method: 'GET', url: '/posts/:id/comments/:id/author' }],
+    testingMethodName: 'find',
+    args: ['GET', '/posts/10/comments/42/author']
+  },
+  {
+    name: 'find long nested dynamic route with encoded parameter unoptimized',
+    setupURLs: [{ method: 'GET', url: '/posts/:id/comments/:id/author' }],
+    testingMethodName: 'find',
+    args: ['GET', '/posts/10%2C10/comments/42%2C42/author']
+  },
+  {
+    name: 'find long nested dynamic route with encoded parameter optimized',
+    setupURLs: [{ method: 'GET', url: '/posts/:id/comments/:id/author' }],
+    testingMethodName: 'find',
+    args: ['GET', '/posts/10%2510/comments/42%2542/author']
+  },
+  {
+    name: 'find long nested dynamic route with other method',
+    setupURLs: [{ method: 'POST', url: '/posts/:id/comments' }],
+    testingMethodName: 'find',
+    args: ['POST', '/posts/10/comments']
+  }
+]
 
-const findMyWay = new FindMyWay()
-findMyWay.on('GET', '/', () => true)
-findMyWay.on('GET', '/a', () => true)
-findMyWay.on('GET', '/user/:id', () => true)
-findMyWay.on('GET', '/user/:id/static', () => true)
-findMyWay.on('POST', '/user/:id', () => true)
-findMyWay.on('PUT', '/user/:id', () => true)
-findMyWay.on('GET', '/customer/:name-:surname', () => true)
-findMyWay.on('POST', '/customer', () => true)
-findMyWay.on('GET', '/at/:hour(^\\d+)h:minute(^\\d+)m', () => true)
-findMyWay.on('GET', '/abc/def/ghi/lmn/opq/rst/uvz', () => true)
+async function runBenchmark (testCase) {
+  const worker = new Worker(BENCH_THREAD_PATH, {
+    workerData: testCase
+  })
 
-findMyWay.on('GET', '/products', () => true)
-findMyWay.on('GET', '/products/:id', () => true)
-findMyWay.on('GET', '/products/:id/options', () => true)
+  return new Promise((resolve, reject) => {
+    let result = null
+    worker.on('error', reject)
+    worker.on('message', (benchResult) => {
+      result = benchResult
+    })
+    worker.on('exit', (code) => {
+      if (code === 0) {
+        resolve(result)
+      } else {
+        reject(new Error(`Worker stopped with exit code ${code}`))
+      }
+    })
+  })
+}
 
-findMyWay.on('GET', '/posts', () => true)
-findMyWay.on('POST', '/posts', () => true)
-findMyWay.on('GET', '/posts/:id', () => true)
-findMyWay.on('GET', '/posts/:id/author', () => true)
-findMyWay.on('GET', '/posts/:id/comments', () => true)
-findMyWay.on('POST', '/posts/:id/comments', () => true)
-findMyWay.on('GET', '/posts/:id/comments/:id', () => true)
-findMyWay.on('GET', '/posts/:id/comments/:id/author', () => true)
-findMyWay.on('GET', '/posts/:id/counter', () => true)
+async function runBenchmarks () {
+  for (const testCase of testCases) {
+    const resultMessage = await runBenchmark(testCase)
+    console.log(resultMessage)
+  }
+}
 
-const constrained = new FindMyWay()
-constrained.on('GET', '/', () => true)
-constrained.on('GET', '/versioned', () => true)
-constrained.on('GET', '/versioned', { constraints: { version: '1.2.0' } }, () => true)
-constrained.on('GET', '/versioned', { constraints: { version: '2.0.0', host: 'example.com' } }, () => true)
-constrained.on('GET', '/versioned', { constraints: { version: '2.0.0', host: 'fastify.io' } }, () => true)
-
-suite
-  .add('lookup root "/" route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/', headers: { host: 'fastify.io' } }, null)
-  })
-  .add('lookup static route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/a', headers: { host: 'fastify.io' } }, null)
-  })
-  .add('lookup dynamic route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/user/tomas', headers: { host: 'fastify.io' } }, null)
-  })
-  .add('lookup dynamic multi-parametric route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/customer/john-doe', headers: { host: 'fastify.io' } }, null)
-  })
-  .add('lookup dynamic multi-parametric route with regex', function () {
-    findMyWay.lookup({ method: 'GET', url: '/at/12h00m', headers: { host: 'fastify.io' } }, null)
-  })
-  .add('lookup long static route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz', headers: { host: 'fastify.io' } }, null)
-  })
-  .add('lookup long dynamic route', function () {
-    findMyWay.lookup({ method: 'GET', url: '/user/qwertyuiopasdfghjklzxcvbnm/static', headers: { host: 'fastify.io' } }, null)
-  })
-  .add('lookup static route on constrained router', function () {
-    constrained.lookup({ method: 'GET', url: '/', headers: { host: 'fastify.io' } }, null)
-  })
-  .add('lookup static versioned route', function () {
-    constrained.lookup({ method: 'GET', url: '/versioned', headers: { 'accept-version': '1.x', host: 'fastify.io' } }, null)
-  })
-  .add('lookup static constrained (version & host) route', function () {
-    constrained.lookup({ method: 'GET', url: '/versioned', headers: { 'accept-version': '2.x', host: 'fastify.io' } }, null)
-  })
-  .add('find root "/" route', function () {
-    findMyWay.find('GET', '/', undefined)
-  })
-  .add('find static route', function () {
-    findMyWay.find('GET', '/a', undefined)
-  })
-  .add('find dynamic route', function () {
-    findMyWay.find('GET', '/user/tomas', undefined)
-  })
-  .add('find dynamic route with encoded parameter unoptimized', function () {
-    findMyWay.find('GET', '/user/maintainer%2Btomas', undefined)
-  })
-  .add('find dynamic route with encoded parameter optimized', function () {
-    findMyWay.find('GET', '/user/maintainer%20tomas', undefined)
-  })
-  .add('find dynamic multi-parametric route', function () {
-    findMyWay.find('GET', '/customer/john-doe', undefined)
-  })
-  .add('find dynamic multi-parametric route with regex', function () {
-    findMyWay.find('GET', '/at/12h00m', undefined)
-  })
-  .add('find long static route', function () {
-    findMyWay.find('GET', '/abc/def/ghi/lmn/opq/rst/uvz', undefined)
-  })
-  .add('find long dynamic route', function () {
-    findMyWay.find('GET', '/user/qwertyuiopasdfghjklzxcvbnm/static', undefined)
-  })
-  .add('find long nested dynamic route', function () {
-    findMyWay.find('GET', '/posts/10/comments/42/author', undefined)
-  })
-  .add('find long nested dynamic route with encoded parameter unoptimized', function () {
-    findMyWay.find('GET', '/posts/10%2C10/comments/42%2C42/author', undefined)
-  })
-  .add('find long nested dynamic route with encoded parameter optimized', function () {
-    findMyWay.find('GET', '/posts/10%2510/comments/42%2542/author', undefined)
-  })
-  .add('find long nested dynamic route with other method', function () {
-    findMyWay.find('POST', '/posts/10/comments', undefined)
-  })
-  .add('find long nested dynamic route', function () {
-    findMyWay.find('GET', '/posts/10/comments/42/author', undefined)
-  })
-  .add('find long nested dynamic route with other method', function () {
-    findMyWay.find('POST', '/posts/10/comments', undefined)
-  })
-  .on('cycle', function (event) {
-    console.log(String(event.target))
-  })
-  .on('complete', function () {})
-  .run()
+runBenchmarks()
