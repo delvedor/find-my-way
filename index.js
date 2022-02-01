@@ -423,11 +423,8 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   const params = []
   const pathLen = path.length
 
-  let wildcardNode = null
-  let wildcardNodePathIndex = 0
-
-  let lastParametricBrother = null
   const parametricBrothersStack = []
+  const wildcardBrothersStack = []
 
   while (true) {
     // found the route
@@ -452,33 +449,45 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       }
     }
 
-    let node = currentNode.findMatchingChild(derivedConstraints, path, pathIndex)
+    let node = currentNode.findStaticMatchingChild(path, pathIndex)
 
-    if (node === null) {
-      node = currentNode.parametricBrother
+    if (currentNode.parametricChild !== null) {
       if (node === null) {
-        return this._getWildcardNode(wildcardNode, path, wildcardNodePathIndex, derivedConstraints, params)
+        node = currentNode.parametricChild
+      } else {
+        parametricBrothersStack.push({
+          brotherPathIndex: pathIndex,
+          paramsCount: params.length
+        })
       }
-
-      const { brotherPathIndex, paramsCount } = parametricBrothersStack.pop()
-      pathIndex = brotherPathIndex
-      params.splice(paramsCount)
-    } else if (
-      pathIndex < pathLen &&
-      node.parametricBrother !== null &&
-      node.parametricBrother !== lastParametricBrother
-    ) {
-      parametricBrothersStack.push({
-        brotherPathIndex: pathIndex,
-        paramsCount: params.length
-      })
-      lastParametricBrother = node.parametricBrother
     }
 
-    // if exist, save the wildcard child
     if (currentNode.wildcardChild !== null) {
-      wildcardNode = currentNode.wildcardChild
-      wildcardNodePathIndex = pathIndex
+      if (node === null) {
+        node = currentNode.wildcardChild
+      } else {
+        wildcardBrothersStack.push({
+          brotherPathIndex: pathIndex,
+          paramsCount: params.length
+        })
+      }
+    }
+
+    if (node === null) {
+      let brotherNodeState
+      node = currentNode.parametricBrother
+      if (node === null) {
+        node = currentNode.wildcardBrother
+        if (node === null) {
+          return null
+        }
+        brotherNodeState = wildcardBrothersStack.pop()
+      } else {
+        brotherNodeState = parametricBrothersStack.pop()
+      }
+
+      pathIndex = brotherNodeState.brotherPathIndex
+      params.splice(brotherNodeState.paramsCount)
     }
 
     currentNode = node
@@ -546,37 +555,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     params.push(decoded)
     pathIndex = paramEndIndex
   }
-}
-
-Router.prototype._getWildcardNode = function (node, sanitizedUrl, len, derivedConstraints, params) {
-  if (node === null) return null
-  var decoded = sanitizedUrl.slice(len)
-  if (decoded === null) {
-    return this._onBadUrl(sanitizedUrl.slice(len))
-  }
-
-  var handle = node.getMatchingHandler(derivedConstraints)
-
-  if (handle !== null && handle !== undefined) {
-    var paramsObj = {}
-    if (handle.paramsLength > 0 && params !== null) {
-      var paramNames = handle.params
-
-      for (i = 0; i < handle.paramsLength; i++) {
-        paramsObj[paramNames[i]] = params[i]
-      }
-    }
-
-    // we must override params[*] to decoded
-    paramsObj['*'] = decoded
-
-    return {
-      handler: handle.handler,
-      params: paramsObj,
-      store: handle.store
-    }
-  }
-  return null
 }
 
 Router.prototype._defaultRoute = function (req, res, ctx) {
