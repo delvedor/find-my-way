@@ -146,6 +146,23 @@ Node.prototype.split = function (length) {
   return newChild
 }
 
+Node.prototype.getChildByLabel = function (label, kind) {
+  if (label.length === 0) {
+    return null
+  }
+
+  switch (kind) {
+    case this.types.STATIC:
+      return this.staticChildren[label]
+    case this.types.MATCH_ALL:
+      return this.wildcardChild
+    case this.types.PARAM:
+    case this.types.REGEX:
+    case this.types.MULTI_PARAM:
+      return this.parametricChild
+  }
+}
+
 Node.prototype.findStaticMatchingChild = function (path, pathIndex) {
   const child = this.staticChildren[path[pathIndex]]
   if (child !== undefined) {
