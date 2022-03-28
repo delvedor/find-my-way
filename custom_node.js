@@ -19,8 +19,8 @@ function Node (options) {
   this.method = options.method // not used for logic, just for debugging and pretty printing
   this.handlers = options.handlers || [] // unoptimized list of handler objects for which the fast matcher function will be compiled
   this.unconstrainedHandler = options.unconstrainedHandler || null // optimized reference to the handler that will match most of the time
-  this.children = options.children || {}
-  this.numberOfChildren = Object.keys(this.children).length
+  this.staticChildren = options.staticChildren || {}
+  this.numberOfChildren = Object.keys(this.staticChildren).length
   this.kind = options.kind || this.types.STATIC
   this.regex = options.regex || null
   this.wildcardChild = null
@@ -37,31 +37,29 @@ Object.defineProperty(Node.prototype, 'types', {
 })
 
 Node.prototype.addChild = function (node) {
-  var label = ''
+  const label = node.prefix[0]
   switch (node.kind) {
     case this.types.STATIC:
-      label = node.prefix[0]
+      assert(
+        this.staticChildren[label] === undefined,
+        `There is already a child with label '${label}'`
+      )
+      this.staticChildren[label] = node
       break
     case this.types.PARAM:
     case this.types.REGEX:
     case this.types.MULTI_PARAM:
+      assert(this.parametricChild === null, 'There is already a parametric child')
       this.parametricChild = node
-      label = ':'
       break
     case this.types.MATCH_ALL:
+      assert(this.wildcardChild === null, 'There is already a wildcard child')
       this.wildcardChild = node
-      label = '*'
       break
     default:
       throw new Error(`Unknown node kind: ${node.kind}`)
   }
 
-  assert(
-    this.children[label] === undefined,
-    `There is already a child with label '${label}'`
-  )
-
-  this.children[label] = node
   this.numberOfChildren++
 
   this._saveParametricBrother()
@@ -79,11 +77,9 @@ Node.prototype._saveParametricBrother = function () {
 
   // Save the parametric brother inside static children
   if (parametricBrother) {
-    for (const child of Object.values(this.children)) {
-      if (child && child !== parametricBrother) {
-        child.parametricBrother = parametricBrother
-        child._saveParametricBrother(parametricBrother)
-      }
+    for (const child of Object.values(this.staticChildren)) {
+      child.parametricBrother = parametricBrother
+      child._saveParametricBrother(parametricBrother)
     }
   }
 }
@@ -97,18 +93,19 @@ Node.prototype._saveWildcardBrother = function () {
 
   // Save the wildcard brother inside static children
   if (wildcardBrother) {
-    for (const child of Object.values(this.children)) {
-      if (child && child !== wildcardBrother) {
-        child.wildcardBrother = wildcardBrother
-        child._saveWildcardBrother(wildcardBrother)
-      }
+    for (const child of Object.values(this.staticChildren)) {
+      child.wildcardBrother = wildcardBrother
+      child._saveWildcardBrother(wildcardBrother)
+    }
+    if (this.parametricChild !== null) {
+      this.parametricChild.wildcardBrother = wildcardBrother
     }
   }
 }
 
 Node.prototype.reset = function (prefix) {
   this.prefix = prefix
-  this.children = {}
+  this.staticChildren = {}
   this.handlers = []
   this.unconstrainedHandler = null
   this.kind = this.types.STATIC
@@ -125,7 +122,7 @@ Node.prototype.split = function (length) {
   const newChild = new Node(
     {
       prefix: this.prefix.slice(length),
-      children: this.children,
+      staticChildren: this.staticChildren,
       kind: this.kind,
       method: this.method,
       handlers: this.handlers.slice(0),
@@ -149,12 +146,8 @@ Node.prototype.split = function (length) {
   return newChild
 }
 
-Node.prototype.findByLabel = function (path) {
-  return this.children[path[0]]
-}
-
 Node.prototype.findStaticMatchingChild = function (path, pathIndex) {
-  const child = this.children[path[pathIndex]]
+  const child = this.staticChildren[path[pathIndex]]
   if (child !== undefined) {
     for (let i = 0; i < child.prefix.length; i++) {
       if (path.charCodeAt(pathIndex + i) !== child.prefix.charCodeAt(i)) {

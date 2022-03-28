@@ -165,9 +165,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     // parametric route
     if (path.charCodeAt(i) === 58) {
       if (i !== len - 1 && path.charCodeAt(i + 1) === 58) {
-        // It's a double colon. Let's just replace it with a single colon and go ahead
-        path = path.slice(0, i) + path.slice(i + 1)
-        len = path.length
+        // It's a double colon. Let's just skip it with and go ahead
+        i += 2
         continue
       }
 
@@ -251,11 +250,6 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
 Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, constraints) {
   const route = path
-  var prefix = ''
-  var pathLen = 0
-  var prefixLen = 0
-  var len = 0
-  var max = 0
   var node = null
 
   // Boot the tree for this method if it doesn't exist yet
@@ -266,23 +260,28 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
   }
 
   while (true) {
-    prefix = currentNode.prefix
-    prefixLen = prefix.length
-    pathLen = path.length
-    len = 0
+    const prefix = currentNode.prefix
+    let len = 0
 
     // search for the longest common prefix
-    max = pathLen < prefixLen ? pathLen : prefixLen
-    while (len < max && path[len] === prefix[len]) len++
+    for (; len < Math.min(path.length, prefix.length); len++) {
+      if (path.charCodeAt(len) === 58 && path.charCodeAt(len + 1) === 58) {
+        path = path.slice(0, len) + path.slice(len + 1)
+      }
+
+      if (path[len] !== prefix[len]) {
+        break
+      }
+    }
 
     // the longest common prefix is smaller than the current prefix
     // let's split the node and add a new child
-    if (len < prefixLen) {
+    if (len < prefix.length) {
       node = currentNode.split(len)
 
       // if the longest common prefix has the same length of the current path
       // the handler should be added to the current node, to a child otherwise
-      if (len === pathLen) {
+      if (len === path.length) {
         assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
         currentNode.addHandler(handler, params, store, constraints)
         currentNode.kind = kind
@@ -301,16 +300,34 @@ Router.prototype._insert = function _insert (method, path, kind, params, handler
 
     // the longest common prefix is smaller than the path length,
     // but is higher than the prefix
-    } else if (len < pathLen) {
+    } else if (len < path.length) {
       // remove the prefix
       path = path.slice(len)
       // check if there is a child with the label extracted from the new path
-      node = currentNode.findByLabel(path)
+      if (path.charCodeAt(0) === 58) {
+        if (path.charCodeAt(1) === 58) {
+          node = currentNode.staticChildren[':']
+        } else {
+          node = currentNode.parametricChild
+        }
+      } else if (path.charCodeAt(0) === 42) {
+        node = currentNode.wildcardChild
+      } else {
+        node = currentNode.staticChildren[path[0]]
+      }
+
       // there is a child within the given label, we must go deepen in the tree
       if (node) {
         currentNode = node
         continue
       }
+
+      for (let i = 0; i < path.length; i++) {
+        if (path.charCodeAt(i) === 58 && path.charCodeAt(i + 1) === 58) {
+          path = path.slice(0, i) + path.slice(i + 1)
+        }
+      }
+
       // there are not children within the given label, let's create a new one!
       node = new Node({ method: method, prefix: path, kind: kind, handlers: null, regex: regex, constrainer: this.constrainer })
       node.addHandler(handler, params, store, constraints)
