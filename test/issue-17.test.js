@@ -20,23 +20,37 @@ test('Parametric route, request.url contains dash', t => {
 })
 
 test('Parametric route with fixed suffix', t => {
-  t.plan(2)
+  t.plan(6)
+  const findMyWay = FindMyWay({
+    defaultRoute: () => t.fail('Should not be defaultRoute')
+  })
+
+  findMyWay.on('GET', '/a/:param-static', () => {})
+  findMyWay.on('GET', '/b/:param.static', () => {})
+
+  t.same(findMyWay.find('GET', '/a/param-static', {}).params, { param: 'param' })
+  t.same(findMyWay.find('GET', '/b/param.static', {}).params, { param: 'param' })
+
+  t.same(findMyWay.find('GET', '/a/param-param-static', {}).params, { param: 'param-param' })
+  t.same(findMyWay.find('GET', '/b/param.param.static', {}).params, { param: 'param.param' })
+
+  t.same(findMyWay.find('GET', '/a/param.param-static', {}).params, { param: 'param.param' })
+  t.same(findMyWay.find('GET', '/b/param-param.static', {}).params, { param: 'param-param' })
+})
+
+test('Regex param exceeds max parameter length', t => {
+  t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.ok('route not matched')
     }
   })
 
-  findMyWay.on('GET', '/a/:param-bar', (req, res, params) => {
-    t.equal(params.param, 'foo')
+  findMyWay.on('GET', '/a/:param(^\\w{3})', (req, res, params) => {
+    t.fail('regex match')
   })
 
-  findMyWay.on('GET', '/b/:param.bar', function bloo (req, res, params) {
-    t.equal(params.param, 'foo')
-  })
-
-  findMyWay.lookup({ method: 'GET', url: '/a/foo-bar', headers: {} }, null)
-  findMyWay.lookup({ method: 'GET', url: '/b/foo.bar', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/a/fool', headers: {} }, null)
 })
 
 test('Parametric route with regexp and fixed suffix / 1', t => {

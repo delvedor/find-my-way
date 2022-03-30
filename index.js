@@ -149,9 +149,6 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   // Let the constrainer know if any constraints are being used now
   this.constrainer.noteUsage(constraints)
 
-  const params = []
-  let j = 0
-
   this.routes.push({ method, path, opts, handler, store })
 
   // Boot the tree for this method if it doesn't exist yet
@@ -165,72 +162,98 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     currentNode.split(0)
   }
 
-  let lastPathIndex = this.trees[method].prefix.length
+  let parentNodePathIndex = this.trees[method].prefix.length
 
-  for (let i = 0, len = path.length; i <= len; i++) {
+  const params = []
+  for (let i = 0; i <= path.length; i++) {
     // search for parametric or wildcard routes
     // parametric route
     if (path.charCodeAt(i) === 58) {
-      if (i !== len - 1 && path.charCodeAt(i + 1) === 58) {
-        // It's a double colon. Let's just skip it with and go ahead
+      if (path.charCodeAt(i + 1) === 58) {
+        // It's a double colon. Let's just replace it with a single colon and go ahead
         path = path.slice(0, i) + path.slice(i + 1)
         continue
       }
 
-      let nodeType = NODE_TYPES.PARAM
-      j = i + 1
-
       // add the static part of the route to the tree
-      currentNode = this._insert(currentNode, method, path.slice(lastPathIndex, i), NODE_TYPES.STATIC, null)
+      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex, i), NODE_TYPES.STATIC, null)
 
-      // isolate the parameter name
-      let isRegex = false
-      while (i < len && path.charCodeAt(i) !== 47) {
-        isRegex = isRegex || path[i] === '('
-        if (isRegex) {
-          i = getClosingParenthensePosition(path, i) + 1
-          break
-        } else if (path.charCodeAt(i) !== 45 && path.charCodeAt(i) !== 46) {
-          i++
-        } else {
+      const paramStartIndex = i + 1
+
+      const regexps = []
+      let nodeType = NODE_TYPES.PARAM
+      let lastParamStartIndex = paramStartIndex
+
+      for (let j = paramStartIndex; ; j++) {
+        const charCode = path.charCodeAt(j)
+
+        if (charCode === 40 || charCode === 45 || charCode === 46) {
+          nodeType = NODE_TYPES.REGEX
+
+          const paramName = path.slice(lastParamStartIndex, j)
+          params.push(paramName)
+
+          if (charCode === 40) {
+            const endOfRegexIndex = getClosingParenthensePosition(path, j)
+            const regexString = path.slice(j, endOfRegexIndex + 1)
+
+            if (!this.allowUnsafeRegex) {
+              assert(isRegexSafe(new RegExp(regexString)), `The regex '${regexString}' is not safe!`)
+            }
+
+            regexps.push(trimRegExpStartAndEnd(regexString))
+
+            j = endOfRegexIndex + 1
+          } else {
+            regexps.push('(.*?)')
+          }
+
+          let lastParamEndIndex = j
+          for (; lastParamEndIndex < path.length; lastParamEndIndex++) {
+            const charCode = path.charCodeAt(lastParamEndIndex)
+            if (charCode === 58 || charCode === 47) {
+              break
+            }
+          }
+
+          const staticPart = path.slice(j, lastParamEndIndex)
+          if (staticPart) {
+            regexps.push(escapeRegExp(staticPart))
+          }
+
+          lastParamStartIndex = lastParamEndIndex + 1
+          j = lastParamEndIndex
+        } else if (charCode === 47 || j === path.length) {
+          const paramName = path.slice(lastParamStartIndex, j)
+          params.push(paramName)
+
+          if (regexps.length !== 0) {
+            regexps.push('(.*?)')
+          }
+        }
+
+        if (path.charCodeAt(j) === 47 || j === path.length) {
+          path = path.slice(0, paramStartIndex) + path.slice(j)
           break
         }
       }
 
-      if (isRegex && (i === len || path.charCodeAt(i) === 47)) {
-        nodeType = NODE_TYPES.REGEX
-      } else if (i < len && path.charCodeAt(i) !== 47) {
-        nodeType = NODE_TYPES.MULTI_PARAM
+      let regex = null
+      if (nodeType === NODE_TYPES.REGEX) {
+        regex = new RegExp('^' + regexps.join('') + '$')
       }
-
-      const parameter = path.slice(j, i)
-      let regex = isRegex ? parameter.slice(parameter.indexOf('('), i) : null
-      if (isRegex) {
-        regex = new RegExp(regex)
-        if (!this.allowUnsafeRegex) {
-          assert(isRegexSafe(regex), `The regex '${regex.toString()}' is not safe!`)
-        }
-      }
-      params.push(parameter.slice(0, isRegex ? parameter.indexOf('(') : i))
-
-      path = path.slice(0, j) + path.slice(i)
-      i = j
-      len = path.length
 
       currentNode = this._insert(currentNode, method, ':', nodeType, regex)
-
-      if (i < len) {
-        lastPathIndex = i--
-      }
+      parentNodePathIndex = i + 1
     // wildcard route
     } else if (path.charCodeAt(i) === 42) {
-      currentNode = this._insert(currentNode, method, path.slice(lastPathIndex, i), NODE_TYPES.STATIC, null)
+      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex, i), NODE_TYPES.STATIC, null)
       // add the wildcard parameter
       params.push('*')
-      currentNode = this._insert(currentNode, method, path.slice(i, len), NODE_TYPES.MATCH_ALL, null)
+      currentNode = this._insert(currentNode, method, path.slice(i), NODE_TYPES.MATCH_ALL, null)
       break
-    } else if (i === len) {
-      currentNode = this._insert(currentNode, method, path.slice(lastPathIndex), NODE_TYPES.STATIC, null)
+    } else if (i === path.length && i !== parentNodePathIndex) {
+      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex), NODE_TYPES.STATIC, null)
     }
   }
 
@@ -441,52 +464,12 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       continue
     }
 
-    let paramEndIndex = pathIndex
+    let paramEndIndex = kind === NODE_TYPES.MATCH_ALL ? pathLen : pathIndex
 
-    // parametric route
-    if (kind === NODE_TYPES.PARAM) {
-      for (; paramEndIndex < pathLen; paramEndIndex++) {
-        if (path.charCodeAt(paramEndIndex) === 47) {
-          break
-        }
+    for (; paramEndIndex < pathLen; paramEndIndex++) {
+      if (path.charCodeAt(paramEndIndex) === 47) {
+        break
       }
-    }
-
-    // wildcard route
-    if (kind === NODE_TYPES.MATCH_ALL) {
-      paramEndIndex = pathLen
-    }
-
-    // parametric(regex) route
-    if (kind === NODE_TYPES.REGEX) {
-      for (; paramEndIndex < pathLen; paramEndIndex++) {
-        if (path.charCodeAt(paramEndIndex) === 47) {
-          break
-        }
-      }
-      if (!node.regex.test(path.slice(pathIndex, paramEndIndex))) {
-        return null
-      }
-    }
-
-    // multiparametric route
-    if (kind === NODE_TYPES.MULTI_PARAM) {
-      if (node.regex !== null) {
-        const matchedParameter = node.regex.exec(path.slice(pathIndex))
-        if (matchedParameter === null) return null
-        paramEndIndex = pathIndex + matchedParameter[1].length
-      } else {
-        for (; paramEndIndex < pathLen; paramEndIndex++) {
-          const charCode = path.charCodeAt(paramEndIndex)
-          if (charCode === 47 || charCode === 45 || charCode === 46) {
-            break
-          }
-        }
-      }
-    }
-
-    if (paramEndIndex > pathIndex + maxParamLength) {
-      return null
     }
 
     const decoded = sanitizedUrl.sliceParameter(pathIndex, paramEndIndex)
@@ -494,7 +477,31 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       return this._onBadUrl(path.slice(pathIndex, paramEndIndex))
     }
 
-    params.push(decoded)
+    if (
+      kind === NODE_TYPES.PARAM ||
+      kind === NODE_TYPES.MATCH_ALL
+    ) {
+      if (decoded.length > maxParamLength) {
+        return null
+      }
+      params.push(decoded)
+    }
+
+    if (kind === NODE_TYPES.REGEX) {
+      const matchedParameters = node.regex.exec(decoded)
+      if (matchedParameters === null) {
+        return null
+      }
+
+      for (let i = 1; i < matchedParameters.length; i++) {
+        const param = matchedParameters[i]
+        if (param.length > maxParamLength) {
+          return null
+        }
+        params.push(param)
+      }
+    }
+
     pathIndex = paramEndIndex
   }
 }
@@ -560,6 +567,23 @@ Router.prototype.all = function (path, handler, store) {
 }
 
 module.exports = Router
+
+function escapeRegExp (string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function trimRegExpStartAndEnd (regexString) {
+  // removes chars that marks start "^" and end "$" of regexp
+  if (regexString.charCodeAt(1) === 94) {
+    regexString = regexString.slice(0, 1) + regexString.slice(2)
+  }
+
+  if (regexString.charCodeAt(regexString.length - 2) === 36) {
+    regexString = regexString.slice(0, regexString.length - 2) + regexString.slice(regexString.length - 1)
+  }
+
+  return regexString
+}
 
 function getClosingParenthensePosition (path, idx) {
   // `path.indexOf()` will always return the first position of the closing parenthese,
