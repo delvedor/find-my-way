@@ -46,7 +46,6 @@ Node.prototype.addChild = function (node) {
       break
     case this.types.PARAM:
     case this.types.REGEX:
-    case this.types.MULTI_PARAM:
       assert(this.parametricChild === null, 'There is already a parametric child')
       this.parametricChild = node
       break
