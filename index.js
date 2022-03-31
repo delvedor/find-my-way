@@ -115,25 +115,25 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
     return
   }
 
-  this._on(method, path, opts, handler, store)
+  const methods = Array.isArray(method) ? method : [method]
+  const paths = [path]
 
   if (this.ignoreTrailingSlash && path !== '/' && !path.endsWith('*')) {
     if (path.endsWith('/')) {
-      this._on(method, path.slice(0, -1), opts, handler, store)
+      paths.push(path.slice(0, -1))
     } else {
-      this._on(method, path + '/', opts, handler, store)
+      paths.push(path + '/')
+    }
+  }
+
+  for (const path of paths) {
+    for (const method of methods) {
+      this._on(method, path, opts, handler, store)
     }
   }
 }
 
 Router.prototype._on = function _on (method, path, opts, handler, store) {
-  if (Array.isArray(method)) {
-    for (const m of method) {
-      this._on(m, path, opts, handler, store)
-    }
-    return
-  }
-
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
 
