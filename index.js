@@ -115,27 +115,27 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
     return
   }
 
-  this._on(method, path, opts, handler, store)
+  const methods = Array.isArray(method) ? method : [method]
+  const paths = [path]
 
   if (this.ignoreTrailingSlash && path !== '/' && !path.endsWith('*')) {
     if (path.endsWith('/')) {
-      this._on(method, path.slice(0, -1), opts, handler, store)
+      paths.push(path.slice(0, -1))
     } else {
-      this._on(method, path + '/', opts, handler, store)
+      paths.push(path + '/')
+    }
+  }
+
+  for (const path of paths) {
+    for (const method of methods) {
+      this._on(method, path, opts, handler, store)
     }
   }
 }
 
 Router.prototype._on = function _on (method, path, opts, handler, store) {
-  if (Array.isArray(method)) {
-    for (var k = 0; k < method.length; k++) {
-      this._on(method[k], path, opts, handler, store)
-    }
-    return
-  }
-
   assert(typeof method === 'string', 'Method should be a string')
-  assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
+  assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
 
   let constraints = {}
   if (opts.constraints !== undefined) {
@@ -149,197 +149,145 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   // Let the constrainer know if any constraints are being used now
   this.constrainer.noteUsage(constraints)
 
-  const params = []
-  var j = 0
-
-  this.routes.push({
-    method: method,
-    path: path,
-    opts: opts,
-    handler: handler,
-    store: store
-  })
-
-  for (var i = 0, len = path.length; i < len; i++) {
-    // search for parametric or wildcard routes
-    // parametric route
-    if (path.charCodeAt(i) === 58) {
-      if (i !== len - 1 && path.charCodeAt(i + 1) === 58) {
-        // It's a double colon. Let's just skip it with and go ahead
-        i += 2
-        continue
-      }
-
-      var nodeType = NODE_TYPES.PARAM
-      j = i + 1
-      var staticPart = path.slice(0, i)
-
-      if (this.caseSensitive === false) {
-        staticPart = staticPart.toLowerCase()
-      }
-
-      // add the static part of the route to the tree
-      this._insert(method, staticPart, NODE_TYPES.STATIC, null, null, null, null, constraints)
-
-      // isolate the parameter name
-      var isRegex = false
-      while (i < len && path.charCodeAt(i) !== 47) {
-        isRegex = isRegex || path[i] === '('
-        if (isRegex) {
-          i = getClosingParenthensePosition(path, i) + 1
-          break
-        } else if (path.charCodeAt(i) !== 45 && path.charCodeAt(i) !== 46) {
-          i++
-        } else {
-          break
-        }
-      }
-
-      if (isRegex && (i === len || path.charCodeAt(i) === 47)) {
-        nodeType = NODE_TYPES.REGEX
-      } else if (i < len && path.charCodeAt(i) !== 47) {
-        nodeType = NODE_TYPES.MULTI_PARAM
-      }
-
-      var parameter = path.slice(j, i)
-      var regex = isRegex ? parameter.slice(parameter.indexOf('('), i) : null
-      if (isRegex) {
-        regex = new RegExp(regex)
-        if (!this.allowUnsafeRegex) {
-          assert(isRegexSafe(regex), `The regex '${regex.toString()}' is not safe!`)
-        }
-      }
-      params.push(parameter.slice(0, isRegex ? parameter.indexOf('(') : i))
-
-      path = path.slice(0, j) + path.slice(i)
-      i = j
-      len = path.length
-
-      // if the path is ended
-      if (i === len) {
-        var completedPath = path.slice(0, i)
-        if (this.caseSensitive === false) {
-          completedPath = completedPath.toLowerCase()
-        }
-        return this._insert(method, completedPath, nodeType, params, handler, store, regex, constraints)
-      }
-      // add the parameter and continue with the search
-      staticPart = path.slice(0, i)
-      if (this.caseSensitive === false) {
-        staticPart = staticPart.toLowerCase()
-      }
-      this._insert(method, staticPart, nodeType, params, null, null, regex, constraints)
-
-      i--
-    // wildcard route
-    } else if (path.charCodeAt(i) === 42) {
-      this._insert(method, path.slice(0, i), NODE_TYPES.STATIC, null, null, null, null, constraints)
-      // add the wildcard parameter
-      params.push('*')
-      return this._insert(method, path.slice(0, len), NODE_TYPES.MATCH_ALL, params, handler, store, null, constraints)
-    }
-  }
-
-  if (this.caseSensitive === false) {
-    path = path.toLowerCase()
-  }
-
-  // static route
-  this._insert(method, path, NODE_TYPES.STATIC, params, handler, store, null, constraints)
-}
-
-Router.prototype._insert = function _insert (method, path, kind, params, handler, store, regex, constraints) {
-  const route = path
-  var node = null
+  this.routes.push({ method, path, opts, handler, store })
 
   // Boot the tree for this method if it doesn't exist yet
-  var currentNode = this.trees[method]
+  let currentNode = this.trees[method]
   if (typeof currentNode === 'undefined') {
     currentNode = new Node({ method: method, constrainer: this.constrainer })
     this.trees[method] = currentNode
   }
 
-  while (true) {
-    const prefix = currentNode.prefix
-    let len = 0
+  if (!path.startsWith('/') && currentNode.prefix !== '') {
+    currentNode.split(0)
+  }
 
-    // search for the longest common prefix
-    for (; len < Math.min(path.length, prefix.length); len++) {
-      if (path.charCodeAt(len) === 58 && path.charCodeAt(len + 1) === 58) {
-        path = path.slice(0, len) + path.slice(len + 1)
-      }
+  let parentNodePathIndex = this.trees[method].prefix.length
 
-      if (path[len] !== prefix[len]) {
-        break
-      }
-    }
-
-    // the longest common prefix is smaller than the current prefix
-    // let's split the node and add a new child
-    if (len < prefix.length) {
-      node = currentNode.split(len)
-
-      // if the longest common prefix has the same length of the current path
-      // the handler should be added to the current node, to a child otherwise
-      if (len === path.length) {
-        assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
-        currentNode.addHandler(handler, params, store, constraints)
-        currentNode.kind = kind
-      } else {
-        node = new Node({
-          method: method,
-          prefix: path.slice(len),
-          kind: kind,
-          handlers: null,
-          regex: regex,
-          constrainer: this.constrainer
-        })
-        node.addHandler(handler, params, store, constraints)
-        currentNode.addChild(node)
-      }
-
-    // the longest common prefix is smaller than the path length,
-    // but is higher than the prefix
-    } else if (len < path.length) {
-      // remove the prefix
-      path = path.slice(len)
-      // check if there is a child with the label extracted from the new path
-      if (path.charCodeAt(0) === 58) {
-        if (path.charCodeAt(1) === 58) {
-          node = currentNode.staticChildren[':']
-        } else {
-          node = currentNode.parametricChild
-        }
-      } else if (path.charCodeAt(0) === 42) {
-        node = currentNode.wildcardChild
-      } else {
-        node = currentNode.staticChildren[path[0]]
-      }
-
-      // there is a child within the given label, we must go deepen in the tree
-      if (node) {
-        currentNode = node
+  const params = []
+  for (let i = 0; i <= path.length; i++) {
+    // search for parametric or wildcard routes
+    // parametric route
+    if (path.charCodeAt(i) === 58) {
+      if (path.charCodeAt(i + 1) === 58) {
+        // It's a double colon. Let's just replace it with a single colon and go ahead
+        path = path.slice(0, i) + path.slice(i + 1)
         continue
       }
 
-      for (let i = 0; i < path.length; i++) {
-        if (path.charCodeAt(i) === 58 && path.charCodeAt(i + 1) === 58) {
-          path = path.slice(0, i) + path.slice(i + 1)
+      // add the static part of the route to the tree
+      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex, i), NODE_TYPES.STATIC, null)
+
+      const paramStartIndex = i + 1
+
+      const regexps = []
+      let nodeType = NODE_TYPES.PARAM
+      let lastParamStartIndex = paramStartIndex
+
+      for (let j = paramStartIndex; ; j++) {
+        const charCode = path.charCodeAt(j)
+
+        if (charCode === 40 || charCode === 45 || charCode === 46) {
+          nodeType = NODE_TYPES.REGEX
+
+          const paramName = path.slice(lastParamStartIndex, j)
+          params.push(paramName)
+
+          if (charCode === 40) {
+            const endOfRegexIndex = getClosingParenthensePosition(path, j)
+            const regexString = path.slice(j, endOfRegexIndex + 1)
+
+            if (!this.allowUnsafeRegex) {
+              assert(isRegexSafe(new RegExp(regexString)), `The regex '${regexString}' is not safe!`)
+            }
+
+            regexps.push(trimRegExpStartAndEnd(regexString))
+
+            j = endOfRegexIndex + 1
+          } else {
+            regexps.push('(.*?)')
+          }
+
+          let lastParamEndIndex = j
+          for (; lastParamEndIndex < path.length; lastParamEndIndex++) {
+            const charCode = path.charCodeAt(lastParamEndIndex)
+            if (charCode === 58 || charCode === 47) {
+              break
+            }
+          }
+
+          const staticPart = path.slice(j, lastParamEndIndex)
+          if (staticPart) {
+            regexps.push(escapeRegExp(staticPart))
+          }
+
+          lastParamStartIndex = lastParamEndIndex + 1
+          j = lastParamEndIndex
+        } else if (charCode === 47 || j === path.length) {
+          const paramName = path.slice(lastParamStartIndex, j)
+          params.push(paramName)
+
+          if (regexps.length !== 0) {
+            regexps.push('(.*?)')
+          }
+        }
+
+        if (path.charCodeAt(j) === 47 || j === path.length) {
+          path = path.slice(0, paramStartIndex) + path.slice(j)
+          break
         }
       }
 
-      // there are not children within the given label, let's create a new one!
-      node = new Node({ method: method, prefix: path, kind: kind, handlers: null, regex: regex, constrainer: this.constrainer })
-      node.addHandler(handler, params, store, constraints)
-      currentNode.addChild(node)
+      let regex = null
+      if (nodeType === NODE_TYPES.REGEX) {
+        regex = new RegExp('^' + regexps.join('') + '$')
+      }
 
-    // the node already exist
-    } else if (handler) {
-      assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${route}' with constraints '${JSON.stringify(constraints)}'`)
-      currentNode.addHandler(handler, params, store, constraints)
+      currentNode = this._insert(currentNode, method, ':', nodeType, regex)
+      parentNodePathIndex = i + 1
+    // wildcard route
+    } else if (path.charCodeAt(i) === 42) {
+      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex, i), NODE_TYPES.STATIC, null)
+      // add the wildcard parameter
+      params.push('*')
+      currentNode = this._insert(currentNode, method, path.slice(i), NODE_TYPES.MATCH_ALL, null)
+      break
+    } else if (i === path.length && i !== parentNodePathIndex) {
+      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex), NODE_TYPES.STATIC, null)
     }
-    return
   }
+
+  assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
+  currentNode.addHandler(handler, params, store, constraints)
+}
+
+Router.prototype._insert = function _insert (currentNode, method, path, kind, regex) {
+  if (!this.caseSensitive) {
+    path = path.toLowerCase()
+  }
+
+  let childNode = currentNode.getChildByLabel(path.charAt(0), kind)
+  while (childNode) {
+    currentNode = childNode
+
+    let i = 0
+    for (; i < currentNode.prefix.length; i++) {
+      if (path.charCodeAt(i) !== currentNode.prefix.charCodeAt(i)) {
+        currentNode.split(i)
+        break
+      }
+    }
+    path = path.slice(i)
+    childNode = currentNode.getChildByLabel(path.charAt(0), kind)
+  }
+
+  if (path.length > 0) {
+    const node = new Node({ method, prefix: path, kind, handlers: null, regex, constrainer: this.constrainer })
+    currentNode.addChild(node)
+    currentNode = node
+  }
+
+  return currentNode
 }
 
 Router.prototype.reset = function reset () {
@@ -516,52 +464,12 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       continue
     }
 
-    let paramEndIndex = pathIndex
+    let paramEndIndex = kind === NODE_TYPES.MATCH_ALL ? pathLen : pathIndex
 
-    // parametric route
-    if (kind === NODE_TYPES.PARAM) {
-      for (; paramEndIndex < pathLen; paramEndIndex++) {
-        if (path.charCodeAt(paramEndIndex) === 47) {
-          break
-        }
+    for (; paramEndIndex < pathLen; paramEndIndex++) {
+      if (path.charCodeAt(paramEndIndex) === 47) {
+        break
       }
-    }
-
-    // wildcard route
-    if (kind === NODE_TYPES.MATCH_ALL) {
-      paramEndIndex = pathLen
-    }
-
-    // parametric(regex) route
-    if (kind === NODE_TYPES.REGEX) {
-      for (; paramEndIndex < pathLen; paramEndIndex++) {
-        if (path.charCodeAt(paramEndIndex) === 47) {
-          break
-        }
-      }
-      if (!node.regex.test(path.slice(pathIndex, paramEndIndex))) {
-        return null
-      }
-    }
-
-    // multiparametric route
-    if (kind === NODE_TYPES.MULTI_PARAM) {
-      if (node.regex !== null) {
-        const matchedParameter = node.regex.exec(path.slice(pathIndex))
-        if (matchedParameter === null) return null
-        paramEndIndex = pathIndex + matchedParameter[1].length
-      } else {
-        for (; paramEndIndex < pathLen; paramEndIndex++) {
-          const charCode = path.charCodeAt(paramEndIndex)
-          if (charCode === 47 || charCode === 45 || charCode === 46) {
-            break
-          }
-        }
-      }
-    }
-
-    if (paramEndIndex > pathIndex + maxParamLength) {
-      return null
     }
 
     const decoded = sanitizedUrl.sliceParameter(pathIndex, paramEndIndex)
@@ -569,7 +477,31 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       return this._onBadUrl(path.slice(pathIndex, paramEndIndex))
     }
 
-    params.push(decoded)
+    if (
+      kind === NODE_TYPES.PARAM ||
+      kind === NODE_TYPES.MATCH_ALL
+    ) {
+      if (decoded.length > maxParamLength) {
+        return null
+      }
+      params.push(decoded)
+    }
+
+    if (kind === NODE_TYPES.REGEX) {
+      const matchedParameters = node.regex.exec(decoded)
+      if (matchedParameters === null) {
+        return null
+      }
+
+      for (let i = 1; i < matchedParameters.length; i++) {
+        const param = matchedParameters[i]
+        if (param.length > maxParamLength) {
+          return null
+        }
+        params.push(param)
+      }
+    }
+
     pathIndex = paramEndIndex
   }
 }
@@ -635,6 +567,23 @@ Router.prototype.all = function (path, handler, store) {
 }
 
 module.exports = Router
+
+function escapeRegExp (string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function trimRegExpStartAndEnd (regexString) {
+  // removes chars that marks start "^" and end "$" of regexp
+  if (regexString.charCodeAt(1) === 94) {
+    regexString = regexString.slice(0, 1) + regexString.slice(2)
+  }
+
+  if (regexString.charCodeAt(regexString.length - 2) === 36) {
+    regexString = regexString.slice(0, regexString.length - 2) + regexString.slice(regexString.length - 1)
+  }
+
+  return regexString
+}
 
 function getClosingParenthensePosition (path, idx) {
   // `path.indexOf()` will always return the first position of the closing parenthese,

@@ -7,9 +7,7 @@ const types = {
   STATIC: 0,
   PARAM: 1,
   MATCH_ALL: 2,
-  REGEX: 3,
-  // It's used for a parameter, that is followed by another parameter in the same part
-  MULTI_PARAM: 4
+  REGEX: 3
 }
 
 function Node (options) {
@@ -48,7 +46,6 @@ Node.prototype.addChild = function (node) {
       break
     case this.types.PARAM:
     case this.types.REGEX:
-    case this.types.MULTI_PARAM:
       assert(this.parametricChild === null, 'There is already a parametric child')
       this.parametricChild = node
       break
@@ -144,6 +141,22 @@ Node.prototype.split = function (length) {
   this.reset(this.prefix.slice(0, length))
   this.addChild(newChild)
   return newChild
+}
+
+Node.prototype.getChildByLabel = function (label, kind) {
+  if (label.length === 0) {
+    return null
+  }
+
+  switch (kind) {
+    case this.types.STATIC:
+      return this.staticChildren[label]
+    case this.types.MATCH_ALL:
+      return this.wildcardChild
+    case this.types.PARAM:
+    case this.types.REGEX:
+      return this.parametricChild
+  }
 }
 
 Node.prototype.findStaticMatchingChild = function (path, pathIndex) {
