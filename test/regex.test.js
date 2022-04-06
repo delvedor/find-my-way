@@ -34,6 +34,23 @@ test('route without matching regex', t => {
   findMyWay.lookup({ method: 'GET', url: '/test/test', headers: {} }, null)
 })
 
+test('route with an extension regex 2', t => {
+  t.plan(2)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req) => {
+      t.fail(`route not matched: ${req.url}`)
+    }
+  })
+  findMyWay.on('GET', '/test/S/:file(^\\S+).png', () => {
+    t.ok('regex match')
+  })
+  findMyWay.on('GET', '/test/D/:file(^\\D+).png', () => {
+    t.ok('regex match')
+  })
+  findMyWay.lookup({ method: 'GET', url: '/test/S/foo.png', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/D/foo.png', headers: {} }, null)
+})
+
 test('nested route with matching regex', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
