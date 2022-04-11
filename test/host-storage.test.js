@@ -25,29 +25,3 @@ t.test('exact host matches take precendence over regexp matches', async (t) => {
   t.equal(storage.get('bar.fastify.io'), 'wildcard')
   t.equal(storage.get('auth.fastify.io'), 'exact')
 })
-
-t.test('exact host matches can be removed', async (t) => {
-  const storage = acceptHostStrategy.storage()
-  storage.set('fastify.io', true)
-  t.equal(storage.get('fastify.io'), true)
-  storage.del('fastify.io')
-  t.equal(storage.get('fastify.io'), undefined)
-})
-
-t.test('regexp host matches can be removed', async (t) => {
-  const storage = acceptHostStrategy.storage()
-  t.equal(storage.get('fastify.io'), undefined)
-  storage.set(/.+fastify\.io/, true)
-  t.equal(storage.get('foo.fastify.io'), true)
-  storage.del(/.+fastify\.io/)
-  t.equal(storage.get('foo.fastify.io'), undefined)
-})
-
-t.test('storage can be emptied', async (t) => {
-  const storage = acceptHostStrategy.storage()
-  storage.set(/.+fastify\.io/, 'wildcard')
-  storage.set('auth.fastify.io', 'exact')
-  storage.empty()
-  t.equal(storage.get('fastify.io'), undefined)
-  t.equal(storage.get('foo.fastify.io'), undefined)
-})

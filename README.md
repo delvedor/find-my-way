@@ -161,9 +161,7 @@ const customResponseTypeStrategy = {
     let handlers = {}
     return {
       get: (type) => { return handlers[type] || null },
-      set: (type, store) => { handlers[type] = store },
-      del: (type) => { delete handlers[type] },
-      empty: () => { handlers = {} }
+      set: (type, store) => { handlers[type] = store }
     }
   },
   // function to get the value of the constraint from each incoming request
@@ -205,9 +203,7 @@ const customVersioning = {
     let versions = {}
     return {
       get: (version) => { return versions[version] || null },
-      set: (version, store) => { versions[version] = store },
-      del: (version) => { delete versions[version] },
-      empty: () => { versions = {} }
+      set: (version, store) => { versions[version] = store }
     }
   },
   deriveConstraint: (req, ctx) => {
@@ -494,7 +490,7 @@ console.log(findMyWay.prettyPrint({ commonPrefix: false }))
 //     └── update (PUT)
 ```
 
-To include a display of the `store` data passed to individual routes, the 
+To include a display of the `store` data passed to individual routes, the
 option `includeMeta` may be passed. If set to `true` all items will be
 displayed, this can also be set to an array specifying which keys (if
 present) should be displayed. This information can be further sanitized
