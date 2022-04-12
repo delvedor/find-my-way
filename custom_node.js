@@ -34,37 +34,6 @@ Object.defineProperty(Node.prototype, 'types', {
   value: types
 })
 
-Node.prototype.addChild = function (node) {
-  const label = node.prefix[0]
-  switch (node.kind) {
-    case this.types.STATIC:
-      assert(
-        this.staticChildren[label] === undefined,
-        `There is already a child with label '${label}'`
-      )
-      this.staticChildren[label] = node
-      break
-    case this.types.PARAM:
-    case this.types.REGEX:
-      assert(this.parametricChild === null, 'There is already a parametric child')
-      this.parametricChild = node
-      break
-    case this.types.MATCH_ALL:
-      assert(this.wildcardChild === null, 'There is already a wildcard child')
-      this.wildcardChild = node
-      break
-    default:
-      throw new Error(`Unknown node kind: ${node.kind}`)
-  }
-
-  this.numberOfChildren++
-
-  this._saveParametricBrother()
-  this._saveWildcardBrother()
-
-  return this
-}
-
 Node.prototype._saveParametricBrother = function () {
   let parametricBrother = this.parametricBrother
   if (this.parametricChild !== null) {
@@ -76,7 +45,7 @@ Node.prototype._saveParametricBrother = function () {
   if (parametricBrother) {
     for (const child of Object.values(this.staticChildren)) {
       child.parametricBrother = parametricBrother
-      child._saveParametricBrother(parametricBrother)
+      child._saveParametricBrother()
     }
   }
 }
@@ -92,7 +61,7 @@ Node.prototype._saveWildcardBrother = function () {
   if (wildcardBrother) {
     for (const child of Object.values(this.staticChildren)) {
       child.wildcardBrother = wildcardBrother
-      child._saveWildcardBrother(wildcardBrother)
+      child._saveWildcardBrother()
     }
     if (this.parametricChild !== null) {
       this.parametricChild.wildcardBrother = wildcardBrother
@@ -116,7 +85,7 @@ Node.prototype.reset = function (prefix) {
 }
 
 Node.prototype.split = function (length) {
-  const newChild = new Node(
+  const staticChild = new Node(
     {
       prefix: this.prefix.slice(length),
       staticChildren: this.staticChildren,
@@ -131,32 +100,85 @@ Node.prototype.split = function (length) {
   )
 
   if (this.wildcardChild !== null) {
-    newChild.wildcardChild = this.wildcardChild
+    staticChild.wildcardChild = this.wildcardChild
   }
 
   if (this.parametricChild !== null) {
-    newChild.parametricChild = this.parametricChild
+    staticChild.parametricChild = this.parametricChild
   }
 
   this.reset(this.prefix.slice(0, length))
-  this.addChild(newChild)
-  return newChild
+
+  const label = staticChild.prefix.charAt(0)
+  this.staticChildren[label] = staticChild
+
+  this.numberOfChildren++
+
+  this._saveParametricBrother()
+  this._saveWildcardBrother()
+
+  return staticChild
 }
 
-Node.prototype.getChildByLabel = function (label, kind) {
-  if (label.length === 0) {
-    return null
+Node.prototype.insertStaticNode = function (path) {
+  if (path.length === 0) {
+    return this
   }
 
-  switch (kind) {
-    case this.types.STATIC:
-      return this.staticChildren[label]
-    case this.types.MATCH_ALL:
-      return this.wildcardChild
-    case this.types.PARAM:
-    case this.types.REGEX:
-      return this.parametricChild
+  let staticChild = this.staticChildren[path.charAt(0)]
+  if (staticChild) {
+    let i = 0
+    for (; i < staticChild.prefix.length; i++) {
+      if (path.charCodeAt(i) !== staticChild.prefix.charCodeAt(i)) {
+        staticChild.split(i)
+        break
+      }
+    }
+    return staticChild.insertStaticNode(path.slice(i))
   }
+
+  staticChild = new Node({ method: this.method, prefix: path, kind: types.STATIC, constrainer: this.constrainer })
+
+  const label = path.charAt(0)
+  this.staticChildren[label] = staticChild
+  this.numberOfChildren++
+
+  this._saveParametricBrother()
+  this._saveWildcardBrother()
+
+  return staticChild
+}
+
+Node.prototype.insertParametricNode = function (regex) {
+  if (this.parametricChild) {
+    return this.parametricChild
+  }
+
+  const kind = regex ? types.REGEX : types.PARAM
+  const parametricChild = new Node({ method: this.method, prefix: ':', kind, regex, constrainer: this.constrainer })
+
+  this.parametricChild = parametricChild
+  this.numberOfChildren++
+
+  this._saveParametricBrother()
+  this._saveWildcardBrother()
+
+  return parametricChild
+}
+
+Node.prototype.insertWildcardNode = function () {
+  if (this.wildcardChild) {
+    return this.wildcardChild
+  }
+
+  const wildcardChild = new Node({ method: this.method, prefix: '*', kind: types.MATCH_ALL, constrainer: this.constrainer })
+
+  this.wildcardChild = wildcardChild
+  this.numberOfChildren++
+
+  this._saveWildcardBrother()
+
+  return wildcardChild
 }
 
 Node.prototype.findStaticMatchingChild = function (path, pathIndex) {
