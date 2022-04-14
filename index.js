@@ -295,7 +295,7 @@ Router.prototype.reset = function reset () {
   this.routes = []
 }
 
-Router.prototype.off = function off (method, path) {
+Router.prototype.off = function off (method, path, derivedConstraints) {
   var self = this
 
   if (Array.isArray(method)) {
@@ -320,23 +320,30 @@ Router.prototype.off = function off (method, path) {
     const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
     const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
 
-    this.off(method, pathFull)
-    this.off(method, pathOptional)
+    this.off(method, pathFull, derivedConstraints)
+    this.off(method, pathOptional, derivedConstraints)
     return
+  }
+
+  function matcher (currentConstraints = {}) {
+    if (!derivedConstraints) return true
+
+    return Object.keys(derivedConstraints)
+      .every((key) => derivedConstraints[key] === currentConstraints[key])
   }
 
   // Rebuild tree without the specific route
   const ignoreTrailingSlash = this.ignoreTrailingSlash
   var newRoutes = self.routes.filter(function (route) {
     if (!ignoreTrailingSlash) {
-      return !(method === route.method && path === route.path)
+      return !(method === route.method && path === route.path && matcher(route.opts?.constraints))
     }
     if (path.endsWith('/')) {
       const routeMatches = path === route.path || path.slice(0, -1) === route.path
-      return !(method === route.method && routeMatches)
+      return !(method === route.method && routeMatches && matcher(route.opts?.constraints))
     }
     const routeMatches = path === route.path || (path + '/') === route.path
-    return !(method === route.method && routeMatches)
+    return !(method === route.method && routeMatches && matcher(route.opts?.constraints))
   })
   if (ignoreTrailingSlash) {
     newRoutes = newRoutes.filter(function (route, i, ar) {
