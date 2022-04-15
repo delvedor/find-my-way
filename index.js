@@ -28,6 +28,7 @@
 const assert = require('assert')
 const http = require('http')
 const isRegexSafe = require('safe-regex2')
+const deepEqual = require('fast-deep-equal')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
 const Node = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
@@ -295,7 +296,7 @@ Router.prototype.reset = function reset () {
   this.routes = []
 }
 
-Router.prototype.off = function off (method, path, derivedConstraints) {
+Router.prototype.off = function off (method, path, opts) {
   var self = this
 
   if (Array.isArray(method)) {
@@ -320,30 +321,29 @@ Router.prototype.off = function off (method, path, derivedConstraints) {
     const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
     const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
 
-    this.off(method, pathFull, derivedConstraints)
-    this.off(method, pathOptional, derivedConstraints)
+    this.off(method, pathFull, opts)
+    this.off(method, pathOptional, opts)
     return
   }
 
-  function matcher (currentConstraints = {}) {
-    if (!derivedConstraints) return true
+  function matcher (currentConstraints) {
+    if (!opts || !currentConstraints) return true
 
-    return Object.keys(derivedConstraints)
-      .every((key) => derivedConstraints[key] === currentConstraints[key])
+    return deepEqual(opts, currentConstraints)
   }
 
   // Rebuild tree without the specific route
   const ignoreTrailingSlash = this.ignoreTrailingSlash
   var newRoutes = self.routes.filter(function (route) {
     if (!ignoreTrailingSlash) {
-      return !(method === route.method && path === route.path && matcher(route.opts?.constraints))
+      return !(method === route.method && path === route.path && matcher(route.opts.constraints))
     }
     if (path.endsWith('/')) {
       const routeMatches = path === route.path || path.slice(0, -1) === route.path
-      return !(method === route.method && routeMatches && matcher(route.opts?.constraints))
+      return !(method === route.method && routeMatches && matcher(route.opts.constraints))
     }
     const routeMatches = path === route.path || (path + '/') === route.path
-    return !(method === route.method && routeMatches && matcher(route.opts?.constraints))
+    return !(method === route.method && routeMatches && matcher(route.opts.constraints))
   })
   if (ignoreTrailingSlash) {
     newRoutes = newRoutes.filter(function (route, i, ar) {
