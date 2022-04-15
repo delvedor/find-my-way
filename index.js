@@ -166,29 +166,34 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
   const params = []
   for (let i = 0; i <= path.length; i++) {
-    // search for parametric or wildcard routes
-    // parametric route
-    if (path.charCodeAt(i) === 58) {
-      if (path.charCodeAt(i + 1) === 58) {
-        // It's a double colon. Let's just replace it with a single colon and go ahead
-        path = path.slice(0, i) + path.slice(i + 1)
-        continue
+    if (path.charCodeAt(i) === 58 && path.charCodeAt(i + 1) === 58) {
+      // It's a double colon. Let's just replace it with a single colon and go ahead
+      path = path.slice(0, i) + path.slice(i + 1)
+      continue
+    }
+
+    const isParametricNode = path.charCodeAt(i) === 58
+    const isWildcardNode = path.charCodeAt(i) === 42
+
+    if (isParametricNode || isWildcardNode || (i === path.length && i !== parentNodePathIndex)) {
+      let staticNodePath = path.slice(parentNodePathIndex, i)
+      if (!this.caseSensitive) {
+        staticNodePath = staticNodePath.toLowerCase()
       }
-
       // add the static part of the route to the tree
-      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex, i), NODE_TYPES.STATIC, null)
+      currentNode = currentNode.insertStaticNode(staticNodePath)
+    }
 
-      const paramStartIndex = i + 1
-
+    if (isParametricNode) {
+      let isRegexNode = false
       const regexps = []
-      let nodeType = NODE_TYPES.PARAM
-      let lastParamStartIndex = paramStartIndex
 
-      for (let j = paramStartIndex; ; j++) {
+      let lastParamStartIndex = i + 1
+      for (let j = lastParamStartIndex; ; j++) {
         const charCode = path.charCodeAt(j)
 
         if (charCode === 40 || charCode === 45 || charCode === 46) {
-          nodeType = NODE_TYPES.REGEX
+          isRegexNode = true
 
           const paramName = path.slice(lastParamStartIndex, j)
           params.push(paramName)
@@ -233,61 +238,28 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         }
 
         if (path.charCodeAt(j) === 47 || j === path.length) {
-          path = path.slice(0, paramStartIndex) + path.slice(j)
+          path = path.slice(0, i + 1) + path.slice(j)
           break
         }
       }
 
       let regex = null
-      if (nodeType === NODE_TYPES.REGEX) {
+      if (isRegexNode) {
         regex = new RegExp('^' + regexps.join('') + '$')
       }
 
-      currentNode = this._insert(currentNode, method, ':', nodeType, regex)
+      currentNode = currentNode.insertParametricNode(regex)
       parentNodePathIndex = i + 1
-    // wildcard route
-    } else if (path.charCodeAt(i) === 42) {
-      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex, i), NODE_TYPES.STATIC, null)
+    } else if (isWildcardNode) {
       // add the wildcard parameter
       params.push('*')
-      currentNode = this._insert(currentNode, method, path.slice(i), NODE_TYPES.MATCH_ALL, null)
-      break
-    } else if (i === path.length && i !== parentNodePathIndex) {
-      currentNode = this._insert(currentNode, method, path.slice(parentNodePathIndex), NODE_TYPES.STATIC, null)
+      currentNode = currentNode.insertWildcardNode()
+      parentNodePathIndex = i + 1
     }
   }
 
   assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
   currentNode.addHandler(handler, params, store, constraints)
-}
-
-Router.prototype._insert = function _insert (currentNode, method, path, kind, regex) {
-  if (!this.caseSensitive) {
-    path = path.toLowerCase()
-  }
-
-  let childNode = currentNode.getChildByLabel(path.charAt(0), kind)
-  while (childNode) {
-    currentNode = childNode
-
-    let i = 0
-    for (; i < currentNode.prefix.length; i++) {
-      if (path.charCodeAt(i) !== currentNode.prefix.charCodeAt(i)) {
-        currentNode.split(i)
-        break
-      }
-    }
-    path = path.slice(i)
-    childNode = currentNode.getChildByLabel(path.charAt(0), kind)
-  }
-
-  if (path.length > 0) {
-    const node = new Node({ method, prefix: path, kind, handlers: null, regex, constrainer: this.constrainer })
-    currentNode.addChild(node)
-    currentNode = node
-  }
-
-  return currentNode
 }
 
 Router.prototype.reset = function reset () {
