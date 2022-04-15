@@ -29,11 +29,11 @@ const assert = require('assert')
 const http = require('http')
 const isRegexSafe = require('safe-regex2')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
-const Node = require('./custom_node')
+const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
 const sanitizeUrl = require('./lib/url-sanitizer')
+const HandlerStorage = require('./handler_storage')
 
-const NODE_TYPES = Node.prototype.types
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 const OPTIONAL_PARAM_REGEXP = /(\/:[^/()]*?)\?(\/?)/
@@ -82,9 +82,11 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  this.constrainer = new Constrainer(opts.constraints)
-  this.trees = {}
   this.routes = []
+  this.trees = {}
+
+  this.constrainer = new Constrainer(opts.constraints)
+  HandlerStorage.prototype.constrainer = this.constrainer
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -152,17 +154,18 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   this.routes.push({ method, path, opts, handler, store })
 
   // Boot the tree for this method if it doesn't exist yet
+  if (this.trees[method] === undefined) {
+    this.trees[method] = new StaticNode('/')
+  }
+
+  if (path === '*' && this.trees[method].prefix.length !== 0) {
+    const currentRoot = this.trees[method]
+    this.trees[method] = new StaticNode('')
+    this.trees[method].staticChildren['/'] = currentRoot
+  }
+
   let currentNode = this.trees[method]
-  if (typeof currentNode === 'undefined') {
-    currentNode = new Node({ method: method, constrainer: this.constrainer })
-    this.trees[method] = currentNode
-  }
-
-  if (!path.startsWith('/') && currentNode.prefix !== '') {
-    currentNode.split(0)
-  }
-
-  let parentNodePathIndex = this.trees[method].prefix.length
+  let parentNodePathIndex = currentNode.prefix.length
 
   const params = []
   for (let i = 0; i <= path.length; i++) {
@@ -181,7 +184,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         staticNodePath = staticNodePath.toLowerCase()
       }
       // add the static part of the route to the tree
-      currentNode = currentNode.insertStaticNode(staticNodePath)
+      currentNode = currentNode.createStaticChild(staticNodePath)
     }
 
     if (isParametricNode) {
@@ -248,18 +251,18 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         regex = new RegExp('^' + regexps.join('') + '$')
       }
 
-      currentNode = currentNode.insertParametricNode(regex)
+      currentNode = currentNode.createParametricChild(regex)
       parentNodePathIndex = i + 1
     } else if (isWildcardNode) {
       // add the wildcard parameter
       params.push('*')
-      currentNode = currentNode.insertWildcardNode()
+      currentNode = currentNode.createWildcardChild()
       parentNodePathIndex = i + 1
     }
   }
 
-  assert(!currentNode.getHandler(constraints), `Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
-  currentNode.addHandler(handler, params, store, constraints)
+  assert(!currentNode.handlerStorage.getHandler(constraints), `Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
+  currentNode.handlerStorage.addHandler(handler, params, store, constraints)
 }
 
 Router.prototype.reset = function reset () {
@@ -366,7 +369,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   while (true) {
     // found the route
     if (pathIndex === pathLen) {
-      const handle = currentNode.getMatchingHandler(derivedConstraints)
+      const handle = currentNode.handlerStorage.getMatchingHandler(derivedConstraints)
 
       if (handle !== null && handle !== undefined) {
         const paramsObj = {}
@@ -386,36 +389,45 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       }
     }
 
-    let node = currentNode.findStaticMatchingChild(path, pathIndex)
+    let node = null
 
-    if (currentNode.parametricChild !== null) {
-      if (node === null) {
-        node = currentNode.parametricChild
-      } else {
-        parametricBrothersStack.push({
-          brotherPathIndex: pathIndex,
-          paramsCount: params.length
-        })
-      }
-    }
+    if (
+      currentNode.kind === NODE_TYPES.STATIC ||
+      currentNode.kind === NODE_TYPES.PARAMETRIC
+    ) {
+      node = currentNode.findStaticMatchingChild(path, pathIndex)
 
-    if (currentNode.wildcardChild !== null) {
-      if (node === null) {
-        node = currentNode.wildcardChild
-      } else {
-        wildcardBrothersStack.push({
-          brotherPathIndex: pathIndex,
-          paramsCount: params.length
-        })
+      if (currentNode.kind === NODE_TYPES.STATIC) {
+        if (currentNode.parametricChild !== null) {
+          if (node === null) {
+            node = currentNode.parametricChild
+          } else {
+            parametricBrothersStack.push({
+              brotherPathIndex: pathIndex,
+              paramsCount: params.length,
+              brotherNode: currentNode.parametricChild
+            })
+          }
+        }
+
+        if (currentNode.wildcardChild !== null) {
+          if (node === null) {
+            node = currentNode.wildcardChild
+          } else {
+            wildcardBrothersStack.push({
+              brotherPathIndex: pathIndex,
+              paramsCount: params.length,
+              brotherNode: currentNode.wildcardChild
+            })
+          }
+        }
       }
     }
 
     if (node === null) {
       let brotherNodeState
-      node = currentNode.parametricBrother
-      if (node === null) {
-        node = currentNode.wildcardBrother
-        if (node === null) {
+      if (parametricBrothersStack.length === 0) {
+        if (wildcardBrothersStack.length === 0) {
           return null
         }
         brotherNodeState = wildcardBrothersStack.pop()
@@ -425,56 +437,67 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
       pathIndex = brotherNodeState.brotherPathIndex
       params.splice(brotherNodeState.paramsCount)
+      node = brotherNodeState.brotherNode
     }
 
     currentNode = node
-    const kind = node.kind
 
     // static route
-    if (kind === NODE_TYPES.STATIC) {
-      pathIndex += node.prefix.length
+    if (currentNode.kind === NODE_TYPES.STATIC) {
+      pathIndex += currentNode.prefix.length
       continue
     }
 
-    let paramEndIndex = kind === NODE_TYPES.MATCH_ALL ? pathLen : pathIndex
-
-    for (; paramEndIndex < pathLen; paramEndIndex++) {
-      if (path.charCodeAt(paramEndIndex) === 47) {
-        break
+    if (currentNode.kind === NODE_TYPES.WILDCARD) {
+      const decoded = sanitizedUrl.sliceParameter(pathIndex)
+      if (decoded === null) {
+        return this._onBadUrl(path.slice(pathIndex))
       }
-    }
 
-    const decoded = sanitizedUrl.sliceParameter(pathIndex, paramEndIndex)
-    if (decoded === null) {
-      return this._onBadUrl(path.slice(pathIndex, paramEndIndex))
-    }
-
-    if (
-      kind === NODE_TYPES.PARAM ||
-      kind === NODE_TYPES.MATCH_ALL
-    ) {
       if (decoded.length > maxParamLength) {
         return null
       }
+
       params.push(decoded)
+      pathIndex = pathLen
+      continue
     }
 
-    if (kind === NODE_TYPES.REGEX) {
-      const matchedParameters = node.regex.exec(decoded)
-      if (matchedParameters === null) {
-        return null
+    if (currentNode.kind === NODE_TYPES.PARAMETRIC) {
+      let paramEndIndex = pathIndex
+      for (; paramEndIndex < pathLen; paramEndIndex++) {
+        if (path.charCodeAt(paramEndIndex) === 47) {
+          break
+        }
       }
 
-      for (let i = 1; i < matchedParameters.length; i++) {
-        const param = matchedParameters[i]
-        if (param.length > maxParamLength) {
+      const decoded = sanitizedUrl.sliceParameter(pathIndex, paramEndIndex)
+      if (decoded === null) {
+        return this._onBadUrl(path.slice(pathIndex, paramEndIndex))
+      }
+
+      if (currentNode.isRegex) {
+        const matchedParameters = currentNode.regex.exec(decoded)
+        if (matchedParameters === null) {
           return null
         }
-        params.push(param)
-      }
-    }
 
-    pathIndex = paramEndIndex
+        for (let i = 1; i < matchedParameters.length; i++) {
+          const param = matchedParameters[i]
+          if (param.length > maxParamLength) {
+            return null
+          }
+          params.push(param)
+        }
+      } else {
+        if (decoded.length > maxParamLength) {
+          return null
+        }
+        params.push(decoded)
+      }
+
+      pathIndex = paramEndIndex
+    }
   }
 }
 
@@ -510,9 +533,10 @@ Router.prototype.prettyPrint = function (opts = {}) {
     children: {}
   }
 
-  for (const node of Object.values(this.trees)) {
+  for (const method in this.trees) {
+    const node = this.trees[method]
     if (node) {
-      flattenNode(root, node)
+      flattenNode(root, node, method)
     }
   }
 

@@ -3,7 +3,6 @@
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
-const Node = require('../custom_node')
 
 test('Nested static parametric route, url with parameter common prefix > 1', t => {
   t.plan(1)
@@ -205,19 +204,4 @@ test('Mixed parametric routes, with last defined route being static', t => {
   t.same(findMyWay.find('GET', '/test/hello/world/test').params, { c: 'world' })
   t.same(findMyWay.find('GET', '/test/hello/world/te').params, { c: 'world', k: 'te' })
   t.same(findMyWay.find('GET', '/test/hello/world/testy').params, { c: 'world', k: 'testy' })
-})
-
-test('parametricBrother of Parent Node, with a parametric child', t => {
-  t.plan(1)
-  const parent = new Node({ prefix: '/a' })
-  parent.insertParametricNode()
-  t.equal(parent.parametricBrother, null)
-})
-
-test('parametricBrother of Parent Node, with a parametric child and a static child', t => {
-  t.plan(1)
-  const parent = new Node({ prefix: '/a' })
-  parent.insertParametricNode()
-  parent.insertStaticNode('/b')
-  t.equal(parent.parametricBrother, null)
 })
