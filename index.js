@@ -117,21 +117,16 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
     return
   }
 
-  const methods = Array.isArray(method) ? method : [method]
-  const paths = [path]
+  const route = path
 
-  if (this.ignoreTrailingSlash && path !== '/' && !path.endsWith('*')) {
-    if (path.endsWith('/')) {
-      paths.push(path.slice(0, -1))
-    } else {
-      paths.push(path + '/')
-    }
+  if (this.ignoreTrailingSlash) {
+    path = trimLastSlash(path)
   }
 
-  for (const path of paths) {
-    for (const method of methods) {
-      this._on(method, path, opts, handler, store)
-    }
+  const methods = Array.isArray(method) ? method : [method]
+  for (const method of methods) {
+    this._on(method, path, opts, handler, store, route)
+    this.routes.push({ method, path, opts, handler, store })
   }
 }
 
@@ -150,8 +145,6 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   this.constrainer.validateConstraints(constraints)
   // Let the constrainer know if any constraints are being used now
   this.constrainer.noteUsage(constraints)
-
-  this.routes.push({ method, path, opts, handler, store })
 
   // Boot the tree for this method if it doesn't exist yet
   if (this.trees[method] === undefined) {
@@ -271,17 +264,6 @@ Router.prototype.reset = function reset () {
 }
 
 Router.prototype.off = function off (method, path) {
-  var self = this
-
-  if (Array.isArray(method)) {
-    return method.map(function (method) {
-      return self.off(method, path)
-    })
-  }
-
-  // method validation
-  assert(typeof method === 'string', 'Method should be a string')
-  assert(httpMethods.indexOf(method) !== -1, `Method '${method}' is not an http method.`)
   // path validation
   assert(typeof path === 'string', 'Path should be a string')
   assert(path.length > 0, 'The path could not be empty')
@@ -300,33 +282,30 @@ Router.prototype.off = function off (method, path) {
     return
   }
 
-  // Rebuild tree without the specific route
-  const ignoreTrailingSlash = this.ignoreTrailingSlash
-  var newRoutes = self.routes.filter(function (route) {
-    if (!ignoreTrailingSlash) {
-      return !(method === route.method && path === route.path)
-    }
-    if (path.endsWith('/')) {
-      const routeMatches = path === route.path || path.slice(0, -1) === route.path
-      return !(method === route.method && routeMatches)
-    }
-    const routeMatches = path === route.path || (path + '/') === route.path
-    return !(method === route.method && routeMatches)
-  })
-  if (ignoreTrailingSlash) {
-    newRoutes = newRoutes.filter(function (route, i, ar) {
-      if (route.path.endsWith('/') && i < ar.length - 1) {
-        return route.path.slice(0, -1) !== ar[i + 1].path
-      } else if (route.path.endsWith('/') === false && i < ar.length - 1) {
-        return (route.path + '/') !== ar[i + 1].path
-      }
-      return true
-    })
+  if (this.ignoreTrailingSlash) {
+    path = trimLastSlash(path)
   }
-  self.reset()
-  newRoutes.forEach(function (route) {
-    self.on(route.method, route.path, route.opts, route.handler, route.store)
-  })
+
+  const methods = Array.isArray(method) ? method : [method]
+  for (const method of methods) {
+    this._off(method, path)
+  }
+}
+
+Router.prototype._off = function _off (method, path) {
+  // method validation
+  assert(typeof method === 'string', 'Method should be a string')
+  assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
+
+  // Rebuild tree without the specific route
+  const newRoutes = this.routes.filter((route) => method !== route.method || path !== route.path)
+  this.reset()
+
+  for (const route of newRoutes) {
+    const { method, path, opts, handler, store } = route
+    this._on(method, path, opts, handler, store)
+    this.routes.push({ method, path, opts, handler, store })
+  }
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
@@ -351,6 +330,10 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = sanitizedUrl.path
   } catch (error) {
     return this._onBadUrl(path)
+  }
+
+  if (this.ignoreTrailingSlash) {
+    path = trimLastSlash(path)
   }
 
   if (this.caseSensitive === false) {
@@ -566,6 +549,13 @@ module.exports = Router
 
 function escapeRegExp (string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function trimLastSlash (path) {
+  if (path.length > 1 && path.charCodeAt(path.length - 1) === 47) {
+    return path.slice(0, -1)
+  }
+  return path
 }
 
 function trimRegExpStartAndEnd (regexString) {
