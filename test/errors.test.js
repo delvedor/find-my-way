@@ -205,7 +205,7 @@ test('Method already declared [ignoreTrailingSlash=true]', t => {
       findMyWay.on('GET', '/test/', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.equal(e.message, 'Method \'GET\' already declared for route \'/test/\' with constraints \'{}\'')
+      t.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
   })
 
@@ -226,7 +226,7 @@ test('Method already declared [ignoreTrailingSlash=true]', t => {
       findMyWay.on('GET', '/test/', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.equal(e.message, 'Method \'GET\' already declared for route \'/test/\' with constraints \'{}\'')
+      t.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
   })
 })
@@ -269,7 +269,7 @@ test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
       findMyWay.on('GET', '/test/hello/', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello/\' with constraints \'{}\'')
+      t.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
   })
 
@@ -305,7 +305,7 @@ test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
       findMyWay.on('GET', '/test/hello/', () => {})
       t.fail('method already declared')
     } catch (e) {
-      t.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello/\' with constraints \'{}\'')
+      t.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
   })
 })

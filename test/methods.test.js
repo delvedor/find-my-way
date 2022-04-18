@@ -148,20 +148,20 @@ test('off removes all routes when ignoreTrailingSlash is true', t => {
   })
 
   findMyWay.on('GET', '/test1/', () => {})
-  t.equal(findMyWay.routes.length, 2)
+  t.equal(findMyWay.routes.length, 1)
 
   findMyWay.on('GET', '/test2', () => {})
-  t.equal(findMyWay.routes.length, 4)
+  t.equal(findMyWay.routes.length, 2)
 
   findMyWay.off('GET', '/test1')
-  t.equal(findMyWay.routes.length, 2)
+  t.equal(findMyWay.routes.length, 1)
   t.equal(
     findMyWay.routes.filter((r) => r.path === '/test2').length,
     1
   )
   t.equal(
     findMyWay.routes.filter((r) => r.path === '/test2/').length,
-    1
+    0
   )
 
   findMyWay.off('GET', '/test2/')
