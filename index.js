@@ -297,7 +297,7 @@ Router.prototype._off = function _off (method, path, opts) {
   // method validation
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
-  
+
   function matcher (currentConstraints) {
     if (!opts || !currentConstraints) return true
 
