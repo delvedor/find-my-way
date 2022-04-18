@@ -384,7 +384,7 @@ router.off(['GET', 'POST'], '/example')
 ```
 
 ##### off(methods, path, [constraints])
-Deregister a route for each `constraints` key is matched, containing keys like the `host` for the request, the `version` for the route to be matched, or other custom constraint values.
+Deregister a route for each `constraints` key is matched, containing keys like the `host` for the request, the `version` for the route to be matched, or other custom constraint values. See the [constraints section](https://github.com/delvedor/find-my-way#constraints) to know more.
 ```js
 router.off('GET', '/example', { host: 'fastify.io' })
 // => [{ handler: Function, params: Object, store: Object}]
