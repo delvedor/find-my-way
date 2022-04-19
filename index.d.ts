@@ -138,7 +138,11 @@ declare namespace Router {
       store: any
     ): void;
 
-    off(method: HTTPMethod | HTTPMethod[], path: string): void;
+    off(
+      method: HTTPMethod | HTTPMethod[],
+      path: string,
+      constraints?: { [key: string]: any }
+    ): void;
 
     lookup<Context>(
       req: Req<V>,
