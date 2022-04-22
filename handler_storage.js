@@ -5,8 +5,6 @@ const deepEqual = require('fast-deep-equal')
 
 class HandlerStorage {
   constructor () {
-    this.constrainer = HandlerStorage.prototype.constrainer
-
     this.handlers = [] // unoptimized list of handler objects for which the fast matcher function will be compiled
     this.hasConstraints = false
     this.compiledHandler = null
@@ -19,14 +17,14 @@ class HandlerStorage {
   }
 
   // This is the hot path for node handler finding -- change with care!
-  getMatchingHandler (derivedConstraints) {
+  getMatchingHandler (constrainer, derivedConstraints) {
     if (derivedConstraints === undefined) {
       return this.unconstrainedHandler
     }
 
     if (this.hasConstraints) {
       // This node is constrained, use the performant precompiled constraint matcher
-      return this._getHandlerMatchingConstraints(derivedConstraints)
+      return this._getHandlerMatchingConstraints(constrainer, derivedConstraints)
     }
 
     // This node doesn't have any handlers that are constrained, so it's handlers probably match. Some requests have constraint values that *must* match however, like version, so check for those before returning it.
@@ -63,9 +61,9 @@ class HandlerStorage {
   }
 
   // Slot for the compiled constraint matching function
-  _getHandlerMatchingConstraints (derivedConstraints) {
+  _getHandlerMatchingConstraints (constrainer, derivedConstraints) {
     if (this.compiledHandler === null) {
-      this.compiledHandler = this._compileGetHandlerMatchingConstraints()
+      this.compiledHandler = this._compileGetHandlerMatchingConstraints(constrainer)
     }
     return this.compiledHandler(derivedConstraints)
   }
@@ -73,8 +71,8 @@ class HandlerStorage {
   // Builds a store object that maps from constraint values to a bitmap of handler indexes which pass the constraint for a value
   // So for a host constraint, this might look like { "fastify.io": 0b0010, "google.ca": 0b0101 }, meaning the 3rd handler is constrainted to fastify.io, and the 2nd and 4th handlers are constrained to google.ca.
   // The store's implementation comes from the strategies provided to the Router.
-  _buildConstraintStore (constraint) {
-    const store = this.constrainer.newStoreForConstraint(constraint)
+  _buildConstraintStore (constrainer, constraint) {
+    const store = constrainer.newStoreForConstraint(constraint)
 
     for (let i = 0; i < this.handlers.length; i++) {
       const handler = this.handlers[i]
@@ -110,7 +108,7 @@ class HandlerStorage {
   // We do this by asking each constraint store which handler indexes match the given constraint value for each store. Trickily, the handlers that a store says match are the handlers constrained by that store, but handlers that aren't constrained at all by that store could still match just fine. So, each constraint store can only describe matches for it, and it won't have any bearing on the handlers it doesn't care about. For this reason, we have to ask each stores which handlers match and track which have been matched (or not cared about) by all of them.
   // We use bitmaps to represent these lists of matches so we can use bitwise operations to implement this efficiently. Bitmaps are cheap to allocate, let us implement this masking behaviour in one CPU instruction, and are quite compact in memory. We start with a bitmap set to all 1s representing every handler that is a match candidate, and then for each constraint, see which handlers match using the store, and then mask the result by the mask of handlers that that store applies to, and bitwise AND with the candidate list. Phew.
   // We consider all this compiling function complexity to be worth it, because the naive implementation that just loops over the handlers asking which stores match is quite a bit slower.
-  _compileGetHandlerMatchingConstraints () {
+  _compileGetHandlerMatchingConstraints (constrainer) {
     this.constrainedHandlerStores = {}
     let constraints = new Set()
     for (const handler of this.handlers) {
@@ -125,7 +123,7 @@ class HandlerStorage {
     constraints.sort((a, b) => a === 'version' ? 1 : 0)
 
     for (const constraint of constraints) {
-      this.constrainedHandlerStores[constraint] = this._buildConstraintStore(constraint)
+      this.constrainedHandlerStores[constraint] = this._buildConstraintStore(constrainer, constraint)
     }
 
     lines.push(`

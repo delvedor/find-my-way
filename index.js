@@ -32,7 +32,6 @@ const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrin
 const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
 const sanitizeUrl = require('./lib/url-sanitizer')
-const HandlerStorage = require('./handler_storage')
 
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
@@ -86,7 +85,6 @@ function Router (opts) {
   this.trees = {}
 
   this.constrainer = new Constrainer(opts.constraints)
-  HandlerStorage.prototype.constrainer = this.constrainer
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -352,7 +350,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   while (true) {
     // found the route
     if (pathIndex === pathLen) {
-      const handle = currentNode.handlerStorage.getMatchingHandler(derivedConstraints)
+      const handle = currentNode.handlerStorage.getMatchingHandler(this.constrainer, derivedConstraints)
 
       if (handle !== null && handle !== undefined) {
         const paramsObj = {}
