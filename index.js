@@ -344,11 +344,9 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   const params = []
   const pathLen = path.length
 
-  const parametricBrothersStack = []
-  const wildcardBrothersStack = []
+  const brothersNodesStack = []
 
   while (true) {
-    // found the route
     if (pathIndex === pathLen) {
       const handle = currentNode.handlerStorage.getMatchingHandler(this.constrainer, derivedConstraints)
 
@@ -379,26 +377,34 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       node = currentNode.findStaticMatchingChild(path, pathIndex)
 
       if (currentNode.kind === NODE_TYPES.STATIC) {
-        if (currentNode.parametricChild !== null) {
-          if (node === null) {
+        if (node === null) {
+          if (currentNode.parametricChild !== null) {
             node = currentNode.parametricChild
-          } else {
-            parametricBrothersStack.push({
-              brotherPathIndex: pathIndex,
-              paramsCount: params.length,
-              brotherNode: currentNode.parametricChild
-            })
-          }
-        }
 
-        if (currentNode.wildcardChild !== null) {
-          if (node === null) {
-            node = currentNode.wildcardChild
+            if (currentNode.wildcardChild !== null) {
+              brothersNodesStack.push({
+                brotherPathIndex: pathIndex,
+                paramsCount: params.length,
+                brotherNode: currentNode.wildcardChild
+              })
+            }
           } else {
-            wildcardBrothersStack.push({
+            node = currentNode.wildcardChild
+          }
+        } else {
+          if (currentNode.wildcardChild !== null) {
+            brothersNodesStack.push({
               brotherPathIndex: pathIndex,
               paramsCount: params.length,
               brotherNode: currentNode.wildcardChild
+            })
+          }
+
+          if (currentNode.parametricChild !== null) {
+            brothersNodesStack.push({
+              brotherPathIndex: pathIndex,
+              paramsCount: params.length,
+              brotherNode: currentNode.parametricChild
             })
           }
         }
@@ -406,16 +412,11 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     }
 
     if (node === null) {
-      let brotherNodeState
-      if (parametricBrothersStack.length === 0) {
-        if (wildcardBrothersStack.length === 0) {
-          return null
-        }
-        brotherNodeState = wildcardBrothersStack.pop()
-      } else {
-        brotherNodeState = parametricBrothersStack.pop()
+      if (brothersNodesStack.length === 0) {
+        return null
       }
 
+      const brotherNodeState = brothersNodesStack.pop()
       pathIndex = brotherNodeState.brotherPathIndex
       params.splice(brotherNodeState.paramsCount)
       node = brotherNodeState.brotherNode
