@@ -9,14 +9,14 @@ const NODE_TYPES = {
 }
 
 class Node {
-  constructor () {
-    this.handlerStorage = new HandlerStorage()
+  constructor (constrainer) {
+    this.handlerStorage = new HandlerStorage(constrainer)
   }
 }
 
 class ParentNode extends Node {
-  constructor () {
-    super()
+  constructor (constrainer) {
+    super(constrainer)
     this.staticChildren = {}
   }
 
@@ -52,14 +52,14 @@ class ParentNode extends Node {
     }
 
     const label = path.charAt(0)
-    this.staticChildren[label] = new StaticNode(path)
+    this.staticChildren[label] = new StaticNode(this.handlerStorage.constrainer, path)
     return this.staticChildren[label]
   }
 }
 
 class StaticNode extends ParentNode {
-  constructor (prefix) {
-    super()
+  constructor (constrainer, prefix) {
+    super(constrainer)
     this.prefix = prefix
     this.wildcardChild = null
     this.parametricChild = null
@@ -71,7 +71,7 @@ class StaticNode extends ParentNode {
       return this.parametricChild
     }
 
-    this.parametricChild = new ParametricNode(regex)
+    this.parametricChild = new ParametricNode(this.handlerStorage.constrainer, regex)
     return this.parametricChild
   }
 
@@ -80,7 +80,7 @@ class StaticNode extends ParentNode {
       return this.wildcardChild
     }
 
-    this.wildcardChild = new WildcardNode()
+    this.wildcardChild = new WildcardNode(this.handlerStorage.constrainer)
     return this.wildcardChild
   }
 
@@ -90,7 +90,7 @@ class StaticNode extends ParentNode {
 
     this.prefix = childPrefix
 
-    const staticNode = new StaticNode(parentPrefix)
+    const staticNode = new StaticNode(this.handlerStorage.constrainer, parentPrefix)
     staticNode.staticChildren[childPrefix.charAt(0)] = this
     parentNode.staticChildren[parentPrefix.charAt(0)] = staticNode
 
@@ -99,8 +99,8 @@ class StaticNode extends ParentNode {
 }
 
 class ParametricNode extends ParentNode {
-  constructor (regex) {
-    super()
+  constructor (constrainer, regex) {
+    super(constrainer)
     this.regex = regex || null
     this.isRegex = !!regex
     this.kind = NODE_TYPES.PARAMETRIC
@@ -108,8 +108,8 @@ class ParametricNode extends ParentNode {
 }
 
 class WildcardNode extends Node {
-  constructor () {
-    super()
+  constructor (constrainer) {
+    super(constrainer)
     this.kind = NODE_TYPES.WILDCARD
   }
 }

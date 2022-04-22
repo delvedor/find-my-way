@@ -4,8 +4,8 @@ const assert = require('assert')
 const deepEqual = require('fast-deep-equal')
 
 class HandlerStorage {
-  constructor () {
-    this.constrainer = HandlerStorage.prototype.constrainer
+  constructor (constrainer) {
+    this.constrainer = constrainer
 
     this.handlers = [] // unoptimized list of handler objects for which the fast matcher function will be compiled
     this.hasConstraints = false

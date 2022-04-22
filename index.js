@@ -32,7 +32,6 @@ const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrin
 const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
 const sanitizeUrl = require('./lib/url-sanitizer')
-const HandlerStorage = require('./handler_storage')
 
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
@@ -86,7 +85,6 @@ function Router (opts) {
   this.trees = {}
 
   this.constrainer = new Constrainer(opts.constraints)
-  HandlerStorage.prototype.constrainer = this.constrainer
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -148,12 +146,12 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
   // Boot the tree for this method if it doesn't exist yet
   if (this.trees[method] === undefined) {
-    this.trees[method] = new StaticNode('/')
+    this.trees[method] = new StaticNode(this.constrainer, '/')
   }
 
   if (path === '*' && this.trees[method].prefix.length !== 0) {
     const currentRoot = this.trees[method]
-    this.trees[method] = new StaticNode('')
+    this.trees[method] = new StaticNode(this.constrainer, '')
     this.trees[method].staticChildren['/'] = currentRoot
   }
 
