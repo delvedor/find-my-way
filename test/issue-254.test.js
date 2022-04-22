@@ -7,8 +7,6 @@ const FindMyWay = require('..')
 test('Constraints should not be overrided when multiple router is created', t => {
   t.plan(1)
 
-  let count = 0
-
   const constraint = {
     name: 'secret',
     storage: function () {
@@ -30,10 +28,7 @@ test('Constraints should not be overrided when multiple router is created', t =>
   FindMyWay()
 
   router1.on('GET', '/', { constraints: { secret: 'alpha' } }, () => {})
-  count++
-
   router1.find('GET', '/', { constraints: { secret: 'alpha' } })
-  count++
 
-  t.equal(count, 2, 'constraints is not overrided')
+  t.pass('constraints is not overrided')
 })
