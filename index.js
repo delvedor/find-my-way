@@ -29,10 +29,10 @@ const assert = require('assert')
 const http = require('http')
 const isRegexSafe = require('safe-regex2')
 const deepEqual = require('fast-deep-equal')
+const fastDecode = require('fast-decode-uri-component')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
 const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
-const sanitizeUrl = require('./lib/url-sanitizer')
 
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
@@ -75,7 +75,6 @@ function Router (opts) {
 
   if (opts.decodeUriParameters) {
     assert(typeof opts.decodeUriParameters === 'function', 'decodeUriParameters must be a function')
-    this.decodeUriParameters = opts.decodeUriParameters
   }
 
   this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
@@ -85,6 +84,7 @@ function Router (opts) {
   this.routes = []
   this.trees = {}
 
+  this.decodeURIComponent = opts.decodeUriParameters || fastDecode
   this.constrainer = new Constrainer(opts.constraints)
 }
 
@@ -175,6 +175,11 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       if (!this.caseSensitive) {
         staticNodePath = staticNodePath.toLowerCase()
       }
+
+      if (opts.encode) {
+        staticNodePath = encodeURI(staticNodePath)
+      }
+
       // add the static part of the route to the tree
       currentNode = currentNode.createStaticChild(staticNodePath)
     }
@@ -216,8 +221,16 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
             }
           }
 
-          const staticPart = path.slice(j, lastParamEndIndex)
+          let staticPart = path.slice(j, lastParamEndIndex)
           if (staticPart) {
+            if (!this.caseSensitive) {
+              staticPart = staticPart.toLowerCase()
+            }
+
+            if (opts.encode) {
+              staticPart = encodeURI(staticPart)
+            }
+
             regexps.push(escapeRegExp(staticPart))
           }
 
@@ -329,17 +342,20 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
 
-  let sanitizedUrl
-  try {
-    sanitizedUrl = sanitizeUrl(path, this.decodeUriParameters)
-    path = sanitizedUrl.path
-  } catch (error) {
-    return this._onBadUrl(path)
+  for (let i = 0; i < path.length; i++) {
+    const charCode = path.charCodeAt(i)
+    // Some systems do not follow RFC and separate the path and query
+    // string with a `;` character (code 59), e.g. `/foo;jsessionid=123456`.
+    // Thus, we need to split on `;` as well as `?` and `#`.
+    if (charCode === 63 || charCode === 59 || charCode === 35) {
+      path = path.slice(0, i)
+    }
   }
 
   if (this.ignoreTrailingSlash) {
     path = trimLastSlash(path)
   }
+  const originPath = path
 
   if (this.caseSensitive === false) {
     path = path.toLowerCase()
@@ -438,51 +454,71 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     }
 
     if (currentNode.kind === NODE_TYPES.WILDCARD) {
-      const decoded = sanitizedUrl.sliceParameter(pathIndex)
-      if (decoded === null) {
-        return this._onBadUrl(path.slice(pathIndex))
+      let shouldDecode = false
+      for (let paramEndIndex = pathIndex; paramEndIndex < pathLen; paramEndIndex++) {
+        if (path.charCodeAt(paramEndIndex) === 37) {
+          shouldDecode = true
+          break
+        }
       }
 
-      if (decoded.length > maxParamLength) {
+      let param = originPath.slice(pathIndex)
+      if (shouldDecode) {
+        param = this.decodeURIComponent(param)
+
+        if (param === null) {
+          return this._onBadUrl(originPath)
+        }
+      }
+
+      if (param.length > maxParamLength) {
         return null
       }
 
-      params.push(decoded)
+      params.push(param)
       pathIndex = pathLen
       continue
     }
 
     if (currentNode.kind === NODE_TYPES.PARAMETRIC) {
       let paramEndIndex = pathIndex
+      let shouldDecode = false
       for (; paramEndIndex < pathLen; paramEndIndex++) {
-        if (path.charCodeAt(paramEndIndex) === 47) {
+        const charCode = path.charCodeAt(paramEndIndex)
+        if (charCode === 47) {
           break
+        } else if (charCode === 37) {
+          shouldDecode = true
         }
       }
 
-      const decoded = sanitizedUrl.sliceParameter(pathIndex, paramEndIndex)
-      if (decoded === null) {
-        return this._onBadUrl(path.slice(pathIndex, paramEndIndex))
+      let param = originPath.slice(pathIndex, paramEndIndex)
+      if (shouldDecode) {
+        param = this.decodeURIComponent(param)
+
+        if (param === null) {
+          return this._onBadUrl(originPath)
+        }
       }
 
       if (currentNode.isRegex) {
-        const matchedParameters = currentNode.regex.exec(decoded)
+        const matchedParameters = currentNode.regex.exec(param)
         if (matchedParameters === null) {
           return null
         }
 
         for (let i = 1; i < matchedParameters.length; i++) {
-          const param = matchedParameters[i]
-          if (param.length > maxParamLength) {
+          const matchedParameter = matchedParameters[i]
+          if (matchedParameter.length > maxParamLength) {
             return null
           }
-          params.push(param)
+          params.push(matchedParameter)
         }
       } else {
-        if (decoded.length > maxParamLength) {
+        if (param.length > maxParamLength) {
           return null
         }
-        params.push(decoded)
+        params.push(param)
       }
 
       pathIndex = paramEndIndex

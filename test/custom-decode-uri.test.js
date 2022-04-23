@@ -25,7 +25,7 @@ test('decodeUriParameters called when needed 1', t => {
     }
   })
 
-  findMyWay.on('GET', '/foo bar', () => {})
+  findMyWay.on('GET', '/foo bar', { encode: true }, () => {})
   findMyWay.on('GET', '/:foo/bar', () => {})
 
   t.ok(findMyWay.find('GET', '/foo%20bar').handler)
@@ -33,12 +33,13 @@ test('decodeUriParameters called when needed 1', t => {
 })
 
 test('decodeUriParameters called when needed 2', t => {
-  t.plan(10)
+  t.plan(11)
 
   const results = [
     'ci%40o',
     'foo%23bar',
-    '%23%F'
+    '%F0%9F%8D%8C',
+    '%23%F0%9F%8D%8C'
   ]
   const findMyWay = FindMyWay({
     decodeUriParameters: (stringToDecode) => {
@@ -50,7 +51,7 @@ test('decodeUriParameters called when needed 2', t => {
   const notCrazy = () => {}
   const paramHandler = () => {}
 
-  findMyWay.on('GET', '/foo bar', notCrazy)
+  findMyWay.on('GET', '/foo bar', { encode: true }, notCrazy)
   findMyWay.on('GET', '/foo#bar', notCrazy)
   findMyWay.on('GET', '/:param/bar', paramHandler)
   findMyWay.on('GET', '/:param', paramHandler)
@@ -61,7 +62,7 @@ test('decodeUriParameters called when needed 2', t => {
 
   const bananaRoute = findMyWay.find('GET', '/%F0%9F%8D%8C')
   t.equal(bananaRoute.handler, paramHandler)
-  t.same(bananaRoute.params, { param: '🍌' })
+  t.same(bananaRoute.params, { param: 'crazy' })
 
   const crazyRoute = findMyWay.find('GET', '/%23%F0%9F%8D%8C')
   t.equal(crazyRoute.handler, paramHandler)

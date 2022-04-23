@@ -317,15 +317,26 @@ In this case you can request `/example/posts` as well as `/example/posts/1`. The
 
 Having a route with multiple parameters may affect negatively the performance, so prefer single parameter approach whenever possible, especially on routes which are on the hot path of your application.
 
+<a name="path-decoding"></a>
+##### Path decoding
+
+If your route contains characters that are not digits (0-9), letters (A-Z, a-z), or a few allowed graphic symbols (; , / ? : @ & = + $ - _ . ! ~ * ' ( ) #) you should [percent-encode](https://www.rfc-editor.org/rfc/rfc3986#section-2.1) your path. You can encode a path by yourself or set encode option.
+```js
+router.on('GET', '/🍌', { encode: true }, (req, res, params) => {}))
+```
+If you set the encode option, the path will be encode with [encodeURI](https://tc39.es/ecma262/multipage/global-object.html#sec-encodeuri-uri) function before inserting.
+
+<a name="path-parameters-decoding"></a>
+##### Path parameters decoding
+
 **Note** that you must encode the parameters containing [reserved characters](https://www.rfc-editor.org/rfc/rfc3986#section-2.2).
 
-If your routes' parameters are not Basic Latin charaters, you may face a performance drop. To avoid it, you can customize the way the parameters are parsed by passing a custom decoding function. Read more about it [here](https://github.com/delvedor/find-my-way/pull/211).
-The parsing function is called when the request URL contains one or more encoded special characters: `# $ & + , / : ; = ? @`.
+If your routes' parameters are not Basic Latin charaters, you may face a performance drop. To avoid it, you can customize the way the parameters are parsed by passing a custom decoding function. Read more about it [here](https://github.com/delvedor/find-my-way/pull/211). The parsing function is called when the request URL contains parameter with one or more [percent-encoded](https://www.rfc-editor.org/rfc/rfc3986#section-2.1) characters.
 
 ```js
 const router = require('find-my-way')({
   decodeUriParameters: (stringToDecode) => {
-    // called when the request URL contains st least one special character: `# $ & + , / : ; = ? @`
+    // called when the request URL parameter contains at least one special percent-encoded character
     return decodeURIComponent(stringToDecode)
   }
 })
