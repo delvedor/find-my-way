@@ -38,7 +38,7 @@
     "pre-commit": "^1.2.2",
     "request": "^2.88.2",
     "standard": "^14.3.4",
-    "tap": "^15.0.9",
+    "tap": "^16.0.1",
     "tap-mocha-reporter": "^5.0.1",
     "tsd": "^0.13.1"
   },
