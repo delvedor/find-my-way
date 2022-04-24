@@ -28,6 +28,7 @@
 const assert = require('assert')
 const http = require('http')
 const isRegexSafe = require('safe-regex2')
+const deepEqual = require('fast-deep-equal')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
 const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
@@ -261,7 +262,7 @@ Router.prototype.reset = function reset () {
   this.routes = []
 }
 
-Router.prototype.off = function off (method, path) {
+Router.prototype.off = function off (method, path, opts) {
   // path validation
   assert(typeof path === 'string', 'Path should be a string')
   assert(path.length > 0, 'The path could not be empty')
@@ -275,8 +276,8 @@ Router.prototype.off = function off (method, path) {
     const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
     const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
 
-    this.off(method, pathFull)
-    this.off(method, pathOptional)
+    this.off(method, pathFull, opts)
+    this.off(method, pathOptional, opts)
     return
   }
 
@@ -286,17 +287,23 @@ Router.prototype.off = function off (method, path) {
 
   const methods = Array.isArray(method) ? method : [method]
   for (const method of methods) {
-    this._off(method, path)
+    this._off(method, path, opts)
   }
 }
 
-Router.prototype._off = function _off (method, path) {
+Router.prototype._off = function _off (method, path, opts) {
   // method validation
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
 
+  function matcher (currentConstraints) {
+    if (!opts || !currentConstraints) return true
+
+    return deepEqual(opts, currentConstraints)
+  }
+
   // Rebuild tree without the specific route
-  const newRoutes = this.routes.filter((route) => method !== route.method || path !== route.path)
+  const newRoutes = this.routes.filter((route) => method !== route.method || path !== route.path || !matcher(route.opts.constraints))
   this.reset()
 
   for (const route of newRoutes) {

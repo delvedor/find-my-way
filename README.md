@@ -374,11 +374,19 @@ router.off('GET', '/example')
 // => null
 ```
 
-##### off(methods[], path, handler, [store])
+##### off(methods[], path)
 Deregister a route for each method specified in the `methods` array.
 It comes handy when you need to deregister multiple routes with the same path but different methods.
 ```js
 router.off(['GET', 'POST'], '/example')
+// => [{ handler: Function, params: Object, store: Object}]
+// => null
+```
+
+##### off(methods, path, [constraints])
+Deregister a route for each `constraints` key is matched, containing keys like the `host` for the request, the `version` for the route to be matched, or other custom constraint values. See the [constraints section](https://github.com/delvedor/find-my-way#constraints) to know more.
+```js
+router.off('GET', '/example', { host: 'fastify.io' })
 // => [{ handler: Function, params: Object, store: Object}]
 // => null
 ```
