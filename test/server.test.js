@@ -3,11 +3,10 @@
 const t = require('tap')
 const test = t.test
 const http = require('http')
-const request = require('request')
 const FindMyWay = require('../')
 
 test('basic router with http server', t => {
-  t.plan(7)
+  t.plan(6)
   const findMyWay = FindMyWay()
   findMyWay.on('GET', '/test', (req, res, params) => {
     t.ok(req)
@@ -24,19 +23,19 @@ test('basic router with http server', t => {
     t.error(err)
     server.unref()
 
-    request({
-      method: 'GET',
-      uri: 'http://localhost:' + server.address().port + '/test'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
+    http.get('http://localhost:' + server.address().port + '/test', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
       t.same(JSON.parse(body), { hello: 'world' })
     })
   })
 })
 
 test('router with params with http server', t => {
-  t.plan(7)
+  t.plan(6)
   const findMyWay = FindMyWay()
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
     t.ok(req)
@@ -53,19 +52,19 @@ test('router with params with http server', t => {
     t.error(err)
     server.unref()
 
-    request({
-      method: 'GET',
-      uri: 'http://localhost:' + server.address().port + '/test/hello'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
+    http.get('http://localhost:' + server.address().port + '/test/hello', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
       t.same(JSON.parse(body), { hello: 'world' })
     })
   })
 })
 
 test('default route', t => {
-  t.plan(3)
+  t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
       res.statusCode = 404
@@ -81,18 +80,14 @@ test('default route', t => {
     t.error(err)
     server.unref()
 
-    request({
-      method: 'GET',
-      uri: 'http://localhost:' + server.address().port
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 404)
+    http.get('http://localhost:' + server.address().port, async (res) => {
+      t.equal(res.statusCode, 404)
     })
   })
 })
 
 test('automatic default route', t => {
-  t.plan(3)
+  t.plan(2)
   const findMyWay = FindMyWay()
 
   const server = http.createServer((req, res) => {
@@ -103,18 +98,14 @@ test('automatic default route', t => {
     t.error(err)
     server.unref()
 
-    request({
-      method: 'GET',
-      uri: 'http://localhost:' + server.address().port
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 404)
+    http.get('http://localhost:' + server.address().port, async (res) => {
+      t.equal(res.statusCode, 404)
     })
   })
 })
 
 test('maps two routes when trailing slash should be trimmed', t => {
-  t.plan(25)
+  t.plan(21)
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: true
   })
@@ -143,46 +134,46 @@ test('maps two routes when trailing slash should be trimmed', t => {
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    request({
-      method: 'GET',
-      uri: baseURL + '/test/'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body, 'test')
+    http.get(baseURL + '/test/', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
     })
 
-    request({
-      method: 'GET',
-      uri: baseURL + '/test'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body, 'test')
+    http.get(baseURL + '/test', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
     })
 
-    request({
-      method: 'GET',
-      uri: baseURL + '/othertest'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body, 'othertest')
+    http.get(baseURL + '/othertest', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'othertest')
     })
 
-    request({
-      method: 'GET',
-      uri: baseURL + '/othertest/'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body, 'othertest')
+    http.get(baseURL + '/othertest/', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'othertest')
     })
   })
 })
 
 test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
-  t.plan(9)
+  t.plan(7)
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false
   })
@@ -204,27 +195,23 @@ test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    request({
-      method: 'GET',
-      uri: baseURL + '/test/'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body, 'test')
+    http.get(baseURL + '/test/', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
     })
 
-    request({
-      method: 'GET',
-      uri: baseURL + '/test'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 404)
+    http.get(baseURL + '/test', async (res) => {
+      t.equal(res.statusCode, 404)
     })
   })
 })
 
 test('does not map // when ignoreTrailingSlash is true', t => {
-  t.plan(9)
+  t.plan(7)
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false
   })
@@ -246,27 +233,23 @@ test('does not map // when ignoreTrailingSlash is true', t => {
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    request({
-      method: 'GET',
-      uri: baseURL + '/'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body, 'test')
+    http.get(baseURL + '/', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
     })
 
-    request({
-      method: 'GET',
-      uri: baseURL + '//'
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 404)
+    http.get(baseURL + '//', async (res) => {
+      t.equal(res.statusCode, 404)
     })
   })
 })
 
 test('versioned routes', t => {
-  t.plan(5)
+  t.plan(3)
 
   const findMyWay = FindMyWay()
 
@@ -282,22 +265,24 @@ test('versioned routes', t => {
     t.error(err)
     server.unref()
 
-    request({
-      method: 'GET',
-      uri: 'http://localhost:' + server.address().port + '/test',
-      headers: { 'Accept-Version': '1.x' }
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-    })
+    http.get(
+      'http://localhost:' + server.address().port + '/test',
+      {
+        headers: { 'Accept-Version': '1.x' }
+      },
+      async (res) => {
+        t.equal(res.statusCode, 200)
+      }
+    )
 
-    request({
-      method: 'GET',
-      uri: 'http://localhost:' + server.address().port + '/test',
-      headers: { 'Accept-Version': '2.x' }
-    }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 404)
-    })
+    http.get(
+      'http://localhost:' + server.address().port + '/test',
+      {
+        headers: { 'Accept-Version': '2.x' }
+      },
+      async (res) => {
+        t.equal(res.statusCode, 404)
+      }
+    )
   })
 })
