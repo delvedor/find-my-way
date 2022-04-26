@@ -22,14 +22,8 @@ class ParentNode extends Node {
 
   findStaticMatchingChild (path, pathIndex) {
     const staticChild = this.staticChildren[path.charAt(pathIndex)]
-    if (staticChild === undefined) {
+    if (staticChild === undefined || !staticChild.matchPrefix(path, pathIndex)) {
       return null
-    }
-
-    for (let i = 0; i < staticChild.prefix.length; i++) {
-      if (path.charCodeAt(pathIndex + i) !== staticChild.prefix.charCodeAt(i)) {
-        return null
-      }
     }
     return staticChild
   }
@@ -41,7 +35,7 @@ class ParentNode extends Node {
 
     let staticChild = this.staticChildren[path.charAt(0)]
     if (staticChild) {
-      let i = 0
+      let i = 1
       for (; i < staticChild.prefix.length; i++) {
         if (path.charCodeAt(i) !== staticChild.prefix.charCodeAt(i)) {
           staticChild = staticChild.split(this, i)
@@ -64,6 +58,7 @@ class StaticNode extends ParentNode {
     this.wildcardChild = null
     this.parametricChild = null
     this.kind = NODE_TYPES.STATIC
+    this._compilePrefixMatch()
   }
 
   createParametricChild (regex) {
@@ -89,12 +84,27 @@ class StaticNode extends ParentNode {
     const childPrefix = this.prefix.slice(length)
 
     this.prefix = childPrefix
+    this._compilePrefixMatch()
 
     const staticNode = new StaticNode(parentPrefix)
     staticNode.staticChildren[childPrefix.charAt(0)] = this
     parentNode.staticChildren[parentPrefix.charAt(0)] = staticNode
 
     return staticNode
+  }
+
+  _compilePrefixMatch () {
+    if (this.prefix.length === 1) {
+      this.matchPrefix = () => true
+      return
+    }
+
+    const lines = []
+    for (let i = 1; i < this.prefix.length; i++) {
+      const chatCode = this.prefix.charCodeAt(i)
+      lines.push(`path.charCodeAt(i + ${i}) === ${chatCode}`)
+    }
+    this.matchPrefix = new Function('path', 'i', `return ${lines.join(' && ')}`) // eslint-disable-line
   }
 }
 
