@@ -5,212 +5,124 @@ const { Worker } = require('worker_threads')
 
 const BENCH_THREAD_PATH = path.join(__dirname, 'bench-thread.js')
 
-const testCases = [
+const benchmarks = [
   {
     name: 'lookup root "/" route',
     setupURLs: [{ method: 'GET', url: '/' }],
-    testingMethodName: 'lookup',
-    args: [
-      { method: 'GET', url: '/', headers: { host: 'fastify.io' } },
-      null
-    ]
+    arguments: [{ method: 'GET', url: '/' }]
   },
   {
-    name: 'lookup static route',
-    setupURLs: [{ method: 'GET', url: '/a' }],
-    testingMethodName: 'lookup',
-    args: [
-      { method: 'GET', url: '/a', headers: { host: 'fastify.io' } },
-      null
-    ]
-  },
-  {
-    name: 'lookup dynamic route',
-    setupURLs: [{ method: 'GET', url: '/user/:id' }],
-    testingMethodName: 'lookup',
-    args: [
-      { method: 'GET', url: '/user/tomas', headers: { host: 'fastify.io' } },
-      null
-    ]
-  },
-  {
-    name: 'lookup dynamic multi-parametric route',
-    setupURLs: [{ method: 'GET', url: '/customer/:name-:surname' }],
-    testingMethodName: 'lookup',
-    args: [
-      { method: 'GET', url: '/customer/john-doe', headers: { host: 'fastify.io' } },
-      null
-    ]
-  },
-  {
-    name: 'lookup dynamic multi-parametric route with regex',
-    setupURLs: [{ method: 'GET', url: '/at/:hour(^\\d+)h:minute(^\\d+)m' }],
-    testingMethodName: 'lookup',
-    args: [
-      { method: 'GET', url: '/at/12h00m', headers: { host: 'fastify.io' } },
-      null
-    ]
+    name: 'lookup short static route',
+    setupURLs: [{ method: 'GET', url: '/static' }],
+    arguments: [{ method: 'GET', url: '/static' }]
   },
   {
     name: 'lookup long static route',
-    setupURLs: [{ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }],
-    testingMethodName: 'lookup',
-    args: [
-      { method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz', headers: { host: 'fastify.io' } },
-      null
-    ]
+    setupURLs: [{ method: 'GET', url: '/static/static/static/static/static' }],
+    arguments: [{ method: 'GET', url: '/static/static/static/static/static' }]
   },
   {
-    name: 'lookup long dynamic route',
-    setupURLs: [{ method: 'GET', url: '/user/:id/static' }],
-    testingMethodName: 'lookup',
-    args: [
-      {
-        method: 'GET',
-        url: '/user/qwertyuiopasdfghjklzxcvbnm/static',
-        headers: { host: 'fastify.io' }
-      },
-      null
-    ]
+    name: 'lookup long static route (common prefix)',
+    setupURLs: [
+      { method: 'GET', url: '/static' },
+      { method: 'GET', url: '/static/static' },
+      { method: 'GET', url: '/static/static/static' },
+      { method: 'GET', url: '/static/static/static/static' },
+      { method: 'GET', url: '/static/static/static/static/static' }
+    ],
+    arguments: [{ method: 'GET', url: '/static/static/static/static/static' }]
   },
   {
-    name: 'lookup static route on constrained router',
+    name: 'lookup short parametric route',
+    setupURLs: [{ method: 'GET', url: '/:param' }],
+    arguments: [{ method: 'GET', url: '/param1' }]
+  },
+  {
+    name: 'lookup long parametric route',
+    setupURLs: [{ method: 'GET', url: '/:param' }],
+    arguments: [{ method: 'GET', url: '/longParamParamParamParamParamParam' }]
+  },
+  {
+    name: 'lookup short parametric route (encoded unoptimized)',
+    setupURLs: [{ method: 'GET', url: '/:param' }],
+    arguments: [{ method: 'GET', url: '/param%2B' }]
+  },
+  {
+    name: 'lookup short parametric route (encoded optimized)',
+    setupURLs: [{ method: 'GET', url: '/:param' }],
+    arguments: [{ method: 'GET', url: '/param%20' }]
+  },
+  {
+    name: 'lookup parametric route with two short params',
+    setupURLs: [{ method: 'GET', url: '/:param1/:param2' }],
+    arguments: [{ method: 'GET', url: '/param1/param2' }]
+  },
+  {
+    name: 'lookup multi-parametric route with two short params',
+    setupURLs: [{ method: 'GET', url: '/:param1-:param2' }],
+    arguments: [{ method: 'GET', url: '/param1-param2' }]
+  },
+  {
+    name: 'lookup multi-parametric route with two short regex params',
+    setupURLs: [{ method: 'GET', url: '/:param1([a-z]*)1:param2([a-z]*)2' }],
+    arguments: [{ method: 'GET', url: '/param1param2' }]
+  },
+  {
+    name: 'lookup long static + parametric route',
+    setupURLs: [{ method: 'GET', url: '/static/:param1/static/:param2/static' }],
+    arguments: [{ method: 'GET', url: '/static/param1/static/param2/static' }]
+  },
+  {
+    name: 'lookup short wildcard route',
+    setupURLs: [{ method: 'GET', url: '/*' }],
+    arguments: [{ method: 'GET', url: '/static' }]
+  },
+  {
+    name: 'lookup long wildcard route',
+    setupURLs: [{ method: 'GET', url: '/*' }],
+    arguments: [{ method: 'GET', url: '/static/static/static/static/static' }]
+  },
+  {
+    name: 'lookup root route on constrained router',
     setupURLs: [
       { method: 'GET', url: '/' },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '1.2.0' } } },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
+      { method: 'GET', url: '/static', opts: { constraints: { version: '1.2.0' } } },
+      { method: 'GET', url: '/static', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
+      { method: 'GET', url: '/static', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
     ],
-    testingMethodName: 'lookup',
-    args: [
-      {
-        method: 'GET',
-        url: '/',
-        headers: { host: 'fastify.io' }
-      },
-      null
-    ]
+    arguments: [{ method: 'GET', url: '/', headers: { host: 'fastify.io' } }]
   },
   {
-    name: 'lookup static versioned route',
+    name: 'lookup short static unconstraint route',
     setupURLs: [
-      { method: 'GET', url: '/' },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '1.2.0' } } },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
+      { method: 'GET', url: '/static', opts: {} },
+      { method: 'GET', url: '/static', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
+      { method: 'GET', url: '/static', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
     ],
-    testingMethodName: 'lookup',
-    args: [
-      {
-        method: 'GET',
-        url: '/versioned',
-        headers: { 'accept-version': '1.x', host: 'fastify.io' }
-      },
-      null
-    ]
+    arguments: [{ method: 'GET', url: '/static', headers: {} }]
   },
   {
-    name: 'lookup static constrained (version & host) route',
+    name: 'lookup short static versioned route',
     setupURLs: [
-      { method: 'GET', url: '/' },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '1.2.0' } } },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
-      { method: 'GET', url: '/versioned', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
+      { method: 'GET', url: '/static', opts: { constraints: { version: '1.2.0' } } },
+      { method: 'GET', url: '/static', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
+      { method: 'GET', url: '/static', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
     ],
-    testingMethodName: 'lookup',
-    args: [
-      {
-        method: 'GET',
-        url: '/versioned',
-        headers: { 'accept-version': '2.x', host: 'fastify.io' }
-      },
-      null
-    ]
+    arguments: [{ method: 'GET', url: '/static', headers: { 'accept-version': '1.x', host: 'fastify.io' } }]
   },
   {
-    name: 'find root "/" route',
-    setupURLs: [{ method: 'GET', url: '/' }],
-    testingMethodName: 'find',
-    args: ['GET', '/']
-  },
-  {
-    name: 'find static route',
-    setupURLs: [{ method: 'GET', url: '/a' }],
-    testingMethodName: 'find',
-    args: ['GET', '/a']
-  },
-  {
-    name: 'find dynamic route',
-    setupURLs: [{ method: 'GET', url: '/user/:id' }],
-    testingMethodName: 'find',
-    args: ['GET', '/user/tomas']
-  },
-  {
-    name: 'find dynamic route with encoded parameter unoptimized',
-    setupURLs: [{ method: 'GET', url: '/user/:id' }],
-    testingMethodName: 'find',
-    args: ['GET', '/user/maintainer%2Btomas']
-  },
-  {
-    name: 'find dynamic route with encoded parameter optimized',
-    setupURLs: [{ method: 'GET', url: '/user/:id' }],
-    testingMethodName: 'find',
-    args: ['GET', '/user/maintainer%20tomas']
-  },
-  {
-    name: 'find dynamic multi-parametric route',
-    setupURLs: [{ method: 'GET', url: '/customer/:name-:surname' }],
-    testingMethodName: 'find',
-    args: ['GET', '/customer/john-doe']
-  },
-  {
-    name: 'find dynamic multi-parametric route with regex',
-    setupURLs: [{ method: 'GET', url: '/at/:hour(^\\d+)h:minute(^\\d+)m' }],
-    testingMethodName: 'find',
-    args: ['GET', '/at/12h00m']
-  },
-  {
-    name: 'find long static route',
-    setupURLs: [{ method: 'GET', url: '/abc/def/ghi/lmn/opq/rst/uvz' }],
-    testingMethodName: 'find',
-    args: ['GET', '/abc/def/ghi/lmn/opq/rst/uvz']
-  },
-  {
-    name: 'find long dynamic route',
-    setupURLs: [{ method: 'GET', url: '/user/:id/static' }],
-    testingMethodName: 'find',
-    args: ['GET', '/user/qwertyuiopasdfghjklzxcvbnm/static']
-  },
-  {
-    name: 'find long nested dynamic route',
-    setupURLs: [{ method: 'GET', url: '/posts/:id/comments/:id/author' }],
-    testingMethodName: 'find',
-    args: ['GET', '/posts/10/comments/42/author']
-  },
-  {
-    name: 'find long nested dynamic route with encoded parameter unoptimized',
-    setupURLs: [{ method: 'GET', url: '/posts/:id/comments/:id/author' }],
-    testingMethodName: 'find',
-    args: ['GET', '/posts/10%2C10/comments/42%2C42/author']
-  },
-  {
-    name: 'find long nested dynamic route with encoded parameter optimized',
-    setupURLs: [{ method: 'GET', url: '/posts/:id/comments/:id/author' }],
-    testingMethodName: 'find',
-    args: ['GET', '/posts/10%2510/comments/42%2542/author']
-  },
-  {
-    name: 'find long nested dynamic route with other method',
-    setupURLs: [{ method: 'POST', url: '/posts/:id/comments' }],
-    testingMethodName: 'find',
-    args: ['POST', '/posts/10/comments']
+    name: 'lookup short static constrained (version & host) route',
+    setupURLs: [
+      { method: 'GET', url: '/static', opts: { constraints: { version: '1.2.0' } } },
+      { method: 'GET', url: '/static', opts: { constraints: { version: '2.0.0', host: 'example.com' } } },
+      { method: 'GET', url: '/static', opts: { constraints: { version: '2.0.0', host: 'fastify.io' } } }
+    ],
+    arguments: [{ method: 'GET', url: '/static', headers: { 'accept-version': '2.x', host: 'fastify.io' } }]
   }
 ]
 
-async function runBenchmark (testCase) {
-  const worker = new Worker(BENCH_THREAD_PATH, {
-    workerData: testCase
-  })
+async function runBenchmark (benchmark) {
+  const worker = new Worker(BENCH_THREAD_PATH, { workerData: benchmark })
 
   return new Promise((resolve, reject) => {
     let result = null
@@ -229,8 +141,14 @@ async function runBenchmark (testCase) {
 }
 
 async function runBenchmarks () {
-  for (const testCase of testCases) {
-    const resultMessage = await runBenchmark(testCase)
+  let maxNameLength = 0
+  for (const benchmark of benchmarks) {
+    maxNameLength = Math.max(benchmark.name.length, maxNameLength)
+  }
+
+  for (const benchmark of benchmarks) {
+    benchmark.name = benchmark.name.padEnd(maxNameLength, '.')
+    const resultMessage = await runBenchmark(benchmark)
     console.log(resultMessage)
   }
 }
