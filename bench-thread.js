@@ -9,7 +9,7 @@ const Benchmark = require('benchmark')
 // changes on performance. Setting the minimum of samples to 500 results in
 // significantly lower variance on my local setup for this tests suite, and
 // gives me higher confidence in benchmark results.
-Benchmark.options.minSamples = 500
+Benchmark.options.minSamples = 200
 
 const suite = Benchmark.Suite()
 
