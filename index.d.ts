@@ -74,6 +74,8 @@ declare namespace Router {
   interface Config<V extends HTTPVersion> {
     ignoreTrailingSlash?: boolean;
 
+    ignoreDuplicateSlashes?: boolean;
+
     allowUnsafeRegex?: boolean;
 
     caseSensitive?: boolean;

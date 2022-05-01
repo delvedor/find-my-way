@@ -125,7 +125,59 @@ test('Optional Parameter with ignoreTrailingSlash = false', (t) => {
   findMyWay.lookup({ method: 'GET', url: '/test/hello/foo/', headers: {} }, null)
 })
 
-test('derigister a route with optional param', (t) => {
+test('Optional Parameter with ignoreDuplicateSlashes = true', (t) => {
+  t.plan(4)
+  const findMyWay = FindMyWay({
+    ignoreDuplicateSlashes: true,
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
+    if (params.optional) {
+      t.equal(params.optional, 'foo')
+    } else {
+      t.equal(params.optional, undefined)
+    }
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test//hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/foo', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test//hello//foo', headers: {} }, null)
+})
+
+test('Optional Parameter with ignoreDuplicateSlashes = false', (t) => {
+  t.plan(4)
+  const findMyWay = FindMyWay({
+    ignoreDuplicateSlashes: false,
+    defaultRoute: (req, res) => {
+      if (req.url === '/test//hello') {
+        t.same(req.params, undefined)
+      } else if (req.url === '/test//hello/foo') {
+        t.same(req.params, undefined)
+      }
+    }
+  })
+
+  findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
+    if (req.url === '/test/hello/') {
+      t.same(params, { optional: '' })
+    } else if (req.url === '/test/hello') {
+      t.same(params, {})
+    } else if (req.url === '/test/hello/foo') {
+      t.same(params, { optional: 'foo' })
+    }
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test//hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test/hello/foo', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/test//hello/foo', headers: {} }, null)
+})
+
+test('deregister a route with optional param', (t) => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
