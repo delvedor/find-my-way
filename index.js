@@ -591,6 +591,11 @@ function escapeRegExp (string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+const duplicationSlashesRegex = /\/\/+/g
+function removeDuplicateSlashes (path) {
+  return path.replace(duplicationSlashesRegex, '/')
+}
+
 function trimLastSlash (path) {
   if (path.length > 1 && path.charCodeAt(path.length - 1) === 47) {
     return path.slice(0, -1)
