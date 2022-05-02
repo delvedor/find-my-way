@@ -2,8 +2,27 @@
 
 const t = require('tap')
 const FindMyWay = require('../')
+const removeDuplicateSlashes = require('../lib/duplicate-slashes')
 
-t.test('issue-240', (t) => {
+t.test('issue-240: removeDuplicateSlashes', (t) => {
+  t.plan(13)
+
+  t.equal(removeDuplicateSlashes('abcdef'), 'abcdef')
+  t.equal(removeDuplicateSlashes('/abcdef'), '/abcdef')
+  t.equal(removeDuplicateSlashes('/abcdef/'), '/abcdef/')
+  t.equal(removeDuplicateSlashes('/ab/cd/ef/'), '/ab/cd/ef/')
+  t.equal(removeDuplicateSlashes('//abcdef'), '/abcdef')
+  t.equal(removeDuplicateSlashes('///abcdef'), '/abcdef')
+  t.equal(removeDuplicateSlashes('////abcdef'), '/abcdef')
+  t.equal(removeDuplicateSlashes('/abcdef//'), '/abcdef/')
+  t.equal(removeDuplicateSlashes('/abcdef///'), '/abcdef/')
+  t.equal(removeDuplicateSlashes('/abcdef////'), '/abcdef/')
+  t.equal(removeDuplicateSlashes('/a//b'), '/a/b')
+  t.equal(removeDuplicateSlashes('/ab//cd/////ef/'), '/ab/cd/ef/')
+  t.equal(removeDuplicateSlashes('/ab//cd/////ef///'), '/ab/cd/ef/')
+})
+
+t.test('issue-240: .find matching', (t) => {
   t.plan(14)
 
   const findMyWay = FindMyWay({ ignoreDuplicateSlashes: true })

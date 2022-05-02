@@ -34,6 +34,7 @@ const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrin
 const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
 const { safeDecodeURI, safeDecodeURIComponent } = require('./lib/url-sanitizer')
+const removeDuplicateSlashes = require('./lib/duplicate-slashes')
 
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
@@ -595,10 +596,6 @@ function trimLastSlash (path) {
     return path.slice(0, -1)
   }
   return path
-}
-
-function removeDuplicateSlashes (path) {
-  return path.replace(/\/\/+/g, '/')
 }
 
 function trimRegExpStartAndEnd (regexString) {
