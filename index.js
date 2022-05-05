@@ -253,8 +253,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     }
   }
 
-  assert(!currentNode.handlerStorage.getHandler(constraints), `Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
-  currentNode.handlerStorage.addHandler(handler, params, store, constraints)
+  assert(!currentNode.handlerStorage.hasHandler(constraints), `Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
+  currentNode.handlerStorage.addHandler(handler, params, store, this.constrainer, constraints)
 }
 
 Router.prototype.reset = function reset () {
@@ -355,7 +355,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
   while (true) {
     if (pathIndex === pathLen) {
-      const handle = currentNode.handlerStorage.getMatchingHandler(this.constrainer, derivedConstraints)
+      const handle = currentNode.handlerStorage.getMatchingHandler(derivedConstraints)
 
       if (handle !== null && handle !== undefined) {
         const paramsObj = {}

@@ -1,101 +1,99 @@
 'use strict'
 
-const assert = require('assert')
 const deepEqual = require('fast-deep-equal')
 
 class HandlerStorage {
   constructor () {
-    this.handlers = [] // unoptimized list of handler objects for which the fast matcher function will be compiled
-    this.hasConstraints = false
-    this.compiledHandler = null
     this.unconstrainedHandler = null // optimized reference to the handler that will match most of the time
+    this.constraints = []
+    this.constrainedHandlers = [] // unoptimized list of handler objects for which the fast matcher function will be compiled
     this.constrainedHandlerStores = null
   }
 
-  getHandler (constraints) {
-    return this.handlers.filter(handler => deepEqual(constraints, handler.constraints))[0]
+  hasHandler (constraints) {
+    if (Object.keys(constraints).length === 0) {
+      return this.unconstrainedHandler !== null
+    }
+
+    for (const handler of this.constrainedHandlers) {
+      if (deepEqual(constraints, handler.constraints)) {
+        return true
+      }
+    }
+    return false
   }
 
   // This is the hot path for node handler finding -- change with care!
-  getMatchingHandler (constrainer, derivedConstraints) {
+  getMatchingHandler (derivedConstraints) {
     if (derivedConstraints === undefined) {
       return this.unconstrainedHandler
     }
 
-    if (this.hasConstraints) {
-      // This node is constrained, use the performant precompiled constraint matcher
-      return this._getHandlerMatchingConstraints(constrainer, derivedConstraints)
-    }
+    const handler = this._getHandlerMatchingConstraints(derivedConstraints)
 
-    // This node doesn't have any handlers that are constrained, so it's handlers probably match. Some requests have constraint values that *must* match however, like version, so check for those before returning it.
-    if (!derivedConstraints.__hasMustMatchValues) {
+    if (handler === null && !derivedConstraints.__hasMustMatchValues) {
       return this.unconstrainedHandler
     }
 
-    return null
+    return handler
   }
 
-  addHandler (handler, params, store, constraints) {
-    if (!handler) return
-    assert(!this.getHandler(constraints), `There is already a handler with constraints '${JSON.stringify(constraints)}' and method '${this.method}'`)
-
+  addHandler (handler, params, store, constrainer, constraints) {
     const handlerObject = { handler, params, constraints, store: store || null, paramsLength: params.length }
 
-    this.handlers.push(handlerObject)
-    // Sort the most constrained handlers to the front of the list of handlers so they are tested first.
-    this.handlers.sort((a, b) => Object.keys(a.constraints).length - Object.keys(b.constraints).length)
-
-    if (Object.keys(constraints).length > 0) {
-      this.hasConstraints = true
-    } else {
+    if (Object.keys(constraints).length === 0) {
       this.unconstrainedHandler = handlerObject
+      return
     }
 
-    if (this.hasConstraints && this.handlers.length > 32) {
+    for (const constraint of Object.keys(constraints)) {
+      if (!this.constraints.includes(constraint)) {
+        if (constraint === 'version') {
+          // always check the version constraint first as it is the most selective
+          this.constraints.unshift(constraint)
+        } else {
+          this.constraints.push(constraint)
+        }
+      }
+    }
+
+    if (this.constrainedHandlers.length >= 32) {
       throw new Error('find-my-way supports a maximum of 32 route handlers per node when there are constraints, limit reached')
     }
 
-    // Note that the fancy constraint handler matcher needs to be recompiled now that the list of handlers has changed
-    // This lazy compilation means we don't do the compile until the first time the route match is tried, which doesn't waste time re-compiling every time a new handler is added
-    this.compiledHandler = null
+    this.constrainedHandlers.push(handlerObject)
+    // Sort the most constrained handlers to the front of the list of handlers so they are tested first.
+    this.constrainedHandlers.sort((a, b) => Object.keys(a.constraints).length - Object.keys(b.constraints).length)
+
+    this._compileGetHandlerMatchingConstraints(constrainer, constraints)
   }
 
-  // Slot for the compiled constraint matching function
-  _getHandlerMatchingConstraints (constrainer, derivedConstraints) {
-    if (this.compiledHandler === null) {
-      this.compiledHandler = this._compileGetHandlerMatchingConstraints(constrainer)
-    }
-    return this.compiledHandler(derivedConstraints)
+  _getHandlerMatchingConstraints () {
+    return null
   }
 
   // Builds a store object that maps from constraint values to a bitmap of handler indexes which pass the constraint for a value
   // So for a host constraint, this might look like { "fastify.io": 0b0010, "google.ca": 0b0101 }, meaning the 3rd handler is constrainted to fastify.io, and the 2nd and 4th handlers are constrained to google.ca.
   // The store's implementation comes from the strategies provided to the Router.
-  _buildConstraintStore (constrainer, constraint) {
-    const store = constrainer.newStoreForConstraint(constraint)
-
-    for (let i = 0; i < this.handlers.length; i++) {
-      const handler = this.handlers[i]
-      const mustMatchValue = handler.constraints[constraint]
-      if (typeof mustMatchValue !== 'undefined') {
-        let indexes = store.get(mustMatchValue)
-        if (!indexes) {
-          indexes = 0
-        }
+  _buildConstraintStore (store, constraint) {
+    for (let i = 0; i < this.constrainedHandlers.length; i++) {
+      const handler = this.constrainedHandlers[i]
+      const constraintValue = handler.constraints[constraint]
+      if (constraintValue !== undefined) {
+        let indexes = store.get(constraintValue) || 0
         indexes |= 1 << i // set the i-th bit for the mask because this handler is constrained by this value https://stackoverflow.com/questions/1436438/how-do-you-set-clear-and-toggle-a-single-bit-in-javascrip
-        store.set(mustMatchValue, indexes)
+        store.set(constraintValue, indexes)
       }
     }
-
-    return store
   }
 
   // Builds a bitmask for a given constraint that has a bit for each handler index that is 0 when that handler *is* constrained and 1 when the handler *isnt* constrainted. This is opposite to what might be obvious, but is just for convienience when doing the bitwise operations.
   _constrainedIndexBitmask (constraint) {
-    let mask = 0b0
-    for (let i = 0; i < this.handlers.length; i++) {
-      const handler = this.handlers[i]
-      if (handler.constraints && constraint in handler.constraints) {
+    let mask = 0
+    for (let i = 0; i < this.constrainedHandlers.length; i++) {
+      const handler = this.constrainedHandlers[i]
+      const constraintValue = handler.constraints[constraint]
+      if (constraintValue !== undefined) {
         mask |= 1 << i
       }
     }
@@ -110,27 +108,20 @@ class HandlerStorage {
   // We consider all this compiling function complexity to be worth it, because the naive implementation that just loops over the handlers asking which stores match is quite a bit slower.
   _compileGetHandlerMatchingConstraints (constrainer) {
     this.constrainedHandlerStores = {}
-    let constraints = new Set()
-    for (const handler of this.handlers) {
-      for (const key of Object.keys(handler.constraints)) {
-        constraints.add(key)
-      }
+
+    for (const constraint of this.constraints) {
+      const store = constrainer.newStoreForConstraint(constraint)
+      this.constrainedHandlerStores[constraint] = store
+
+      this._buildConstraintStore(store, constraint)
     }
-    constraints = Array.from(constraints)
+
     const lines = []
-
-    // always check the version constraint first as it is the most selective
-    constraints.sort((a, b) => a === 'version' ? 1 : 0)
-
-    for (const constraint of constraints) {
-      this.constrainedHandlerStores[constraint] = this._buildConstraintStore(constrainer, constraint)
-    }
-
     lines.push(`
-    let candidates = 0b${'1'.repeat(this.handlers.length)}
+    let candidates = ${(1 << this.constrainedHandlers.length) - 1}
     let mask, matches
     `)
-    for (const constraint of constraints) {
+    for (const constraint of this.constraints) {
       // Setup the mask for indexes this constraint applies to. The mask bits are set to 1 for each position if the constraint applies.
       lines.push(`
       mask = ${this._constrainedIndexBitmask(constraint)}
@@ -140,7 +131,7 @@ class HandlerStorage {
       // If there's no constraint value, none of the handlers constrained by this constraint can match. Remove them from the candidates.
       // If there is a constraint value, get the matching indexes bitmap from the store, and mask it down to only the indexes this constraint applies to, and then bitwise and with the candidates list to leave only matching candidates left.
       lines.push(`
-      if (typeof value === "undefined") {
+      if (value === undefined) {
         candidates &= mask
       } else {
         matches = this.constrainedHandlerStores.${constraint}.get(value) || 0
@@ -150,15 +141,9 @@ class HandlerStorage {
       `)
     }
     // Return the first handler who's bit is set in the candidates https://stackoverflow.com/questions/18134985/how-to-find-index-of-first-set-bit
-    lines.push(`
-    const handler = this.handlers[Math.floor(Math.log2(candidates))]
-    if (handler && derivedConstraints.__hasMustMatchValues && handler === this.unconstrainedHandler) {
-      return null;
-    }
-    return handler;
-    `)
+    lines.push('return this.constrainedHandlers[Math.floor(Math.log2(candidates))]')
 
-    return new Function('derivedConstraints', lines.join('\n')) // eslint-disable-line
+    this._getHandlerMatchingConstraints = new Function('derivedConstraints', lines.join('\n')) // eslint-disable-line
   }
 }
 
