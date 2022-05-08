@@ -26,7 +26,7 @@ test('Constraints should not be overrided when multiple router is created', t =>
   FindMyWay()
 
   router1.on('GET', '/', { constraints: { secret: 'alpha' } }, () => {})
-  router1.find('GET', '/', { constraints: { secret: 'alpha' } })
+  router1.find('GET', '/', { secret: 'alpha' })
 
   t.pass('constraints is not overrided')
 })
