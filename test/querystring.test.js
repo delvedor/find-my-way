@@ -36,3 +36,25 @@ test('handles path and query separated by ;', t => {
 
   findMyWay.lookup({ method: 'GET', url: '/test;jsessionid=123456', headers: {} }, null)
 })
+
+test('wildcard node with querystring', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/*', (req, res, params) => {
+    t.same(params, { '*': 'test' })
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test;jsessionid=123456', headers: {} }, null)
+})
+
+test('parametric node with querystring', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/:param', (req, res, params) => {
+    t.same(params, { param: 'test' })
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/test;jsessionid=123456', headers: {} }, null)
+})

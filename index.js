@@ -342,16 +342,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
 
-  for (let i = 0; i < path.length; i++) {
-    const charCode = path.charCodeAt(i)
-    // Some systems do not follow RFC and separate the path and query
-    // string with a `;` character (code 59), e.g. `/foo;jsessionid=123456`.
-    // Thus, we need to split on `;` as well as `?` and `#`.
-    if (charCode === 63 || charCode === 59 || charCode === 35) {
-      path = path.slice(0, i)
-    }
-  }
-
   if (this.ignoreTrailingSlash) {
     path = trimLastSlash(path)
   }
@@ -365,12 +355,11 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
   let pathIndex = currentNode.prefix.length
   const params = []
-  const pathLen = path.length
 
   const brothersNodesStack = []
 
   while (true) {
-    if (pathIndex === pathLen) {
+    if (pathIndex === path.length) {
       const handle = currentNode.handlerStorage.getMatchingHandler(derivedConstraints)
 
       if (handle !== null && handle !== undefined) {
@@ -450,19 +439,32 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     // static route
     if (currentNode.kind === NODE_TYPES.STATIC) {
       pathIndex += currentNode.prefix.length
+
+      // Some systems do not follow RFC and separate the path and query
+      // string with a `;` character (code 59), e.g. `/foo;jsessionid=123456`.
+      // Thus, we need to split on `;` as well as `?` and `#`.
+      const charCode = path.charCodeAt(pathIndex)
+      if (charCode === 63 || charCode === 59 || charCode === 35) {
+        path = path.slice(0, pathIndex)
+      }
+
       continue
     }
 
     if (currentNode.kind === NODE_TYPES.WILDCARD) {
+      let paramEndIndex = pathIndex
       let shouldDecode = false
-      for (let paramEndIndex = pathIndex; paramEndIndex < pathLen; paramEndIndex++) {
-        if (path.charCodeAt(paramEndIndex) === 37) {
+      for (; paramEndIndex < path.length; paramEndIndex++) {
+        const charCode = path.charCodeAt(paramEndIndex)
+        if (charCode === 37) {
           shouldDecode = true
+        } else if (charCode === 63 || charCode === 59 || charCode === 35) {
+          path = path.slice(0, paramEndIndex)
           break
         }
       }
 
-      let param = originPath.slice(pathIndex)
+      let param = originPath.slice(pathIndex, paramEndIndex)
       if (shouldDecode) {
         param = this.decodeURIComponent(param)
 
@@ -476,19 +478,22 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       }
 
       params.push(param)
-      pathIndex = pathLen
+      pathIndex = path.length
       continue
     }
 
     if (currentNode.kind === NODE_TYPES.PARAMETRIC) {
       let paramEndIndex = pathIndex
       let shouldDecode = false
-      for (; paramEndIndex < pathLen; paramEndIndex++) {
+      for (; paramEndIndex < path.length; paramEndIndex++) {
         const charCode = path.charCodeAt(paramEndIndex)
         if (charCode === 47) {
           break
         } else if (charCode === 37) {
           shouldDecode = true
+        } else if (charCode === 63 || charCode === 59 || charCode === 35) {
+          path = path.slice(0, paramEndIndex)
+          break
         }
       }
 
