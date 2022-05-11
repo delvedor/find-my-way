@@ -320,9 +320,10 @@ Having a route with multiple parameters may affect negatively the performance, s
 <a name="path-decoding"></a>
 ##### Path decoding
 
-If your route contains characters that are not digits (0-9), letters (A-Z, a-z), or a few allowed graphic symbols (; , / ? : @ & = + $ - _ . ! ~ * ' ( ) #) you should [percent-encode](https://www.rfc-editor.org/rfc/rfc3986#section-2.1) your path. You can encode a path by yourself or set encode option.
+If your route contains characters that are not digits (0-9), letters (A-Z, a-z), or a few allowed graphic symbols (; , / ? : @ & = + $ - _ . ! ~ * ' ( ) #) you should [percent-encode](https://www.rfc-editor.org/rfc/rfc3986#section-2.1) your path. Before inserting, your path will be encoded by the encodeURI function. If you expect to receive a decoded URL, or a URL not encoded with encodeURI, you can disable the "encode" option and pass a custom encoded path.
 ```js
-router.on('GET', '/🍌', { encode: true }, (req, res, params) => {}))
+router.on('GET', '/🍌', { encode: false }, (req, res, params) => {}))
+router.on('GET', '/%74e%73t', { encode: false }, (req, res, params) => {})) // encoded "/test" path
 ```
 If you set the encode option, the path will be encode with [encodeURI](https://tc39.es/ecma262/multipage/global-object.html#sec-encodeuri-uri) function before inserting.
 

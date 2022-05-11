@@ -25,7 +25,7 @@ test('decodeUriParameters called when needed 1', t => {
     }
   })
 
-  findMyWay.on('GET', '/foo bar', { encode: true }, () => {})
+  findMyWay.on('GET', '/foo bar', () => {})
   findMyWay.on('GET', '/:foo/bar', () => {})
 
   t.ok(findMyWay.find('GET', '/foo%20bar').handler)
@@ -51,7 +51,7 @@ test('decodeUriParameters called when needed 2', t => {
   const notCrazy = () => {}
   const paramHandler = () => {}
 
-  findMyWay.on('GET', '/foo bar', { encode: true }, notCrazy)
+  findMyWay.on('GET', '/foo bar', notCrazy)
   findMyWay.on('GET', '/foo#bar', notCrazy)
   findMyWay.on('GET', '/:param/bar', paramHandler)
   findMyWay.on('GET', '/:param', paramHandler)

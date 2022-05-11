@@ -141,6 +141,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     }
   }
 
+  const encode = opts.encode === undefined ? true : opts.encode
+
   this.constrainer.validateConstraints(constraints)
   // Let the constrainer know if any constraints are being used now
   this.constrainer.noteUsage(constraints)
@@ -176,7 +178,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         staticNodePath = staticNodePath.toLowerCase()
       }
 
-      if (opts.encode) {
+      if (encode) {
         staticNodePath = encodeURI(staticNodePath)
       }
 
@@ -227,7 +229,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
               staticPart = staticPart.toLowerCase()
             }
 
-            if (opts.encode) {
+            if (encode) {
               staticPart = encodeURI(staticPart)
             }
 

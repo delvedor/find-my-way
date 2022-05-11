@@ -14,11 +14,11 @@ test('Decode the URL before the routing', t => {
 
   findMyWay.on('GET', '/static/:pathParam', () => {})
   findMyWay.on('GET', '/[...]/a .html', space)
-  findMyWay.on('GET', '/%5B...%5D/a .html', space)
-  findMyWay.on('GET', '/[...]/a%20.html', space)
-  findMyWay.on('GET', '/[...]/a .html', { encode: true }, space)
-  findMyWay.on('GET', '/[...]/a%2520.html', percentTwenty)
-  findMyWay.on('GET', '/[...]/a%2520.html', { encode: true }, percentTwentyfive)
+  findMyWay.on('GET', '/[...]/a .html', { encode: false }, space)
+  findMyWay.on('GET', '/[...]/a%20.html', { encode: false }, space)
+  findMyWay.on('GET', '/%5B...%5D/a .html', { encode: false }, space)
+  findMyWay.on('GET', '/[...]/a%2520.html', { encode: false }, percentTwenty)
+  findMyWay.on('GET', '/[...]/a%2520.html', percentTwentyfive)
 
   t.equal(findMyWay.find('GET', '/[...]/a .html').handler, space)
   t.equal(findMyWay.find('GET', '/%5B...%5D/a .html').handler, space)
@@ -90,8 +90,8 @@ test('Special chars on path parameter', t => {
   }
 
   findMyWay.on('GET', '/:pathParam', pathParam)
-  findMyWay.on('GET', '/reg/:regExeParam(^\\d+) .png', regexPathParam)
-  findMyWay.on('GET', '/[...]/a%2520.html', { encode: true }, staticEncoded)
+  findMyWay.on('GET', '/reg/:regExeParam(^\\d+) .png', { encode: false }, regexPathParam)
+  findMyWay.on('GET', '/[...]/a%2520.html', staticEncoded)
 
   findMyWay.lookup(get('/%5B...%5D/a%252520.html'), null, { expect: {}, handler: staticEncoded })
   findMyWay.lookup(get('/[...].html'), null, { expect: { pathParam: '[...].html' }, handler: pathParam })

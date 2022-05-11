@@ -11,7 +11,7 @@ test('Match static url without encoding option', t => {
 
   const handler = () => {}
 
-  findMyWay.on('GET', '/🍌', handler)
+  findMyWay.on('GET', '/🍌', { encode: false }, handler)
 
   t.same(findMyWay.find('GET', '/🍌').handler, handler)
   t.same(findMyWay.find('GET', '/%F0%9F%8D%8C'), null)
@@ -24,7 +24,7 @@ test('Match static url with encoding option', t => {
 
   const handler = () => {}
 
-  findMyWay.on('GET', '/🍌', { encode: true }, handler)
+  findMyWay.on('GET', '/🍌', handler)
 
   t.same(findMyWay.find('GET', '/🍌'), null)
   t.same(findMyWay.find('GET', '/%F0%9F%8D%8C').handler, handler)
@@ -35,7 +35,7 @@ test('Match parametric url without encoding option', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/🍌/:param', () => {})
+  findMyWay.on('GET', '/🍌/:param', { encode: false }, () => {})
 
   t.same(findMyWay.find('GET', '/🍌/@').params, { param: '@' })
   t.same(findMyWay.find('GET', '/%F0%9F%8D%8C/@'), null)
@@ -46,7 +46,7 @@ test('Match parametric url with encoding option', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/🍌/:param', { encode: true }, () => {})
+  findMyWay.on('GET', '/🍌/:param', () => {})
 
   t.same(findMyWay.find('GET', '/🍌/@'), null)
   t.same(findMyWay.find('GET', '/%F0%9F%8D%8C/@').params, { param: '@' })
@@ -57,7 +57,7 @@ test('Match encoded parametric url without encoding option', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/🍌/:param', () => {})
+  findMyWay.on('GET', '/🍌/:param', { encode: false }, () => {})
 
   t.same(findMyWay.find('GET', '/🍌/%23').params, { param: '#' })
   t.same(findMyWay.find('GET', '/%F0%9F%8D%8C/%23'), null)
@@ -68,7 +68,7 @@ test('Match encoded parametric url with encoding option', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/🍌/:param', { encode: true }, () => {})
+  findMyWay.on('GET', '/🍌/:param', () => {})
 
   t.same(findMyWay.find('GET', '/🍌/%23'), null)
   t.same(findMyWay.find('GET', '/%F0%9F%8D%8C/%23').params, { param: '#' })
@@ -91,7 +91,7 @@ test('Decode url components', t => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/foo🍌bar/:param1/:param2', { encode: true }, () => {})
+  findMyWay.on('GET', '/foo🍌bar/:param1/:param2', () => {})
   findMyWay.on('GET', '/user/:id', () => {})
 
   t.same(findMyWay.find('GET', '/foo%F0%9F%8D%8Cbar/foo%23bar/foo%23bar').params, { param1: 'foo#bar', param2: 'foo#bar' })
