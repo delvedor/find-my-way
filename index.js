@@ -467,9 +467,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
       if (currentNode.isRegex) {
         const matchedParameters = currentNode.regex.exec(decoded)
-        if (matchedParameters === null) {
-          return null
-        }
+        if (matchedParameters === null) continue
 
         for (let i = 1; i < matchedParameters.length; i++) {
           const param = matchedParameters[i]
