@@ -11,5 +11,5 @@ test('Wildcard route match when regexp route fails', (t) => {
   findMyWay.on('GET', '/:a(a)', () => {})
   findMyWay.on('GET', '/*', () => {})
 
-  t.ok(findMyWay.find('GET', '/b', {}))
+  t.same(findMyWay.find('GET', '/b', {}).params, { '*': '/b' })
 })
