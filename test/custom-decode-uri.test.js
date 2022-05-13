@@ -38,7 +38,7 @@ test('decodeUriParameters called when needed 2', t => {
   const results = [
     'ci%40o',
     'foo%23bar',
-    '%23%F'
+    '%23🍌'
   ]
   const findMyWay = FindMyWay({
     decodeUriParameters: (stringToDecode) => {

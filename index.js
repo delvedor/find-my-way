@@ -32,7 +32,7 @@ const deepEqual = require('fast-deep-equal')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
 const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
-const sanitizeUrl = require('./lib/url-sanitizer')
+const { safeDecodeURI, safeDecodeURIComponent } = require('./lib/url-sanitizer')
 
 const httpMethods = http.METHODS
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
@@ -85,6 +85,7 @@ function Router (opts) {
   this.routes = []
   this.trees = {}
 
+  this.decodeURIComponent = opts.decodeUriParameters || safeDecodeURIComponent
   this.constrainer = new Constrainer(opts.constraints)
 }
 
@@ -164,6 +165,12 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     if (path.charCodeAt(i) === 58 && path.charCodeAt(i + 1) === 58) {
       // It's a double colon. Let's just replace it with a single colon and go ahead
       path = path.slice(0, i) + path.slice(i + 1)
+      continue
+    }
+
+    if (path.charCodeAt(i) === 37) {
+      // We need to encode % char to prevent double decoding
+      path = path.slice(0, i + 1) + '25' + path.slice(i + 1)
       continue
     }
 
@@ -329,10 +336,8 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
 
-  let sanitizedUrl
   try {
-    sanitizedUrl = sanitizeUrl(path, this.decodeUriParameters)
-    path = sanitizedUrl.path
+    path = safeDecodeURI(path)
   } catch (error) {
     return this._onBadUrl(path)
   }
@@ -340,6 +345,8 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   if (this.ignoreTrailingSlash) {
     path = trimLastSlash(path)
   }
+
+  const originPath = path
 
   if (this.caseSensitive === false) {
     path = path.toLowerCase()
@@ -429,49 +436,55 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     }
 
     if (currentNode.kind === NODE_TYPES.WILDCARD) {
-      const decoded = sanitizedUrl.sliceParameter(pathIndex)
-      if (decoded === null) {
-        return this._onBadUrl(path.slice(pathIndex))
+      let param = originPath.slice(pathIndex)
+
+      const firstPercentIndex = param.indexOf('%')
+      if (firstPercentIndex !== -1) {
+        param = this.decodeURIComponent(param, firstPercentIndex)
       }
 
-      if (decoded.length > maxParamLength) {
+      if (param.length > maxParamLength) {
         return null
       }
 
-      params.push(decoded)
+      params.push(param)
       pathIndex = pathLen
       continue
     }
 
     if (currentNode.kind === NODE_TYPES.PARAMETRIC) {
       let paramEndIndex = pathIndex
+      let firstPercentIndex = -1
       for (; paramEndIndex < pathLen; paramEndIndex++) {
-        if (path.charCodeAt(paramEndIndex) === 47) {
+        const charCode = path.charCodeAt(paramEndIndex)
+        if (charCode === 47) {
           break
+        } else if (firstPercentIndex === -1 && charCode === 37) {
+          firstPercentIndex = paramEndIndex - pathIndex
         }
       }
 
-      const decoded = sanitizedUrl.sliceParameter(pathIndex, paramEndIndex)
-      if (decoded === null) {
-        return this._onBadUrl(path.slice(pathIndex, paramEndIndex))
+      let param = originPath.slice(pathIndex, paramEndIndex)
+      if (firstPercentIndex !== -1) {
+        param = this.decodeURIComponent(param, firstPercentIndex)
       }
 
       if (currentNode.isRegex) {
-        const matchedParameters = currentNode.regex.exec(decoded)
+        const matchedParameters = currentNode.regex.exec(param)
         if (matchedParameters === null) continue
 
         for (let i = 1; i < matchedParameters.length; i++) {
-          const param = matchedParameters[i]
-          if (param.length > maxParamLength) {
+          const matchedParam = matchedParameters[i]
+          if (matchedParam.length > maxParamLength) {
             return null
           }
-          params.push(param)
+          params.push(matchedParam)
         }
       } else {
-        if (decoded.length > maxParamLength) {
+        if (param.length > maxParamLength) {
           return null
         }
-        params.push(decoded)
+        params.push(param)
       }
 
       pathIndex = paramEndIndex
