@@ -39,7 +39,13 @@ class HandlerStorage {
   }
 
   addHandler (handler, params, store, constrainer, constraints) {
-    const handlerObject = { handler, params, constraints, store: store || null, paramsLength: params.length }
+    const handlerObject = {
+      handler,
+      params,
+      constraints,
+      store: store || null,
+      _createParamsObject: this._compileCreateParamsObject(params)
+    }
 
     if (Object.keys(constraints).length === 0) {
       this.unconstrainedHandler = handlerObject
@@ -66,6 +72,14 @@ class HandlerStorage {
     this.constrainedHandlers.sort((a, b) => Object.keys(a.constraints).length - Object.keys(b.constraints).length)
 
     this._compileGetHandlerMatchingConstraints(constrainer, constraints)
+  }
+
+  _compileCreateParamsObject (params) {
+    const lines = []
+    for (let i = 0; i < params.length; i++) {
+      lines.push(`'${params[i]}': paramsArray[${i}]`)
+    }
+    return new Function('paramsArray', `return {${lines.join(',')}}`)  // eslint-disable-line
   }
 
   _getHandlerMatchingConstraints () {

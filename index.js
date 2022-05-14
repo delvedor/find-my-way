@@ -357,19 +357,10 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     if (pathIndex === pathLen) {
       const handle = currentNode.handlerStorage.getMatchingHandler(derivedConstraints)
 
-      if (handle !== null && handle !== undefined) {
-        const paramsObj = {}
-        if (handle.paramsLength > 0) {
-          const paramNames = handle.params
-
-          for (let i = 0; i < handle.paramsLength; i++) {
-            paramsObj[paramNames[i]] = params[i]
-          }
-        }
-
+      if (handle !== null) {
         return {
           handler: handle.handler,
-          params: paramsObj,
+          params: handle._createParamsObject(params),
           store: handle.store
         }
       }
