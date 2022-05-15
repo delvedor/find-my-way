@@ -435,7 +435,7 @@ test('find should return the route', t => {
 
   t.same(
     findMyWay.find('GET', '/test'),
-    { handler: fn, params: {}, store: null }
+    { handler: fn, params: {}, store: null, searchParams: {} }
   )
 })
 
@@ -448,7 +448,7 @@ test('find should return the route with params', t => {
 
   t.same(
     findMyWay.find('GET', '/test/hello'),
-    { handler: fn, params: { id: 'hello' }, store: null }
+    { handler: fn, params: { id: 'hello' }, store: null, searchParams: {} }
   )
 })
 
@@ -471,7 +471,7 @@ test('should decode the uri - parametric', t => {
 
   t.same(
     findMyWay.find('GET', '/test/he%2Fllo'),
-    { handler: fn, params: { id: 'he/llo' }, store: null }
+    { handler: fn, params: { id: 'he/llo' }, store: null, searchParams: {} }
   )
 })
 
@@ -484,7 +484,7 @@ test('should decode the uri - wildcard', t => {
 
   t.same(
     findMyWay.find('GET', '/test/he%2Fllo'),
-    { handler: fn, params: { '*': 'he/llo' }, store: null }
+    { handler: fn, params: { '*': 'he/llo' }, store: null, searchParams: {} }
   )
 })
 

@@ -96,6 +96,21 @@ const router = require('find-my-way')({
 })
 ```
 
+The default query string parser that find-my-way uses is the Node.js's core querystring module. You can change this default setting by passing the option querystringParser and use a custom one, such as [qs](https://www.npmjs.com/package/qs).
+
+```js
+const qs = require('qs')
+const router = require('find-my-way')({
+  querystringParser: str => qs.parse(str)
+})
+
+router.on('GET', '/', (req, res, params, store, searchParams) => {
+  assert.equal(searchParams, { foo: 'bar', baz: 'faz' })
+})
+
+router.lookup({ method: 'GET', url: '/?foo=bar&baz=faz' }, null)
+```
+
 You can assign a `buildPrettyMeta` function to sanitize a route's `store` object to use with the `prettyPrint` functions. This function should accept a single object and return an object.
 
 ```js
@@ -227,7 +242,7 @@ The signature of the functions and objects must match the one from the example a
 #### on(method, path, [opts], handler, [store])
 Register a new route.
 ```js
-router.on('GET', '/example', (req, res, params) => {
+router.on('GET', '/example', (req, res, params, store, searchParams) => {
   // your code
 })
 ```

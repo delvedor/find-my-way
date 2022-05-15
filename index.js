@@ -27,6 +27,7 @@
 
 const assert = require('assert')
 const http = require('http')
+const querystring = require('querystring')
 const isRegexSafe = require('safe-regex2')
 const deepEqual = require('fast-deep-equal')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
@@ -71,6 +72,13 @@ function Router (opts) {
     this.buildPrettyMeta = opts.buildPrettyMeta
   } else {
     this.buildPrettyMeta = defaultBuildPrettyMeta
+  }
+
+  if (opts.querystringParser) {
+    assert(typeof opts.querystringParser === 'function', 'querystringParser must be a function')
+    this.querystringParser = opts.querystringParser
+  } else {
+    this.querystringParser = (query) => query === '' ? {} : querystring.parse(query)
   }
 
   this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
@@ -318,8 +326,8 @@ Router.prototype.lookup = function lookup (req, res, ctx) {
   var handle = this.find(req.method, req.url, this.constrainer.deriveConstraints(req, ctx))
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
-    ? handle.handler(req, res, handle.params, handle.store)
-    : handle.handler.call(ctx, req, res, handle.params, handle.store)
+    ? handle.handler(req, res, handle.params, handle.store, handle.searchParams)
+    : handle.handler.call(ctx, req, res, handle.params, handle.store, handle.searchParams)
 }
 
 Router.prototype.find = function find (method, path, derivedConstraints) {
@@ -330,8 +338,13 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = path.replace(FULL_PATH_REGEXP, '/')
   }
 
+  let sanitizedUrl
+  let querystring
+
   try {
-    path = safeDecodeURI(path)
+    sanitizedUrl = safeDecodeURI(path)
+    path = sanitizedUrl.path
+    querystring = sanitizedUrl.querystring
   } catch (error) {
     return this._onBadUrl(path)
   }
@@ -361,8 +374,9 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       if (handle !== null) {
         return {
           handler: handle.handler,
+          store: handle.store,
           params: handle._createParamsObject(params),
-          store: handle.store
+          searchParams: this.querystringParser(querystring)
         }
       }
     }

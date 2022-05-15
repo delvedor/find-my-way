@@ -25,7 +25,8 @@ test('find a store object', t => {
   t.same(findMyWay.find('GET', '/test'), {
     handler: fn,
     params: {},
-    store: { hello: 'world' }
+    store: { hello: 'world' },
+    searchParams: {}
   })
 })
 

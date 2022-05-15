@@ -54,7 +54,8 @@ declare namespace Router {
     req: Req<V>,
     res: Res<V>,
     params: { [k: string]: string | undefined },
-    store: any
+    store: any,
+    searchParams: { [k: string]: string }
   ) => any;
 
   interface ConstraintStrategy<V extends HTTPVersion, T = string> {
@@ -110,6 +111,7 @@ declare namespace Router {
     handler: Handler<V>;
     params: { [k: string]: string | undefined };
     store: any;
+    searchParams: { [k: string]: string };
   }
 
   interface Instance<V extends HTTPVersion> {
