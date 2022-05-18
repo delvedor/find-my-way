@@ -88,3 +88,12 @@ test('Routes with multiple constraints are matched before routes with one constr
   t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.0.0' }), null)
   t.equal(findMyWay.find('GET', '/', { host: 'example.io' }).handler, gamma)
 })
+
+test('Has constraint strategy method test', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+
+  t.same(findMyWay.hasCustomConstraintStrategy('version'), false)
+  t.same(findMyWay.hasCustomConstraintStrategy('host'), false)
+})

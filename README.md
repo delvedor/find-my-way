@@ -165,7 +165,9 @@ Constraints can be combined, and route handlers will only match if __all__ of th
 <a name="custom-constraint-strategies"></a>
 ### Custom Constraint Strategies
 
-Custom constraining strategies can be added and are matched against incoming requests while trying to maintain `find-my-way`'s high performance. To register a new type of constraint, you must add a new constraint strategy that knows how to match values to handlers, and that knows how to get the constraint value from a request. Register strategies when constructing a router:
+Custom constraining strategies can be added and are matched against incoming requests while trying to maintain `find-my-way`'s high performance. To register a new type of constraint, you must add a new constraint strategy that knows how to match values to handlers, and that knows how to get the constraint value from a request. Register strategies when constructing a router or use the addCustomConstraintStrategy method.
+
+Add a custom constrain strategy when constructing a router:
 
 ```js
 const customResponseTypeStrategy = {
@@ -188,6 +190,32 @@ const customResponseTypeStrategy = {
 }
 
 const router = FindMyWay({ constraints: { accept: customResponseTypeStrategy } });
+```
+
+Add a custom constraint strategy using the addCustomConstraintStrategy method:
+
+```js
+const customResponseTypeStrategy = {
+  // strategy name for referencing in the route handler `constraints` options
+  name: 'accept',
+  // storage factory for storing routes in the find-my-way route tree
+  storage: function () {
+    let handlers = {}
+    return {
+      get: (type) => { return handlers[type] || null },
+      set: (type, store) => { handlers[type] = store }
+    }
+  },
+  // function to get the value of the constraint from each incoming request
+  deriveConstraint: (req, ctx) => {
+    return req.headers['accept']
+  },
+  // optional flag marking if handlers without constraints can match requests that have a value for this constraint
+  mustMatchWhenDerived: true
+}
+
+const router = FindMyWay();
+router.addCustomConstraintStrategy(customResponseTypeStrategy);
 ```
 
 Once a custom constraint strategy is registered, routes can be added that are constrained using it:
