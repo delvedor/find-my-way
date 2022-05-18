@@ -266,12 +266,12 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   currentNode.handlerStorage.addHandler(handler, params, store, this.constrainer, constraints)
 }
 
-Router.prototype.hasCustomConstraintStrategy = function (strategyName) {
-  return this.constrainer.hasCustomConstraintStrategy(strategyName)
+Router.prototype.hasConstraintStrategy = function (strategyName) {
+  return this.constrainer.hasConstraintStrategy(strategyName)
 }
 
-Router.prototype.addCustomConstraintStrategy = function (constraints) {
-  this.constrainer.addCustomConstraintStrategy(constraints)
+Router.prototype.addConstraintStrategy = function (constraints) {
+  this.constrainer.addConstraintStrategy(constraints)
   this._rebuild(this.routes)
 }
 

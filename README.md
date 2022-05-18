@@ -165,7 +165,7 @@ Constraints can be combined, and route handlers will only match if __all__ of th
 <a name="custom-constraint-strategies"></a>
 ### Custom Constraint Strategies
 
-Custom constraining strategies can be added and are matched against incoming requests while trying to maintain `find-my-way`'s high performance. To register a new type of constraint, you must add a new constraint strategy that knows how to match values to handlers, and that knows how to get the constraint value from a request. Register strategies when constructing a router or use the addCustomConstraintStrategy method.
+Custom constraining strategies can be added and are matched against incoming requests while trying to maintain `find-my-way`'s high performance. To register a new type of constraint, you must add a new constraint strategy that knows how to match values to handlers, and that knows how to get the constraint value from a request. Register strategies when constructing a router or use the addConstraintStrategy method.
 
 Add a custom constrain strategy when constructing a router:
 
@@ -192,7 +192,7 @@ const customResponseTypeStrategy = {
 const router = FindMyWay({ constraints: { accept: customResponseTypeStrategy } });
 ```
 
-Add a custom constraint strategy using the addCustomConstraintStrategy method:
+Add a custom constraint strategy using the addConstraintStrategy method:
 
 ```js
 const customResponseTypeStrategy = {
@@ -215,7 +215,7 @@ const customResponseTypeStrategy = {
 }
 
 const router = FindMyWay();
-router.addCustomConstraintStrategy(customResponseTypeStrategy);
+router.addConstraintStrategy(customResponseTypeStrategy);
 ```
 
 Once a custom constraint strategy is registered, routes can be added that are constrained using it:

@@ -42,7 +42,7 @@ test('A route could support multiple versions (find) / 1 (add strategy outside c
 
   const findMyWay = FindMyWay()
 
-  findMyWay.addCustomConstraintStrategy(customVersioning)
+  findMyWay.addConstraintStrategy(customVersioning)
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, noop)
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, noop)
@@ -84,7 +84,7 @@ test('Overriding default strategies uses the custom deriveConstraint function (a
 
   const findMyWay = FindMyWay()
 
-  findMyWay.addCustomConstraintStrategy(customVersioning)
+  findMyWay.addConstraintStrategy(customVersioning)
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, (req, res, params) => {
     t.equal(req.headers.accept, 'application/vnd.example.api+json;version=2')
@@ -111,9 +111,21 @@ test('Overriding custom strategies throws as error (add strategy outside constru
 
   const findMyWay = FindMyWay()
 
-  findMyWay.addCustomConstraintStrategy(customVersioning)
+  findMyWay.addConstraintStrategy(customVersioning)
 
-  t.throws(() => findMyWay.addCustomConstraintStrategy(customVersioning),
-    'There is already exists a custom constraint with the name version.'
+  t.throws(() => findMyWay.addConstraintStrategy(customVersioning),
+    'There already exists a custom constraint with the name version.'
+  )
+})
+
+test('Overriding default strategies after defining a route with constraint', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '1.0.0' } }, () => {})
+
+  t.throws(() => findMyWay.addConstraintStrategy(customVersioning),
+    'There already exists a route with version constraint.'
   )
 })
