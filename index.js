@@ -73,11 +73,6 @@ function Router (opts) {
     this.buildPrettyMeta = defaultBuildPrettyMeta
   }
 
-  if (opts.decodeUriParameters) {
-    assert(typeof opts.decodeUriParameters === 'function', 'decodeUriParameters must be a function')
-    this.decodeUriParameters = opts.decodeUriParameters
-  }
-
   this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.maxParamLength = opts.maxParamLength || 100
@@ -85,7 +80,6 @@ function Router (opts) {
   this.routes = []
   this.trees = {}
 
-  this.decodeURIComponent = opts.decodeUriParameters || safeDecodeURIComponent
   this.constrainer = new Constrainer(opts.constraints)
 }
 
@@ -440,7 +434,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
       const firstPercentIndex = param.indexOf('%')
       if (firstPercentIndex !== -1) {
-        param = this.decodeURIComponent(param, firstPercentIndex)
+        param = safeDecodeURIComponent(param, firstPercentIndex)
       }
 
       if (param.length > maxParamLength) {
@@ -466,7 +460,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
       let param = originPath.slice(pathIndex, paramEndIndex)
       if (firstPercentIndex !== -1) {
-        param = this.decodeURIComponent(param, firstPercentIndex)
+        param = safeDecodeURIComponent(param, firstPercentIndex)
       }
 
       if (currentNode.isRegex) {
