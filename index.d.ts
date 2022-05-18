@@ -137,7 +137,6 @@ declare namespace Router {
       handler: Handler<V>,
       store: any
     ): void;
-
     off(
       method: HTTPMethod | HTTPMethod[],
       path: string,
@@ -159,6 +158,9 @@ declare namespace Router {
     reset(): void;
     prettyPrint(): string;
     prettyPrint(opts: { commonPrefix?: boolean, includeMeta?: boolean | (string | symbol)[]  }): string;
+
+    hasCustomConstraintStrategy(strategyName: string): boolean;
+    addCustomConstraintStrategy(constraintStrategy: ConstraintStrategy<V>): void;
 
     all: ShortHandRoute<V>;
 

@@ -66,6 +66,23 @@ let http2Res!: Http2ServerResponse;
 
 // HTTP2
 {
+  const constraints: { [key: string]: Router.ConstraintStrategy<Router.HTTPVersion.V2, string> } = {
+    foo: {
+      name: 'foo',
+      mustMatchWhenDerived: true,
+      storage () {
+        return {
+          get (version) { return handler },
+          set (version, handler) {},
+          del (version) {},
+          empty () {}
+        }
+      },
+      deriveConstraint(req) { return '1.0.0' },
+      validate(value) { if (typeof value === "string") { throw new Error("invalid")} }
+    }
+  }
+
   let handler: Router.Handler<Router.HTTPVersion.V2>
   const router = Router<Router.HTTPVersion.V2>({
     ignoreTrailingSlash: true,
@@ -74,22 +91,7 @@ let http2Res!: Http2ServerResponse;
     maxParamLength: 42,
     defaultRoute (http1Req, http1Res) {},
     onBadUrl (path, http1Req, http1Res) {},
-    constraints: {
-      foo: {
-        name: 'foo',
-        mustMatchWhenDerived: true,
-        storage () {
-          return {
-            get (version) { return handler },
-            set (version, handler) {},
-            del (version) {},
-            empty () {}
-          }
-        },
-        deriveConstraint(req) { return '1.0.0' },
-        validate(value) { if (typeof value === "string") { throw new Error("invalid")} }
-      }
-    }
+    constraints
   })
   expectType<Router.Instance<Router.HTTPVersion.V2>>(router)
 
@@ -98,6 +100,8 @@ let http2Res!: Http2ServerResponse;
   expectType<void>(router.on('GET', '/', { constraints: { version: '1.0.0' }}, () => {}))
   expectType<void>(router.on('GET', '/', () => {}, {}))
   expectType<void>(router.on('GET', '/', { constraints: { version: '1.0.0' }}, () => {}, {}))
+
+  expectType<void>(router.addCustomConstraintStrategy(constraints.foo))
 
   expectType<void>(router.get('/', () => {}))
   expectType<void>(router.get('/', { constraints: { version: '1.0.0' }}, () => {}))
@@ -140,6 +144,7 @@ let http2Res!: Http2ServerResponse;
       }
     }
   }
+
   const storageWithObject = customConstraintWithObject.storage()
   const acceptAndContentType: AcceptAndContentType = { accept: 'application/json', contentType: 'application/xml' }
 

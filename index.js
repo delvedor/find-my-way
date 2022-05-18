@@ -257,6 +257,15 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   currentNode.handlerStorage.addHandler(handler, params, store, this.constrainer, constraints)
 }
 
+Router.prototype.hasCustomConstraintStrategy = function (strategyName) {
+  return this.constrainer.hasCustomConstraintStrategy(strategyName)
+}
+
+Router.prototype.addCustomConstraintStrategy = function (constraints) {
+  this.constrainer.addCustomConstraintStrategy(constraints)
+  this._rebuild(this.routes)
+}
+
 Router.prototype.reset = function reset () {
   this.trees = {}
   this.routes = []
@@ -304,13 +313,7 @@ Router.prototype._off = function _off (method, path, opts) {
 
   // Rebuild tree without the specific route
   const newRoutes = this.routes.filter((route) => method !== route.method || path !== route.path || !matcher(route.opts.constraints))
-  this.reset()
-
-  for (const route of newRoutes) {
-    const { method, path, opts, handler, store } = route
-    this._on(method, path, opts, handler, store)
-    this.routes.push({ method, path, opts, handler, store })
-  }
+  this._rebuild(newRoutes)
 }
 
 Router.prototype.lookup = function lookup (req, res, ctx) {
@@ -487,6 +490,16 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
       pathIndex = paramEndIndex
     }
+  }
+}
+
+Router.prototype._rebuild = function (routes) {
+  this.reset()
+
+  for (const route of routes) {
+    const { method, path, opts, handler, store } = route
+    this._on(method, path, opts, handler, store)
+    this.routes.push({ method, path, opts, handler, store })
   }
 }
 
