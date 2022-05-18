@@ -6,21 +6,12 @@ class HandlerStorage {
   constructor () {
     this.unconstrainedHandler = null // optimized reference to the handler that will match most of the time
     this.constraints = []
-    this.constrainedHandlers = [] // unoptimized list of handler objects for which the fast matcher function will be compiled
+    this.handlers = [] // unoptimized list of handler objects for which the fast matcher function will be compiled
     this.constrainedHandlerStores = null
   }
 
   hasHandler (constraints) {
-    if (Object.keys(constraints).length === 0) {
-      return this.unconstrainedHandler !== null
-    }
-
-    for (const handler of this.constrainedHandlers) {
-      if (deepEqual(constraints, handler.constraints)) {
-        return true
-      }
-    }
-    return false
+    return this.handlers.find(handler => deepEqual(constraints, handler.constraints)) !== undefined
   }
 
   // This is the hot path for node handler finding -- change with care!
@@ -28,14 +19,7 @@ class HandlerStorage {
     if (derivedConstraints === undefined) {
       return this.unconstrainedHandler
     }
-
-    const handler = this._getHandlerMatchingConstraints(derivedConstraints)
-
-    if (handler === null && !derivedConstraints.__hasMustMatchValues) {
-      return this.unconstrainedHandler
-    }
-
-    return handler
+    return this._getHandlerMatchingConstraints(derivedConstraints)
   }
 
   addHandler (handler, params, store, constrainer, constraints) {
@@ -49,7 +33,6 @@ class HandlerStorage {
 
     if (Object.keys(constraints).length === 0) {
       this.unconstrainedHandler = handlerObject
-      return
     }
 
     for (const constraint of Object.keys(constraints)) {
@@ -63,13 +46,13 @@ class HandlerStorage {
       }
     }
 
-    if (this.constrainedHandlers.length >= 32) {
+    if (this.handlers.length >= 32) {
       throw new Error('find-my-way supports a maximum of 32 route handlers per node when there are constraints, limit reached')
     }
 
-    this.constrainedHandlers.push(handlerObject)
+    this.handlers.push(handlerObject)
     // Sort the most constrained handlers to the front of the list of handlers so they are tested first.
-    this.constrainedHandlers.sort((a, b) => Object.keys(a.constraints).length - Object.keys(b.constraints).length)
+    this.handlers.sort((a, b) => Object.keys(a.constraints).length - Object.keys(b.constraints).length)
 
     this._compileGetHandlerMatchingConstraints(constrainer, constraints)
   }
@@ -90,8 +73,8 @@ class HandlerStorage {
   // So for a host constraint, this might look like { "fastify.io": 0b0010, "google.ca": 0b0101 }, meaning the 3rd handler is constrainted to fastify.io, and the 2nd and 4th handlers are constrained to google.ca.
   // The store's implementation comes from the strategies provided to the Router.
   _buildConstraintStore (store, constraint) {
-    for (let i = 0; i < this.constrainedHandlers.length; i++) {
-      const handler = this.constrainedHandlers[i]
+    for (let i = 0; i < this.handlers.length; i++) {
+      const handler = this.handlers[i]
       const constraintValue = handler.constraints[constraint]
       if (constraintValue !== undefined) {
         let indexes = store.get(constraintValue) || 0
@@ -104,8 +87,8 @@ class HandlerStorage {
   // Builds a bitmask for a given constraint that has a bit for each handler index that is 0 when that handler *is* constrained and 1 when the handler *isnt* constrainted. This is opposite to what might be obvious, but is just for convienience when doing the bitwise operations.
   _constrainedIndexBitmask (constraint) {
     let mask = 0
-    for (let i = 0; i < this.constrainedHandlers.length; i++) {
-      const handler = this.constrainedHandlers[i]
+    for (let i = 0; i < this.handlers.length; i++) {
+      const handler = this.handlers[i]
       const constraintValue = handler.constraints[constraint]
       if (constraintValue !== undefined) {
         mask |= 1 << i
@@ -132,7 +115,7 @@ class HandlerStorage {
 
     const lines = []
     lines.push(`
-    let candidates = ${(1 << this.constrainedHandlers.length) - 1}
+    let candidates = ${(1 << this.handlers.length) - 1}
     let mask, matches
     `)
     for (const constraint of this.constraints) {
@@ -144,18 +127,32 @@ class HandlerStorage {
 
       // If there's no constraint value, none of the handlers constrained by this constraint can match. Remove them from the candidates.
       // If there is a constraint value, get the matching indexes bitmap from the store, and mask it down to only the indexes this constraint applies to, and then bitwise and with the candidates list to leave only matching candidates left.
+      const strategy = constrainer.strategies[constraint]
+      const matchMask = strategy.mustMatchWhenDerived ? 'matches' : '(matches | mask)'
+
       lines.push(`
       if (value === undefined) {
         candidates &= mask
       } else {
         matches = this.constrainedHandlerStores.${constraint}.get(value) || 0
-        candidates &= (matches | mask)
+        candidates &= ${matchMask}
       }
       if (candidates === 0) return null;
       `)
     }
+
+    // There are some constraints that can be derived and marked as "must match", where if they are derived, they only match routes that actually have a constraint on the value, like the SemVer version constraint.
+    // An example: a request comes in for version 1.x, and this node has a handler that matches the path, but there's no version constraint. For SemVer, the find-my-way semantics do not match this handler to that request.
+    // This function is used by Nodes with handlers to match when they don't have any constrained routes to exclude request that do have must match derived constraints present.
+    for (const constraint in constrainer.strategies) {
+      const strategy = constrainer.strategies[constraint]
+      if (strategy.mustMatchWhenDerived && !this.constraints.includes(constraint)) {
+        lines.push(`if (derivedConstraints.${constraint} !== undefined) return null`)
+      }
+    }
+
     // Return the first handler who's bit is set in the candidates https://stackoverflow.com/questions/18134985/how-to-find-index-of-first-set-bit
-    lines.push('return this.constrainedHandlers[Math.floor(Math.log2(candidates))]')
+    lines.push('return this.handlers[Math.floor(Math.log2(candidates))]')
 
     this._getHandlerMatchingConstraints = new Function('derivedConstraints', lines.join('\n')) // eslint-disable-line
   }
