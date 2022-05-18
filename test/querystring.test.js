@@ -5,10 +5,11 @@ const test = t.test
 const FindMyWay = require('../')
 
 test('should sanitize the url - query', t => {
-  t.plan(1)
+  t.plan(2)
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/test', (req, res, params) => {
+  findMyWay.on('GET', '/test', (req, res, params, store, query) => {
+    t.same(query, { hello: 'world' })
     t.ok('inside the handler')
   })
 
@@ -16,10 +17,11 @@ test('should sanitize the url - query', t => {
 })
 
 test('should sanitize the url - hash', t => {
-  t.plan(1)
+  t.plan(2)
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/test', (req, res, params) => {
+  findMyWay.on('GET', '/test', (req, res, params, store, query) => {
+    t.same(query, { hello: '' })
     t.ok('inside the handler')
   })
 
@@ -27,10 +29,11 @@ test('should sanitize the url - hash', t => {
 })
 
 test('handles path and query separated by ;', t => {
-  t.plan(1)
+  t.plan(2)
   const findMyWay = FindMyWay()
 
-  findMyWay.on('GET', '/test', (req, res, params) => {
+  findMyWay.on('GET', '/test', (req, res, params, store, query) => {
+    t.same(query, { jsessionid: '123456' })
     t.ok('inside the handler')
   })
 
