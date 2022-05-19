@@ -42,7 +42,7 @@ test('A route could support a custom constraint strategy (add strategy outside c
 
   const findMyWay = FindMyWay()
 
-  findMyWay.addCustomConstraintStrategy(customHeaderConstraint)
+  findMyWay.addConstraintStrategy(customHeaderConstraint)
 
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, alpha)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, beta)
@@ -79,7 +79,7 @@ test('A route could support a custom constraint strategy while versioned (add st
 
   const findMyWay = FindMyWay()
 
-  findMyWay.addCustomConstraintStrategy(customHeaderConstraint)
+  findMyWay.addConstraintStrategy(customHeaderConstraint)
 
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '1.0.0' } }, alpha)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '2.0.0' } }, beta)
@@ -124,7 +124,7 @@ test('A route could support a custom constraint strategy while versioned and hos
 
   const findMyWay = FindMyWay()
 
-  findMyWay.addCustomConstraintStrategy(customHeaderConstraint)
+  findMyWay.addConstraintStrategy(customHeaderConstraint)
 
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '1.0.0', host: 'fastify.io' } }, alpha)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '2.0.0', host: 'fastify.io' } }, beta)
@@ -171,7 +171,7 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
     }
   })
 
-  findMyWay.addCustomConstraintStrategy({
+  findMyWay.addConstraintStrategy({
     ...customHeaderConstraint,
     mustMatchWhenDerived: true
   })
@@ -212,7 +212,7 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
     }
   })
 
-  findMyWay.addCustomConstraintStrategy({
+  findMyWay.addConstraintStrategy({
     ...customHeaderConstraint,
     mustMatchWhenDerived: true
   })
@@ -253,7 +253,7 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to false wh
     }
   })
 
-  findMyWay.addCustomConstraintStrategy({
+  findMyWay.addConstraintStrategy({
     ...customHeaderConstraint,
     mustMatchWhenDerived: true
   })
@@ -264,14 +264,11 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to false wh
 })
 
 test('Has constraint strategy method test', t => {
-  t.plan(1)
+  t.plan(2)
 
-  const findMyWay = FindMyWay({
-    defaultRoute (req, res) {
-      t.pass()
-    }
-  })
+  const findMyWay = FindMyWay()
 
-  findMyWay.addCustomConstraintStrategy(customHeaderConstraint)
-  t.same(findMyWay.hasCustomConstraintStrategy(customHeaderConstraint.name), true)
+  t.same(findMyWay.hasConstraintStrategy(customHeaderConstraint.name), false)
+  findMyWay.addConstraintStrategy(customHeaderConstraint)
+  t.same(findMyWay.hasConstraintStrategy(customHeaderConstraint.name), true)
 })

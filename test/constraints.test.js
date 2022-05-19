@@ -90,10 +90,20 @@ test('Routes with multiple constraints are matched before routes with one constr
 })
 
 test('Has constraint strategy method test', t => {
-  t.plan(2)
+  t.plan(6)
 
   const findMyWay = FindMyWay()
 
-  t.same(findMyWay.hasCustomConstraintStrategy('version'), false)
-  t.same(findMyWay.hasCustomConstraintStrategy('host'), false)
+  t.same(findMyWay.hasConstraintStrategy('version'), false)
+  t.same(findMyWay.hasConstraintStrategy('host'), false)
+
+  findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, () => {})
+
+  t.same(findMyWay.hasConstraintStrategy('version'), false)
+  t.same(findMyWay.hasConstraintStrategy('host'), true)
+
+  findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '1.0.0' } }, () => {})
+
+  t.same(findMyWay.hasConstraintStrategy('version'), true)
+  t.same(findMyWay.hasConstraintStrategy('host'), true)
 })

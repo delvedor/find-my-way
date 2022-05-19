@@ -101,7 +101,7 @@ let http2Res!: Http2ServerResponse;
   expectType<void>(router.on('GET', '/', () => {}, {}))
   expectType<void>(router.on('GET', '/', { constraints: { version: '1.0.0' }}, () => {}, {}))
 
-  expectType<void>(router.addCustomConstraintStrategy(constraints.foo))
+  expectType<void>(router.addConstraintStrategy(constraints.foo))
 
   expectType<void>(router.get('/', () => {}))
   expectType<void>(router.get('/', { constraints: { version: '1.0.0' }}, () => {}))

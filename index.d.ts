@@ -161,8 +161,8 @@ declare namespace Router {
     prettyPrint(): string;
     prettyPrint(opts: { commonPrefix?: boolean, includeMeta?: boolean | (string | symbol)[]  }): string;
 
-    hasCustomConstraintStrategy(strategyName: string): boolean;
-    addCustomConstraintStrategy(constraintStrategy: ConstraintStrategy<V>): void;
+    hasConstraintStrategy(strategyName: string): boolean;
+    addConstraintStrategy(constraintStrategy: ConstraintStrategy<V>): void;
 
     all: ShortHandRoute<V>;
 
