@@ -343,11 +343,13 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
   let sanitizedUrl
   let querystring
+  let shouldDecodeParam
 
   try {
     sanitizedUrl = safeDecodeURI(path)
     path = sanitizedUrl.path
     querystring = sanitizedUrl.querystring
+    shouldDecodeParam = sanitizedUrl.shouldDecodeParam
   } catch (error) {
     return this._onBadUrl(path)
   }
@@ -448,10 +450,8 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     if (currentNode.kind === NODE_TYPES.WILDCARD) {
       let param = originPath.slice(pathIndex)
-
-      const firstPercentIndex = param.indexOf('%')
-      if (firstPercentIndex !== -1) {
-        param = safeDecodeURIComponent(param, firstPercentIndex)
+      if (shouldDecodeParam) {
+        param = safeDecodeURIComponent(param)
       }
 
       if (param.length > maxParamLength) {
@@ -464,20 +464,14 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     }
 
     if (currentNode.kind === NODE_TYPES.PARAMETRIC) {
-      let paramEndIndex = pathIndex
-      let firstPercentIndex = -1
-      for (; paramEndIndex < pathLen; paramEndIndex++) {
-        const charCode = path.charCodeAt(paramEndIndex)
-        if (charCode === 47) {
-          break
-        } else if (firstPercentIndex === -1 && charCode === 37) {
-          firstPercentIndex = paramEndIndex - pathIndex
-        }
+      let paramEndIndex = originPath.indexOf('/', pathIndex)
+      if (paramEndIndex === -1) {
+        paramEndIndex = pathLen
       }
 
       let param = originPath.slice(pathIndex, paramEndIndex)
-      if (firstPercentIndex !== -1) {
-        param = safeDecodeURIComponent(param, firstPercentIndex)
+      if (shouldDecodeParam) {
+        param = safeDecodeURIComponent(param)
       }
 
       if (currentNode.isRegex) {
