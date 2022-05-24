@@ -70,6 +70,20 @@ function handler (req, res, params) {
 router.on('GET', '/foo/', handler)
 ```
 
+Duplicate slashes can be ignored by supplying the `ignoreDuplicateSlashes` option:
+```js
+const router = require('find-my-way')({
+  ignoreDuplicateSlashes: true
+})
+function handler (req, res, params) {
+  res.end('foo')
+}
+// maps "/foo", "//foo", "///foo", etc to `handler`
+router.on('GET', '////foo', handler)
+```
+
+Note that when `ignoreTrailingSlash` and `ignoreDuplicateSlashes` are both set to true, duplicate slashes will first be removed and then trailing slashes will, meaning `//a//b//c//` will be converted to `/a/b/c`.
+
 You can set a custom length for parameters in parametric *(standard, regex and multi)* routes by using `maxParamLength` option, the default value is 100 characters.<br/>
 *If the maximum length limit is reached, the default route will be invoked.*
 ```js

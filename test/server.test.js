@@ -248,6 +248,155 @@ test('does not map // when ignoreTrailingSlash is true', t => {
   })
 })
 
+test('maps two routes when duplicate slashes should be trimmed', t => {
+  t.plan(21)
+  const findMyWay = FindMyWay({
+    ignoreDuplicateSlashes: true
+  })
+
+  findMyWay.on('GET', '//test', (req, res, params) => {
+    t.ok(req)
+    t.ok(res)
+    t.ok(params)
+    res.end('test')
+  })
+
+  findMyWay.on('GET', '/othertest', (req, res, params) => {
+    t.ok(req)
+    t.ok(res)
+    t.ok(params)
+    res.end('othertest')
+  })
+
+  const server = http.createServer((req, res) => {
+    findMyWay.lookup(req, res)
+  })
+
+  server.listen(0, err => {
+    t.error(err)
+    server.unref()
+
+    const baseURL = 'http://localhost:' + server.address().port
+
+    http.get(baseURL + '//test', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
+    })
+
+    http.get(baseURL + '/test', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
+    })
+
+    http.get(baseURL + '/othertest', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'othertest')
+    })
+
+    http.get(baseURL + '//othertest', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'othertest')
+    })
+  })
+})
+
+test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', t => {
+  t.plan(7)
+  const findMyWay = FindMyWay({
+    ignoreDuplicateSlashes: false
+  })
+
+  findMyWay.on('GET', '//test', (req, res, params) => {
+    t.ok(req)
+    t.ok(res)
+    t.ok(params)
+    res.end('test')
+  })
+
+  const server = http.createServer((req, res) => {
+    findMyWay.lookup(req, res)
+  })
+
+  server.listen(0, err => {
+    t.error(err)
+    server.unref()
+
+    const baseURL = 'http://localhost:' + server.address().port
+
+    http.get(baseURL + '//test', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
+    })
+
+    http.get(baseURL + '/test', async (res) => {
+      t.equal(res.statusCode, 404)
+    })
+  })
+})
+
+test('does map // when ignoreDuplicateSlashes is true', t => {
+  t.plan(11)
+  const findMyWay = FindMyWay({
+    ignoreDuplicateSlashes: true
+  })
+
+  findMyWay.on('GET', '/', (req, res, params) => {
+    t.ok(req)
+    t.ok(res)
+    t.ok(params)
+    res.end('test')
+  })
+
+  const server = http.createServer((req, res) => {
+    findMyWay.lookup(req, res)
+  })
+
+  server.listen(0, err => {
+    t.error(err)
+    server.unref()
+
+    const baseURL = 'http://localhost:' + server.address().port
+
+    http.get(baseURL + '/', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
+    })
+
+    http.get(baseURL + '//', async (res) => {
+      let body = ''
+      for await (const chunk of res) {
+        body += chunk
+      }
+      t.equal(res.statusCode, 200)
+      t.same(body, 'test')
+    })
+  })
+})
+
 test('versioned routes', t => {
   t.plan(3)
 

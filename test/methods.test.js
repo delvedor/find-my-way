@@ -168,6 +168,33 @@ test('off removes all routes when ignoreTrailingSlash is true', t => {
   t.equal(findMyWay.routes.length, 0)
 })
 
+test('off removes all routes when ignoreDuplicateSlashes is true', t => {
+  t.plan(6)
+  const findMyWay = FindMyWay({
+    ignoreDuplicateSlashes: true
+  })
+
+  findMyWay.on('GET', '//test1', () => {})
+  t.equal(findMyWay.routes.length, 1)
+
+  findMyWay.on('GET', '/test2', () => {})
+  t.equal(findMyWay.routes.length, 2)
+
+  findMyWay.off('GET', '/test1')
+  t.equal(findMyWay.routes.length, 1)
+  t.equal(
+    findMyWay.routes.filter((r) => r.path === '/test2').length,
+    1
+  )
+  t.equal(
+    findMyWay.routes.filter((r) => r.path === '//test2').length,
+    0
+  )
+
+  findMyWay.off('GET', '//test2')
+  t.equal(findMyWay.routes.length, 0)
+})
+
 test('deregister a route without children', t => {
   t.plan(2)
   const findMyWay = FindMyWay()

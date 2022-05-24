@@ -83,6 +83,7 @@ function Router (opts) {
 
   this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
+  this.ignoreDuplicateSlashes = opts.ignoreDuplicateSlashes || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.routes = []
@@ -120,6 +121,10 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
   }
 
   const route = path
+
+  if (this.ignoreDuplicateSlashes) {
+    path = removeDuplicateSlashes(path)
+  }
 
   if (this.ignoreTrailingSlash) {
     path = trimLastSlash(path)
@@ -299,6 +304,10 @@ Router.prototype.off = function off (method, path, opts) {
     return
   }
 
+  if (this.ignoreDuplicateSlashes) {
+    path = removeDuplicateSlashes(path)
+  }
+
   if (this.ignoreTrailingSlash) {
     path = trimLastSlash(path)
   }
@@ -339,6 +348,13 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
+  }
+
+  // This must be run before sanitizeUrl as the resulting function
+  // .sliceParameter must be constructed with same URL string used
+  // throughout the rest of this function.
+  if (this.ignoreDuplicateSlashes) {
+    path = removeDuplicateSlashes(path)
   }
 
   let sanitizedUrl
@@ -572,6 +588,10 @@ module.exports = Router
 
 function escapeRegExp (string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function removeDuplicateSlashes (path) {
+  return path.replace(/\/\/+/g, '/')
 }
 
 function trimLastSlash (path) {

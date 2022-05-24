@@ -13,6 +13,7 @@ let http2Res!: Http2ServerResponse;
   let handler: Router.Handler<Router.HTTPVersion.V1>
   const router = Router({
     ignoreTrailingSlash: true,
+    ignoreDuplicateSlashes: true,
     allowUnsafeRegex: false,
     caseSensitive: false,
     maxParamLength: 42,
@@ -86,6 +87,7 @@ let http2Res!: Http2ServerResponse;
   let handler: Router.Handler<Router.HTTPVersion.V2>
   const router = Router<Router.HTTPVersion.V2>({
     ignoreTrailingSlash: true,
+    ignoreDuplicateSlashes: true,
     allowUnsafeRegex: false,
     caseSensitive: false,
     maxParamLength: 42,
