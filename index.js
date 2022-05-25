@@ -88,8 +88,9 @@ function Router (opts) {
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.routes = []
   this.trees = {}
-
   this.constrainer = new Constrainer(opts.constraints)
+
+  this._routesPatterns = []
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -170,18 +171,12 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   const params = []
   for (let i = 0; i <= path.length; i++) {
     if (path.charCodeAt(i) === 58 && path.charCodeAt(i + 1) === 58) {
-      // It's a double colon. Let's just replace it with a single colon and go ahead
-      path = path.slice(0, i) + path.slice(i + 1)
+      // It's a double colon
+      i++
       continue
     }
 
-    if (path.charCodeAt(i) === 37) {
-      // We need to encode % char to prevent double decoding
-      path = path.slice(0, i + 1) + '25' + path.slice(i + 1)
-      continue
-    }
-
-    const isParametricNode = path.charCodeAt(i) === 58
+    const isParametricNode = path.charCodeAt(i) === 58 && path.charCodeAt(i + 1) !== 58
     const isWildcardNode = path.charCodeAt(i) === 42
 
     if (isParametricNode || isWildcardNode || (i === path.length && i !== parentNodePathIndex)) {
@@ -189,6 +184,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       if (!this.caseSensitive) {
         staticNodePath = staticNodePath.toLowerCase()
       }
+      staticNodePath = staticNodePath.split('::').join(':')
+      staticNodePath = staticNodePath.split('%').join('%25')
       // add the static part of the route to the tree
       currentNode = currentNode.createStaticChild(staticNodePath)
     }
@@ -267,7 +264,21 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     }
   }
 
-  assert(!currentNode.handlerStorage.hasHandler(constraints), `Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
+  if (!this.caseSensitive) {
+    path = path.toLowerCase()
+  }
+
+  for (const existRoute of this._routesPatterns) {
+    if (
+      existRoute.path === path &&
+      existRoute.method === method &&
+      deepEqual(existRoute.constraints, constraints)
+    ) {
+      throw new Error(`Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
+    }
+  }
+  this._routesPatterns.push({ method, path, constraints })
+
   currentNode.handlerStorage.addHandler(handler, params, store, this.constrainer, constraints)
 }
 
@@ -283,6 +294,7 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 Router.prototype.reset = function reset () {
   this.trees = {}
   this.routes = []
+  this._routesPatterns = []
 }
 
 Router.prototype.off = function off (method, path, opts) {
@@ -402,48 +414,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       }
     }
 
-    let node = null
-
-    if (
-      currentNode.kind === NODE_TYPES.STATIC ||
-      currentNode.kind === NODE_TYPES.PARAMETRIC
-    ) {
-      node = currentNode.findStaticMatchingChild(path, pathIndex)
-
-      if (currentNode.kind === NODE_TYPES.STATIC) {
-        if (node === null) {
-          if (currentNode.parametricChild !== null) {
-            node = currentNode.parametricChild
-
-            if (currentNode.wildcardChild !== null) {
-              brothersNodesStack.push({
-                brotherPathIndex: pathIndex,
-                paramsCount: params.length,
-                brotherNode: currentNode.wildcardChild
-              })
-            }
-          } else {
-            node = currentNode.wildcardChild
-          }
-        } else {
-          if (currentNode.wildcardChild !== null) {
-            brothersNodesStack.push({
-              brotherPathIndex: pathIndex,
-              paramsCount: params.length,
-              brotherNode: currentNode.wildcardChild
-            })
-          }
-
-          if (currentNode.parametricChild !== null) {
-            brothersNodesStack.push({
-              brotherPathIndex: pathIndex,
-              paramsCount: params.length,
-              brotherNode: currentNode.parametricChild
-            })
-          }
-        }
-      }
-    }
+    let node = currentNode.getNextNode(path, pathIndex, brothersNodesStack, params.length)
 
     if (node === null) {
       if (brothersNodesStack.length === 0) {
