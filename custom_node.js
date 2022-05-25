@@ -56,18 +56,21 @@ class StaticNode extends ParentNode {
     super()
     this.prefix = prefix
     this.wildcardChild = null
-    this.parametricChild = null
+    this.parametricChildren = []
     this.kind = NODE_TYPES.STATIC
     this._compilePrefixMatch()
   }
 
   createParametricChild (regex) {
-    if (this.parametricChild) {
-      return this.parametricChild
+    let parametricChild = this.parametricChildren.find(child => child.regex === regex)
+
+    if (parametricChild) {
+      return parametricChild
     }
 
-    this.parametricChild = new ParametricNode(regex)
-    return this.parametricChild
+    parametricChild = new ParametricNode(regex)
+    this.parametricChildren.push(parametricChild)
+    return parametricChild
   }
 
   createWildcardChild () {
@@ -93,6 +96,38 @@ class StaticNode extends ParentNode {
     return staticNode
   }
 
+  getNextNode (path, pathIndex, nodeStack, paramsCount) {
+    let node = this.findStaticMatchingChild(path, pathIndex)
+    let parametricBrotherNodeIndex = 0
+
+    if (node === null) {
+      if (this.parametricChildren.length === 0) {
+        return this.wildcardChild
+      }
+
+      node = this.parametricChildren[0]
+      parametricBrotherNodeIndex = 1
+    }
+
+    if (this.wildcardChild !== null) {
+      nodeStack.push({
+        paramsCount,
+        brotherPathIndex: pathIndex,
+        brotherNode: this.wildcardChild
+      })
+    }
+
+    for (let i = parametricBrotherNodeIndex; i < this.parametricChildren.length; i++) {
+      nodeStack.push({
+        paramsCount,
+        brotherPathIndex: pathIndex,
+        brotherNode: this.parametricChildren[i]
+      })
+    }
+
+    return node
+  }
+
   _compilePrefixMatch () {
     if (this.prefix.length === 1) {
       this.matchPrefix = () => true
@@ -115,12 +150,20 @@ class ParametricNode extends ParentNode {
     this.isRegex = !!regex
     this.kind = NODE_TYPES.PARAMETRIC
   }
+
+  getNextNode (path, pathIndex) {
+    return this.findStaticMatchingChild(path, pathIndex)
+  }
 }
 
 class WildcardNode extends Node {
   constructor () {
     super()
     this.kind = NODE_TYPES.WILDCARD
+  }
+
+  getNextNode () {
+    return null
   }
 }
 

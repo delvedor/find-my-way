@@ -1,17 +1,11 @@
 'use strict'
 
-const deepEqual = require('fast-deep-equal')
-
 class HandlerStorage {
   constructor () {
     this.unconstrainedHandler = null // optimized reference to the handler that will match most of the time
     this.constraints = []
     this.handlers = [] // unoptimized list of handler objects for which the fast matcher function will be compiled
     this.constrainedHandlerStores = null
-  }
-
-  hasHandler (constraints) {
-    return this.handlers.find(handler => deepEqual(constraints, handler.constraints)) !== undefined
   }
 
   // This is the hot path for node handler finding -- change with care!
