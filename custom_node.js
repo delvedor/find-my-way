@@ -62,7 +62,12 @@ class StaticNode extends ParentNode {
   }
 
   createParametricChild (regex) {
-    let parametricChild = this.parametricChildren.find(child => child.regex === regex)
+    const regexpSource = regex && regex.source
+
+    let parametricChild = this.parametricChildren.find(child => {
+      const childRegexSource = child.regex && child.regex.source
+      return childRegexSource === regexpSource
+    })
 
     if (parametricChild) {
       return parametricChild
