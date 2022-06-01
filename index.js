@@ -441,10 +441,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         param = safeDecodeURIComponent(param)
       }
 
-      if (param.length > maxParamLength) {
-        return null
-      }
-
       params.push(param)
       pathIndex = pathLen
       continue
