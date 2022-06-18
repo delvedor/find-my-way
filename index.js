@@ -194,6 +194,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       let isRegexNode = false
       const regexps = []
 
+      let staticEndingLength = 0
       let lastParamStartIndex = i + 1
       for (let j = lastParamStartIndex; ; j++) {
         const charCode = path.charCodeAt(j)
@@ -234,6 +235,10 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
           lastParamStartIndex = lastParamEndIndex + 1
           j = lastParamEndIndex
+
+          if (path.charCodeAt(j) === 47 || j === path.length) {
+            staticEndingLength = staticPart.length
+          }
         } else if (charCode === 47 || j === path.length) {
           const paramName = path.slice(lastParamStartIndex, j)
           params.push(paramName)
@@ -244,7 +249,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         }
 
         if (path.charCodeAt(j) === 47 || j === path.length) {
-          path = path.slice(0, i + 1) + path.slice(j)
+          path = path.slice(0, i + 1) + path.slice(j - staticEndingLength)
+          i += staticEndingLength
           break
         }
       }

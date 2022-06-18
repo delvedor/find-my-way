@@ -74,7 +74,11 @@ class StaticNode extends ParentNode {
     }
 
     parametricChild = new ParametricNode(regex)
-    this.parametricChildren.push(parametricChild)
+    if (regex) {
+      this.parametricChildren.unshift(parametricChild)
+    } else {
+      this.parametricChildren.push(parametricChild)
+    }
     return parametricChild
   }
 
@@ -122,7 +126,7 @@ class StaticNode extends ParentNode {
       })
     }
 
-    for (let i = parametricBrotherNodeIndex; i < this.parametricChildren.length; i++) {
+    for (let i = this.parametricChildren.length - 1; i >= parametricBrotherNodeIndex; i--) {
       nodeStack.push({
         paramsCount,
         brotherPathIndex: pathIndex,
