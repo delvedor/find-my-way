@@ -245,6 +245,32 @@ test('Method already declared', t => {
   }
 })
 
+test('Method already declared if * is used', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/*', () => {})
+  try {
+    findMyWay.on('GET', '*', () => {})
+    t.fail('should throw error')
+  } catch (e) {
+    t.equal(e.message, 'Method \'GET\' already declared for route \'*\' with constraints \'{}\'')
+  }
+})
+
+test('Method already declared if /* is used', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '*', () => {})
+  try {
+    findMyWay.on('GET', '/*', () => {})
+    t.fail('should throw error')
+  } catch (e) {
+    t.equal(e.message, 'Method \'GET\' already declared for route \'/*\' with constraints \'{}\'')
+  }
+})
+
 test('Method already declared [ignoreTrailingSlash=true]', t => {
   t.plan(2)
 
