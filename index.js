@@ -274,9 +274,18 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     path = path.toLowerCase()
   }
 
+  const isRootWildcard = path === '*' || path === '/*'
   for (const existRoute of this._routesPatterns) {
+    let samePath = false
+
+    if (existRoute.path === path) {
+      samePath = true
+    } else if (isRootWildcard && (existRoute.path === '/*' || existRoute.path === '*')) {
+      samePath = true
+    }
+
     if (
-      existRoute.path === path &&
+      samePath &&
       existRoute.method === method &&
       deepEqual(existRoute.constraints, constraints)
     ) {
