@@ -145,8 +145,8 @@ class StaticNode extends ParentNode {
 
     const lines = []
     for (let i = 1; i < this.prefix.length; i++) {
-      const chatCode = this.prefix.charCodeAt(i)
-      lines.push(`path.charCodeAt(i + ${i}) === ${chatCode}`)
+      const charCode = this.prefix.charCodeAt(i)
+      lines.push(`path.charCodeAt(i + ${i}) === ${charCode}`)
     }
     this.matchPrefix = new Function('path', 'i', `return ${lines.join(' && ')}`) // eslint-disable-line
   }
