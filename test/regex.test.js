@@ -192,7 +192,7 @@ test('Should check if a regex is safe to use', t => {
     try {
       findMyWay.on('GET', `/test/:id(${regex.toString()})`, noop)
       t.pass('ok')
-      findMyWay.off('GET', `/test/:id(${regex.toString()})`, noop)
+      findMyWay.off('GET', `/test/:id(${regex.toString()})`)
     } catch (err) {
       t.fail(err)
     }
@@ -239,7 +239,7 @@ test('Disable safe regex check', t => {
     try {
       findMyWay.on('GET', `/test/:id(${regex.toString()})`, noop)
       t.pass('ok')
-      findMyWay.off('GET', `/test/:id(${regex.toString()})`, noop)
+      findMyWay.off('GET', `/test/:id(${regex.toString()})`)
     } catch (err) {
       t.fail(err)
     }
@@ -249,7 +249,7 @@ test('Disable safe regex check', t => {
     try {
       findMyWay.on('GET', `/test/:id(${regex.toString()})`, noop)
       t.pass('ok')
-      findMyWay.off('GET', `/test/:id(${regex.toString()})`, noop)
+      findMyWay.off('GET', `/test/:id(${regex.toString()})`)
     } catch (err) {
       t.fail(err)
     }

@@ -351,7 +351,10 @@ Router.prototype._off = function _off (method, path, opts) {
   assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
 
   function matcher (currentConstraints) {
-    if (!opts || !currentConstraints) return true
+    // no constraints given so we delete all routes no matter if with constraints or not
+    if (!opts) return true
+    // the route to be deleted has constraints but the current route does not, so it is not deleted
+    if (!currentConstraints) return false
 
     return deepEqual(opts, currentConstraints)
   }
