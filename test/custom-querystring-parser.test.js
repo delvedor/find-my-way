@@ -2,7 +2,7 @@
 
 const t = require('tap')
 const test = t.test
-const querystring = require('querystring')
+const querystring = require('fast-querystring')
 const FindMyWay = require('../')
 
 test('Custom querystring parser', t => {
