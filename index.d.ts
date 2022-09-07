@@ -64,8 +64,8 @@ declare namespace Router {
     storage() : {
       get(value: T) : Handler<V> | null,
       set(value: T, handler: Handler<V>) : void,
-      del(value: T) : void,
-      empty() : void
+      del?(value: T) : void,
+      empty?() : void
     },
     validate(value: unknown): void,
     deriveConstraint<Context>(req: Req<V>, ctx?: Context) : T,

@@ -1,4 +1,4 @@
-import { expectType } from 'tsd'
+import { expectType, expectError } from 'tsd'
 import * as Router from '../../'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 import { IncomingMessage, ServerResponse } from 'http'
@@ -26,9 +26,7 @@ let http2Res!: Http2ServerResponse;
         storage () {
           return {
             get (version) { return handler },
-            set (version, handler) {},
-            del (version) {},
-            empty () {}
+            set (version, handler) {}
           }
         },
         deriveConstraint(req) { return '1.0.0' },
@@ -74,9 +72,7 @@ let http2Res!: Http2ServerResponse;
       storage () {
         return {
           get (version) { return handler },
-          set (version, handler) {},
-          del (version) {},
-          empty () {}
+          set (version, handler) {}
         }
       },
       deriveConstraint(req) { return '1.0.0' },
@@ -140,9 +136,7 @@ let http2Res!: Http2ServerResponse;
     storage () {
       return {
         get (version) { return handler },
-        set (version, handler) {},
-        del (version) {},
-        empty () {}
+        set (version, handler) {}
       }
     }
   }
@@ -151,8 +145,6 @@ let http2Res!: Http2ServerResponse;
   const acceptAndContentType: AcceptAndContentType = { accept: 'application/json', contentType: 'application/xml' }
 
   expectType<AcceptAndContentType>(customConstraintWithObject.deriveConstraint(http1Req, http1Res))
-  expectType<void>(storageWithObject.empty())
-  expectType<void>(storageWithObject.del(acceptAndContentType));
   expectType<Router.Handler<Router.HTTPVersion.V1> | null>(storageWithObject.get(acceptAndContentType));
   expectType<void>(storageWithObject.set(acceptAndContentType, () => {}));
 
@@ -165,9 +157,7 @@ let http2Res!: Http2ServerResponse;
     storage () {
       return {
         get (version) { return handler },
-        set (version, handler) {},
-        del (version) {},
-        empty () {}
+        set (version, handler) {}
       }
     }
   }
@@ -175,8 +165,6 @@ let http2Res!: Http2ServerResponse;
   const storageWithDefault = customConstraintWithDefault.storage()
 
   expectType<string>(customConstraintWithDefault.deriveConstraint(http1Req, http1Res))
-  expectType<void>(storageWithDefault.empty())
-  expectType<void>(storageWithDefault.del(''));
   expectType<Router.Handler<Router.HTTPVersion.V1> | null>(storageWithDefault.get(''));
   expectType<void>(storageWithDefault.set('', () => {}));
 }
