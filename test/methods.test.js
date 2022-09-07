@@ -775,7 +775,7 @@ test('off removes all routes without checking constraints if no constraints are 
 })
 
 test('off removes only constrainted routes if constraints are specified', t => {
-  t.plan(1)
+  t.plan(2)
 
   const findMyWay = FindMyWay()
 
@@ -785,6 +785,7 @@ test('off removes only constrainted routes if constraints are specified', t => {
   findMyWay.off('GET', '/test', { host: 'example.com' })
 
   t.equal(findMyWay.routes.length, 1)
+  t.notOk(findMyWay.routes[0].opts.constraints)
 })
 
 test('off removes no routes if provided constraints does not match any registered route', t => {
@@ -799,4 +800,31 @@ test('off removes no routes if provided constraints does not match any registere
   findMyWay.off('GET', '/test', { version: '1.x' })
 
   t.equal(findMyWay.routes.length, 3)
+})
+
+test('off validates that constraints is an object or undefined', t => {
+  t.plan(6)
+
+  const findMyWay = FindMyWay()
+
+  t.throws(() => findMyWay.off('GET', '/', 2))
+  t.throws(() => findMyWay.off('GET', '/', 'should throw'))
+  t.throws(() => findMyWay.off('GET', '/', []))
+  t.doesNotThrow(() => findMyWay.off('GET', '/', undefined))
+  t.doesNotThrow(() => findMyWay.off('GET', '/', {}))
+  t.doesNotThrow(() => findMyWay.off('GET', '/'))
+})
+
+test('off removes only unconstrainted route if an empty object is given as constraints', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.get('/', {}, () => {})
+  findMyWay.get('/', { constraints: { host: 'fastify.io' } }, () => {})
+
+  findMyWay.off('GET', '/', {})
+
+  t.equal(findMyWay.routes.length, 1)
+  t.equal(findMyWay.routes[0].opts.constraints.host, 'fastify.io')
 })

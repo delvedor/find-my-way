@@ -312,11 +312,16 @@ Router.prototype.reset = function reset () {
   this._routesPatterns = []
 }
 
-Router.prototype.off = function off (method, path, opts) {
+Router.prototype.off = function off (method, path, constraints) {
   // path validation
   assert(typeof path === 'string', 'Path should be a string')
   assert(path.length > 0, 'The path could not be empty')
   assert(path[0] === '/' || path[0] === '*', 'The first character of a path should be `/` or `*`')
+  // options validation
+  assert(
+    typeof constraints === 'undefined' ||
+    (typeof constraints === 'object' && !Array.isArray(constraints) && constraints !== null),
+    'Constraints should be an object or undefined.')
 
   // path ends with optional parameter
   const optionalParamMatch = path.match(OPTIONAL_PARAM_REGEXP)
@@ -326,8 +331,8 @@ Router.prototype.off = function off (method, path, opts) {
     const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
     const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
 
-    this.off(method, pathFull, opts)
-    this.off(method, pathOptional, opts)
+    this.off(method, pathFull, constraints)
+    this.off(method, pathOptional, constraints)
     return
   }
 
@@ -341,26 +346,27 @@ Router.prototype.off = function off (method, path, opts) {
 
   const methods = Array.isArray(method) ? method : [method]
   for (const method of methods) {
-    this._off(method, path, opts)
+    this._off(method, path, constraints)
   }
 }
 
-Router.prototype._off = function _off (method, path, opts) {
+Router.prototype._off = function _off (method, path, constraints) {
   // method validation
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
 
-  function matcher (currentConstraints) {
-    // no constraints given so we delete all routes no matter if with constraints or not
-    if (!opts) return true
-    // the route to be deleted has constraints but the current route does not, so it is not deleted
-    if (!currentConstraints) return false
-
-    return deepEqual(opts, currentConstraints)
+  function matcherWithoutConstraints (route) {
+    return method !== route.method || path !== route.path
   }
 
+  function matcherWithConstraints (route) {
+    return matcherWithoutConstraints(route) || !deepEqual(constraints, route.opts.constraints || {})
+  }
+
+  const predicate = constraints ? matcherWithConstraints : matcherWithoutConstraints
+
   // Rebuild tree without the specific route
-  const newRoutes = this.routes.filter((route) => method !== route.method || path !== route.path || !matcher(route.opts.constraints))
+  const newRoutes = this.routes.filter(predicate)
   this._rebuild(newRoutes)
 }
 
