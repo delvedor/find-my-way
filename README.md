@@ -313,29 +313,69 @@ Once a url has been matched, `find-my-way` will figure out which handler registe
 The router is able to route all HTTP methods defined by [`http` core module](https://nodejs.org/api/http.html#http_http_methods).
 
 <a name="off"></a>
-#### off(method, path)
-Deregister a route.
+#### off(methods[], path, [constraints])
+
+Used to deregister routes.
+
+<a name="off-without-constraints"></a>
+##### off(methods, path)
+
+If no constraint argument is passed, all routes with identical path and method are deregistered, regardless of whether 
+a route has constraints or not.
+
 ```js
+router.on('GET', '/example', { constraints: { host: 'fastify.io' } })
+router.on('GET', '/example', { constraints: { version: '1.x' } })
+router.on('GET', '/example')
+
+// Deregisters all 3 routes registered above
 router.off('GET', '/example')
-// => { handler: Function, params: Object, store: Object}
-// => null
+```
+
+##### off(methods, path, constraints)
+
+If a constraint object is specified, only those routes are deleted that have the same constraints as well as the 
+identical path and method. If an empty object is passed, only unconstrained routes will be deleted.
+```js
+router.on('GET', '/example', { constraints: { host: 'fastify.io' } })
+router.on('GET', '/example', { constraints: { version: '1.x' } })
+router.on('GET', '/example')
+
+// Deregisters only the third route without constraints
+router.off('GET', '/example', {})
+
+// Deregisters only the first route
+router.off('GET', '/example', { host: 'fastify.io' })
 ```
 
 ##### off(methods[], path)
-Deregister a route for each method specified in the `methods` array.
-It comes handy when you need to deregister multiple routes with the same path but different methods.
+
+Deregister a route for each method specified in the methods array. It comes handy when you need to deregister multiple 
+routes with the same path but different methods. As explained above, the constraints will be ignored here.
+
 ```js
-router.off(['GET', 'POST'], '/example')
-// => [{ handler: Function, params: Object, store: Object}]
-// => null
+router.on('GET', '/example', { constraints: { host: 'fastify.io' } })
+router.on('POST', '/example', { constraints: { version: '1.x' } })
+router.on('PUT', '/example')
+
+// Deregisters all 3 routes registered above
+router.off(['POST', 'GET', 'PUT'], '/example')
 ```
 
-##### off(methods, path, [constraints])
-Deregister a route for each `constraints` key is matched, containing keys like the `host` for the request, the `version` for the route to be matched, or other custom constraint values. See the [constraints section](https://github.com/delvedor/find-my-way#constraints) to know more.
+##### off(methods[], path, constraints)
+
 ```js
-router.off('GET', '/example', { host: 'fastify.io' })
-// => [{ handler: Function, params: Object, store: Object}]
-// => null
+router.on('GET', '/example', { constraints: { host: 'fastify.io' } }) // first route
+router.on('POST', '/example', { constraints: { host: 'fastify.io' } }) // second route
+router.on('POST', '/example', { constraints: { host: 'google.de' } }) // third route
+router.on('GET', '/example') // fourth route 
+router.on('POST', '/example') // fifth route 
+
+// Deregisters only first and second route
+router.off(['POST', 'GET'], '/example', { host: 'fastify.io' })
+
+// Deregisters only fourth and fifth route
+router.off(['POST', 'GET'], '/example', {})
 ```
 
 #### lookup(request, response, [context])

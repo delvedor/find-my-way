@@ -760,3 +760,71 @@ test('register all known HTTP methods', t => {
   t.ok(findMyWay.find('M-SEARCH', '/test'))
   t.equal(findMyWay.find('M-SEARCH', '/test').handler, handlers['M-SEARCH'])
 })
+
+test('off removes all routes without checking constraints if no constraints are specified', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test', {}, (req, res) => {})
+  findMyWay.on('GET', '/test', { constraints: { host: 'example.com' } }, (req, res) => {})
+
+  findMyWay.off('GET', '/test')
+
+  t.equal(findMyWay.routes.length, 0)
+})
+
+test('off removes only constrainted routes if constraints are specified', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test', {}, (req, res) => {})
+  findMyWay.on('GET', '/test', { constraints: { host: 'example.com' } }, (req, res) => {})
+
+  findMyWay.off('GET', '/test', { host: 'example.com' })
+
+  t.equal(findMyWay.routes.length, 1)
+  t.notOk(findMyWay.routes[0].opts.constraints)
+})
+
+test('off removes no routes if provided constraints does not match any registered route', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test', {}, (req, res) => {})
+  findMyWay.on('GET', '/test', { constraints: { version: '2.x' } }, (req, res) => {})
+  findMyWay.on('GET', '/test', { constraints: { version: '3.x' } }, (req, res) => {})
+
+  findMyWay.off('GET', '/test', { version: '1.x' })
+
+  t.equal(findMyWay.routes.length, 3)
+})
+
+test('off validates that constraints is an object or undefined', t => {
+  t.plan(6)
+
+  const findMyWay = FindMyWay()
+
+  t.throws(() => findMyWay.off('GET', '/', 2))
+  t.throws(() => findMyWay.off('GET', '/', 'should throw'))
+  t.throws(() => findMyWay.off('GET', '/', []))
+  t.doesNotThrow(() => findMyWay.off('GET', '/', undefined))
+  t.doesNotThrow(() => findMyWay.off('GET', '/', {}))
+  t.doesNotThrow(() => findMyWay.off('GET', '/'))
+})
+
+test('off removes only unconstrainted route if an empty object is given as constraints', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.get('/', {}, () => {})
+  findMyWay.get('/', { constraints: { host: 'fastify.io' } }, () => {})
+
+  findMyWay.off('GET', '/', {})
+
+  t.equal(findMyWay.routes.length, 1)
+  t.equal(findMyWay.routes[0].opts.constraints.host, 'fastify.io')
+})
