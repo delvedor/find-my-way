@@ -7,6 +7,33 @@ A crazy fast HTTP router, internally uses an highly performant [Radix Tree](http
 If you want to see a benchmark comparison with the most commonly used routers, see [here](https://github.com/delvedor/router-benchmark).<br>
 Do you need a real-world example that uses this router? Check out [Fastify](https://github.com/fastify/fastify) or [Restify](https://github.com/restify/node-restify).
 
+- [Install](#install)
+- [Usage](#usage)
+- [API](#api)
+  - [FindMyWay([options])](#find-my-way)
+  - [on(method, path, [opts], handler, [store])](#onmethod-path-opts-handler-store)
+    - [Versioned routes](#versioned-routes)
+      - [default](#default)
+      - [custom](#custom)
+    - [on(methods[], path, [opts], handler, [store])](#onmethods-path-opts-handler-store)
+    - [Supported path formats](#supported-path-formats)
+    - [Match order](#match-order)
+    - [Supported methods](#supported-methods)
+  - [off(method, path)](#offmethod-path)
+    - [off(methods[], path)](#offmethods-path)
+    - [off(methods, path, [constraints])](#offmethods-path-constraints)
+  - [lookup(request, response, [context])](#lookuprequest-response-context)
+  - [find(method, path, [constraints])](#findmethod-path-constraints)
+  - [prettyPrint([{ commonPrefix: false, includeMeta: true || [] }])](#prettyprint-commonprefix-false-includemeta-true---)
+  - [reset()](#reset)
+  - [routes](#routes)
+  - [Caveats](#caveats)
+  - [Shorthand methods](#shorthand-methods)
+- [Constraints](#constraints)
+  - [Custom Constraint Strategies](#custom-constraint-strategies)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
+
 <a name="install"></a>
 ## Install
 ```
@@ -156,129 +183,6 @@ router.prettyPrint()
 
 ```
 
-## Constraints
-
-`find-my-way` supports restricting handlers to only match certain requests for the same path. This can be used to support different versions of the same route that conform to a [semver](#semver) based versioning strategy, or restricting some routes to only be available on hosts. `find-my-way` has the semver based versioning strategy and a regex based hostname constraint strategy built in.
-
-To constrain a route to only match sometimes, pass `constraints` to the route options when registering the route:
-
-```js
-findMyWay.on('GET', '/', { constraints: { version: '1.0.2' } }, (req, res) => {
-  // will only run when the request's Accept-Version header asks for a version semver compatible with 1.0.2, like 1.x, or 1.0.x.
-})
-
-findMyWay.on('GET', '/', { constraints: { host: 'example.com' } }, (req, res) => {
-  // will only run when the request's Host header is `example.com`
-})
-```
-
-Constraints can be combined, and route handlers will only match if __all__ of the constraints for the handler match the request. `find-my-way` does a boolean AND with each route constraint, not an OR.
-
-`find-my-way` will try to match the most constrained handlers first before handler with fewer or no constraints.
-
-<a name="custom-constraint-strategies"></a>
-### Custom Constraint Strategies
-
-Custom constraining strategies can be added and are matched against incoming requests while trying to maintain `find-my-way`'s high performance. To register a new type of constraint, you must add a new constraint strategy that knows how to match values to handlers, and that knows how to get the constraint value from a request. Register strategies when constructing a router or use the addConstraintStrategy method.
-
-Add a custom constrain strategy when constructing a router:
-
-```js
-const customResponseTypeStrategy = {
-  // strategy name for referencing in the route handler `constraints` options
-  name: 'accept',
-  // storage factory for storing routes in the find-my-way route tree
-  storage: function () {
-    let handlers = {}
-    return {
-      get: (type) => { return handlers[type] || null },
-      set: (type, store) => { handlers[type] = store }
-    }
-  },
-  // function to get the value of the constraint from each incoming request
-  deriveConstraint: (req, ctx) => {
-    return req.headers['accept']
-  },
-  // optional flag marking if handlers without constraints can match requests that have a value for this constraint
-  mustMatchWhenDerived: true
-}
-
-const router = FindMyWay({ constraints: { accept: customResponseTypeStrategy } });
-```
-
-Add a custom constraint strategy using the addConstraintStrategy method:
-
-```js
-const customResponseTypeStrategy = {
-  // strategy name for referencing in the route handler `constraints` options
-  name: 'accept',
-  // storage factory for storing routes in the find-my-way route tree
-  storage: function () {
-    let handlers = {}
-    return {
-      get: (type) => { return handlers[type] || null },
-      set: (type, store) => { handlers[type] = store }
-    }
-  },
-  // function to get the value of the constraint from each incoming request
-  deriveConstraint: (req, ctx) => {
-    return req.headers['accept']
-  },
-  // optional flag marking if handlers without constraints can match requests that have a value for this constraint
-  mustMatchWhenDerived: true
-}
-
-const router = FindMyWay();
-router.addConstraintStrategy(customResponseTypeStrategy);
-```
-
-Once a custom constraint strategy is registered, routes can be added that are constrained using it:
-
-
-```js
-findMyWay.on('GET', '/', { constraints: { accept: 'application/fancy+json' } }, (req, res) => {
-  // will only run when the request's Accept header asks for 'application/fancy+json'
-})
-
-findMyWay.on('GET', '/', { constraints: { accept: 'application/fancy+xml' } }, (req, res) => {
-  // will only run when the request's Accept header asks for 'application/fancy+xml'
-})
-```
-
-Constraint strategies should be careful to make the `deriveConstraint` function performant as it is run for every request matched by the router. See the `lib/strategies` directory for examples of the built in constraint strategies.
-
-
-<a name="custom-versioning"></a>
-By default, `find-my-way` uses a built in strategies for the version constraint that uses semantic version based matching logic, which is detailed [below](#semver). It is possible to define an alternative strategy:
-
-```js
-const customVersioning = {
-  // replace the built in version strategy
-  name: 'version',
-  // provide a storage factory to store handlers in a simple way
-  storage: function () {
-    let versions = {}
-    return {
-      get: (version) => { return versions[version] || null },
-      set: (version, store) => { versions[version] = store }
-    }
-  },
-  deriveConstraint: (req, ctx) => {
-    return req.headers['accept']
-  },
-  mustMatchWhenDerived: true // if the request is asking for a version, don't match un-version-constrained handlers
-}
-
-const router = FindMyWay({ constraints: { version: customVersioning } });
-```
-
-The custom strategy object should contain next properties:
-* `storage` - a factory function to store lists of handlers for each possible constraint value. The storage object can use domain-specific storage mechanisms to store handlers in a way that makes sense for the constraint at hand. See `lib/strategies` for examples, like the `version` constraint strategy that matches using semantic versions, or the `host` strategy that allows both exact and regex host constraints.
-* `deriveConstraint` - the function to determine the value of this constraint given a request
-
-The signature of the functions and objects must match the one from the example above.
-
-*Please, be aware, if you use your own constraining strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself!*
 
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])
@@ -434,48 +338,6 @@ router.off('GET', '/example', { host: 'fastify.io' })
 // => null
 ```
 
-<a name="reset"></a>
-#### reset()
-Empty router.
-```js
-router.reset()
-```
-
-##### Caveats
-* It's not possible to register two routes which differs only for their parameters, because internally they would be seen as the same route. In a such case you'll get an early error during the route registration phase. An example is worth thousand words:
-```js
-const findMyWay = FindMyWay({
-  defaultRoute: (req, res) => {}
-})
-
-findMyWay.on('GET', '/user/:userId(^\\d+)', (req, res, params) => {})
-
-findMyWay.on('GET', '/user/:username(^[a-z]+)', (req, res, params) => {})
-// Method 'GET' already declared for route ':'
-```
-
-<a name="shorthand-methods"></a>
-##### Shorthand methods
-If you want an even nicer api, you can also use the shorthand methods to declare your routes.
-
-For each HTTP supported method, there's the shorthand method. For example:
-```js
-router.get(path, handler [, store])
-router.delete(path, handler [, store])
-router.head(path, handler [, store])
-router.patch(path, handler [, store])
-router.post(path, handler [, store])
-router.put(path, handler [, store])
-router.options(path, handler [, store])
-// ...
-```
-
-If you need a route that supports *all* methods you can use the `all` api.
-```js
-router.all(path, handler [, store])
-```
-
-<a name="lookup"></a>
 #### lookup(request, response, [context])
 Start a new search, `request` and `response` are the server req/res objects.<br>
 If a route is found it will automatically call the handler, otherwise the default route will be called.<br>
@@ -576,6 +438,13 @@ console.log(findMyWay.prettyPrint({ commonPrefix: true, includeMeta: true }))
 //     └── update (PUT)
 ```
 
+<a name="reset"></a>
+#### reset()
+Empty router.
+```js
+router.reset()
+```
+
 <a name="routes"></a>
 #### routes
 Return the all routes **registered** at moment, useful for debugging.
@@ -605,6 +474,167 @@ console.log(findMyWay.routes)
 //   }
 // ]
 ```
+
+#### Caveats
+* It's not possible to register two routes which differs only for their parameters, because internally they would be seen as the same route. In a such case you'll get an early error during the route registration phase. An example is worth thousand words:
+```js
+const findMyWay = FindMyWay({
+  defaultRoute: (req, res) => {}
+})
+
+findMyWay.on('GET', '/user/:userId(^\\d+)', (req, res, params) => {})
+
+findMyWay.on('GET', '/user/:username(^[a-z]+)', (req, res, params) => {})
+// Method 'GET' already declared for route ':'
+```
+
+<a name="shorthand-methods"></a>
+#### Shorthand methods
+If you want an even nicer api, you can also use the shorthand methods to declare your routes.
+
+For each HTTP supported method, there's the shorthand method. For example:
+```js
+router.get(path, handler [, store])
+router.delete(path, handler [, store])
+router.head(path, handler [, store])
+router.patch(path, handler [, store])
+router.post(path, handler [, store])
+router.put(path, handler [, store])
+router.options(path, handler [, store])
+// ...
+```
+
+If you need a route that supports *all* methods you can use the `all` api.
+```js
+router.all(path, handler [, store])
+```
+
+<a name="lookup"></a>
+
+## Constraints
+
+`find-my-way` supports restricting handlers to only match certain requests for the same path. This can be used to support different versions of the same route that conform to a [semver](#semver) based versioning strategy, or restricting some routes to only be available on hosts. `find-my-way` has the semver based versioning strategy and a regex based hostname constraint strategy built in.
+
+To constrain a route to only match sometimes, pass `constraints` to the route options when registering the route:
+
+```js
+findMyWay.on('GET', '/', { constraints: { version: '1.0.2' } }, (req, res) => {
+  // will only run when the request's Accept-Version header asks for a version semver compatible with 1.0.2, like 1.x, or 1.0.x.
+})
+
+findMyWay.on('GET', '/', { constraints: { host: 'example.com' } }, (req, res) => {
+  // will only run when the request's Host header is `example.com`
+})
+```
+
+Constraints can be combined, and route handlers will only match if __all__ of the constraints for the handler match the request. `find-my-way` does a boolean AND with each route constraint, not an OR.
+
+`find-my-way` will try to match the most constrained handlers first before handler with fewer or no constraints.
+
+<a name="custom-constraint-strategies"></a>
+### Custom Constraint Strategies
+
+Custom constraining strategies can be added and are matched against incoming requests while trying to maintain `find-my-way`'s high performance. To register a new type of constraint, you must add a new constraint strategy that knows how to match values to handlers, and that knows how to get the constraint value from a request. Register strategies when constructing a router or use the addConstraintStrategy method.
+
+Add a custom constrain strategy when constructing a router:
+
+```js
+const customResponseTypeStrategy = {
+  // strategy name for referencing in the route handler `constraints` options
+  name: 'accept',
+  // storage factory for storing routes in the find-my-way route tree
+  storage: function () {
+    let handlers = {}
+    return {
+      get: (type) => { return handlers[type] || null },
+      set: (type, store) => { handlers[type] = store }
+    }
+  },
+  // function to get the value of the constraint from each incoming request
+  deriveConstraint: (req, ctx) => {
+    return req.headers['accept']
+  },
+  // optional flag marking if handlers without constraints can match requests that have a value for this constraint
+  mustMatchWhenDerived: true
+}
+
+const router = FindMyWay({ constraints: { accept: customResponseTypeStrategy } });
+```
+
+Add a custom constraint strategy using the addConstraintStrategy method:
+
+```js
+const customResponseTypeStrategy = {
+  // strategy name for referencing in the route handler `constraints` options
+  name: 'accept',
+  // storage factory for storing routes in the find-my-way route tree
+  storage: function () {
+    let handlers = {}
+    return {
+      get: (type) => { return handlers[type] || null },
+      set: (type, store) => { handlers[type] = store }
+    }
+  },
+  // function to get the value of the constraint from each incoming request
+  deriveConstraint: (req, ctx) => {
+    return req.headers['accept']
+  },
+  // optional flag marking if handlers without constraints can match requests that have a value for this constraint
+  mustMatchWhenDerived: true
+}
+
+const router = FindMyWay();
+router.addConstraintStrategy(customResponseTypeStrategy);
+```
+
+Once a custom constraint strategy is registered, routes can be added that are constrained using it:
+
+
+```js
+findMyWay.on('GET', '/', { constraints: { accept: 'application/fancy+json' } }, (req, res) => {
+  // will only run when the request's Accept header asks for 'application/fancy+json'
+})
+
+findMyWay.on('GET', '/', { constraints: { accept: 'application/fancy+xml' } }, (req, res) => {
+  // will only run when the request's Accept header asks for 'application/fancy+xml'
+})
+```
+
+Constraint strategies should be careful to make the `deriveConstraint` function performant as it is run for every request matched by the router. See the `lib/strategies` directory for examples of the built in constraint strategies.
+
+
+<a name="custom-versioning"></a>
+By default, `find-my-way` uses a built in strategies for the version constraint that uses semantic version based matching logic, which is detailed [below](#semver). It is possible to define an alternative strategy:
+
+```js
+const customVersioning = {
+  // replace the built in version strategy
+  name: 'version',
+  // provide a storage factory to store handlers in a simple way
+  storage: function () {
+    let versions = {}
+    return {
+      get: (version) => { return versions[version] || null },
+      set: (version, store) => { versions[version] = store }
+    }
+  },
+  deriveConstraint: (req, ctx) => {
+    return req.headers['accept']
+  },
+  mustMatchWhenDerived: true // if the request is asking for a version, don't match un-version-constrained handlers
+}
+
+const router = FindMyWay({ constraints: { version: customVersioning } });
+```
+
+The custom strategy object should contain next properties:
+* `storage` - a factory function to store lists of handlers for each possible constraint value. The storage object can use domain-specific storage mechanisms to store handlers in a way that makes sense for the constraint at hand. See `lib/strategies` for examples, like the `version` constraint strategy that matches using semantic versions, or the `host` strategy that allows both exact and regex host constraints.
+* `deriveConstraint` - the function to determine the value of this constraint given a request
+
+The signature of the functions and objects must match the one from the example above.
+
+*Please, be aware, if you use your own constraining strategy - you use it on your own risk. This can lead both to the performance degradation and bugs which are not related to `find-my-way` itself!*
+
 
 <a name="acknowledgements"></a>
 ## Acknowledgements
