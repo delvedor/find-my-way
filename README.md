@@ -137,7 +137,7 @@ const router = require('find-my-way')({
 })
 ```
 
-The default query string parser that find-my-way uses is the Node.js's core querystring module. You can change this default setting by passing the option querystringParser and use a custom one, such as [qs](https://www.npmjs.com/package/qs).
+The default query string parser that find-my-way uses is [fast-querystring](https://www.npmjs.com/package/fast-querystring) module. You can change this default setting by passing the option querystringParser and use a custom one, such as [qs](https://www.npmjs.com/package/qs).
 
 ```js
 const qs = require('qs')

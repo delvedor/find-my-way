@@ -27,7 +27,7 @@
 
 const assert = require('assert')
 const http = require('http')
-const querystring = require('querystring')
+const querystring = require('fast-querystring')
 const isRegexSafe = require('safe-regex2')
 const deepEqual = require('fast-deep-equal')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
