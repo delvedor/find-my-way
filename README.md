@@ -22,7 +22,7 @@ Do you need a real-world example that uses this router? Check out [Fastify](http
   - [off(method, path)](#offmethod-path)
     - [off(methods[], path)](#offmethods-path)
     - [off(methods, path, [constraints])](#offmethods-path-constraints)
-  - [lookup(request, response, [context])](#lookuprequest-response-context)
+  - [lookup(request, response, [context], [done])](#lookuprequest-response-context)
   - [find(method, path, [constraints])](#findmethod-path-constraints)
   - [prettyPrint([{ commonPrefix: false, includeMeta: true || [] }])](#prettyprint-commonprefix-false-includemeta-true---)
   - [reset()](#reset)
@@ -378,7 +378,7 @@ router.off(['POST', 'GET'], '/example', { host: 'fastify.io' })
 router.off(['POST', 'GET'], '/example', {})
 ```
 
-#### lookup(request, response, [context])
+#### lookup(request, response, [context], [done])
 Start a new search, `request` and `response` are the server req/res objects.<br>
 If a route is found it will automatically call the handler, otherwise the default route will be called.<br>
 The url is sanitized internally, all the parameters and wildcards are decoded automatically.
@@ -392,6 +392,19 @@ router.on('GET', '*', function(req, res) {
   res.end(this.greeting);
 })
 router.lookup(req, res, { greeting: 'Hello, World!' })
+```
+
+`lookup` accepts an optional `done` callback for case when you use an async `deriveConstraint` function.
+```js
+router.on('GET', '*', function(req, res) {
+  res.end({ hello: 'world' });
+})
+router.lookup(req, res, (err) => {
+  if (err !== null) {
+    // handle error
+  }
+  console.log('Handler executed!!!'); 
+})
 ```
 
 <a name="find"></a>
@@ -602,7 +615,30 @@ const router = FindMyWay({ constraints: { accept: customResponseTypeStrategy } }
 ```
 
 Add a custom constraint strategy using the addConstraintStrategy method:
+```js
+const asyncCustomResponseTypeStrategy = {
+  // strategy name for referencing in the route handler `constraints` options
+  name: 'accept',
+  // storage factory for storing routes in the find-my-way route tree
+  storage: function () {
+    let handlers = {}
+    return {
+      get: (type) => { return handlers[type] || null },
+      set: (type, store) => { handlers[type] = store }
+    }
+  },
+  // function to get the value of the constraint from each incoming request
+  deriveConstraint: (req, ctx, done) => {
+    done(null, req.headers['accept'])
+  },
+  // optional flag marking if handlers without constraints can match requests that have a value for this constraint
+  mustMatchWhenDerived: true
+}
 
+const router = FindMyWay({ constraints: { accept: asyncCustomResponseTypeStrategy } });
+```
+
+Add an async custom constrain strategy when constructing a router:
 ```js
 const customResponseTypeStrategy = {
   // strategy name for referencing in the route handler `constraints` options
