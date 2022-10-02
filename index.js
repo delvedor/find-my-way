@@ -267,6 +267,10 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       params.push('*')
       currentNode = currentNode.createWildcardChild()
       parentNodePathIndex = i + 1
+
+      if (i !== path.length - 1) {
+        throw new Error('Wildcard must be the last character in the route')
+      }
     }
   }
 

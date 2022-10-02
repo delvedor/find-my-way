@@ -601,3 +601,19 @@ test('Wildcard node with constraints', t => {
     null
   )
 })
+
+test('Wildcard must be the last character in the route', (t) => {
+  t.plan(6)
+
+  const expectedError = new Error('Wildcard must be the last character in the route')
+
+  const findMyWay = FindMyWay()
+
+  t.throws(() => findMyWay.on('GET', '*1', () => {}), expectedError)
+  t.throws(() => findMyWay.on('GET', '*/', () => {}), expectedError)
+  t.throws(() => findMyWay.on('GET', '*?', () => {}), expectedError)
+
+  t.throws(() => findMyWay.on('GET', '/foo*123', () => {}), expectedError)
+  t.throws(() => findMyWay.on('GET', '/foo*?', () => {}), expectedError)
+  t.throws(() => findMyWay.on('GET', '/foo*/', () => {}), expectedError)
+})
