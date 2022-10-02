@@ -382,10 +382,19 @@ Router.prototype.lookup = function lookup (req, res, ctx, done) {
     return this.callHandler(handle, req, res, ctx)
   }
 
-  this.constrainer.deriveConstraints(req, ctx, (constraints) => {
-    const handle = this.find(req.method, req.url, constraints)
-    const result = this.callHandler(handle, req, res, ctx)
-    done(result)
+  this.constrainer.deriveConstraints(req, ctx, (err, constraints) => {
+    if (err !== null) {
+      done(err)
+      return
+    }
+
+    try {
+      const handle = this.find(req.method, req.url, constraints)
+      const result = this.callHandler(handle, req, res, ctx)
+      done(null, result)
+    } catch (err) {
+      done(err)
+    }
   })
 }
 
