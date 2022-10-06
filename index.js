@@ -223,13 +223,18 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
           let lastParamEndIndex = j
           for (; lastParamEndIndex < path.length; lastParamEndIndex++) {
             const charCode = path.charCodeAt(lastParamEndIndex)
-            if (charCode === 58 || charCode === 47) {
-              break
+            const nextCharCode = path.charCodeAt(lastParamEndIndex + 1)
+            if (charCode === 58 && nextCharCode === 58) {
+              lastParamEndIndex++
+              continue
             }
+            if (charCode === 58 || charCode === 47) break
           }
 
-          const staticPart = path.slice(j, lastParamEndIndex)
+          let staticPart = path.slice(j, lastParamEndIndex)
           if (staticPart) {
+            staticPart = staticPart.split('::').join(':')
+            staticPart = staticPart.split('%').join('%25')
             regexps.push(escapeRegExp(staticPart))
           }
 

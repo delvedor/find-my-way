@@ -97,6 +97,21 @@ test('Special chars on path parameter', t => {
   findMyWay.lookup(get('/reg/123%20.png'), null, { expect: { regExeParam: '123' }, handler: regexPathParam })
 })
 
+test('Multi parametric route with encoded colon separator', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/:param(.*)::suffix', (req, res, params) => {
+    t.equal(params.param, 'foo-bar')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/foo-bar%3Asuffix', headers: {} }, null)
+})
+
 function get (url) {
   return { method: 'GET', url, headers: {} }
 }
