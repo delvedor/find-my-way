@@ -374,8 +374,35 @@ Router.prototype._off = function _off (method, path, constraints) {
   this._rebuild(newRoutes)
 }
 
-Router.prototype.lookup = function lookup (req, res, ctx) {
-  var handle = this.find(req.method, req.url, this.constrainer.deriveConstraints(req, ctx))
+Router.prototype.lookup = function lookup (req, res, ctx, done) {
+  if (typeof ctx === 'function') {
+    done = ctx
+    ctx = undefined
+  }
+
+  if (done === undefined) {
+    const constraints = this.constrainer.deriveConstraints(req, ctx)
+    const handle = this.find(req.method, req.url, constraints)
+    return this.callHandler(handle, req, res, ctx)
+  }
+
+  this.constrainer.deriveConstraints(req, ctx, (err, constraints) => {
+    if (err !== null) {
+      done(err)
+      return
+    }
+
+    try {
+      const handle = this.find(req.method, req.url, constraints)
+      const result = this.callHandler(handle, req, res, ctx)
+      done(null, result)
+    } catch (err) {
+      done(err)
+    }
+  })
+}
+
+Router.prototype.callHandler = function callHandler (handle, req, res, ctx) {
   if (handle === null) return this._defaultRoute(req, res, ctx)
   return ctx === undefined
     ? handle.handler(req, res, handle.params, handle.store, handle.searchParams)
