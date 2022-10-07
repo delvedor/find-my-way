@@ -203,6 +203,27 @@ test('Multi parametric route with regexp / 1', t => {
   findMyWay.lookup({ method: 'GET', url: '/at/0h42m', headers: {} }, null)
 })
 
+test('Multi parametric route with colon separator', t => {
+  t.plan(3)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/:param(.*)::suffix', (req, res, params) => {
+    t.equal(params.param, 'foo')
+  })
+
+  findMyWay.on('GET', '/:param1(.*)::suffix1-:param2(.*)::suffix2/static', (req, res, params) => {
+    t.equal(params.param1, 'foo')
+    t.equal(params.param2, 'bar')
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/foo:suffix', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/foo:suffix1-bar:suffix2/static', headers: {} }, null)
+})
+
 test('Multi parametric route with regexp / 2', t => {
   t.plan(8)
   const findMyWay = FindMyWay({
