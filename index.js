@@ -32,7 +32,7 @@ const deepEqual = require('fast-deep-equal')
 const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
 const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
-const httpMethods = require('./lib/http-methods');
+const httpMethods = require('./lib/http-methods')
 const { safeDecodeURI, safeDecodeURIComponent } = require('./lib/url-sanitizer')
 
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
