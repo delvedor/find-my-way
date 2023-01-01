@@ -743,10 +743,10 @@ test('register all known HTTP methods', t => {
   t.plan(6)
   const findMyWay = FindMyWay()
 
-  const http = require('http')
+  const httpMethods = require('../lib/http-methods')
   const handlers = {}
-  for (var i in http.METHODS) {
-    var m = http.METHODS[i]
+  for (var i in httpMethods) {
+    var m = httpMethods[i]
     handlers[m] = function myHandler () {}
     findMyWay.on(m, '/test', handlers[m])
   }
