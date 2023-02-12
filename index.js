@@ -89,7 +89,7 @@ function Router (opts) {
   this.trees = {}
   this.constrainer = new Constrainer(opts.constraints)
 
-  this._routesPatterns = []
+  this._routesPatterns = {}
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -156,6 +156,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   // Boot the tree for this method if it doesn't exist yet
   if (this.trees[method] === undefined) {
     this.trees[method] = new StaticNode('/')
+    this._routesPatterns[method] = []
   }
 
   if (path === '*' && this.trees[method].prefix.length !== 0) {
@@ -193,18 +194,21 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       let isRegexNode = false
       const regexps = []
 
-      let staticEndingLength = 0
       let lastParamStartIndex = i + 1
       for (let j = lastParamStartIndex; ; j++) {
         const charCode = path.charCodeAt(j)
 
-        if (charCode === 40 || charCode === 45 || charCode === 46) {
-          isRegexNode = true
+        const isRegexParam = charCode === 40
+        const isStaticPart = charCode === 45 || charCode === 46
+        const isEndOfNode = charCode === 47 || j === path.length
 
+        if (isRegexParam || isStaticPart || isEndOfNode) {
           const paramName = path.slice(lastParamStartIndex, j)
           params.push(paramName)
 
-          if (charCode === 40) {
+          isRegexNode = isRegexNode || isRegexParam || isStaticPart
+
+          if (isRegexParam) {
             const endOfRegexIndex = getClosingParenthensePosition(path, j)
             const regexString = path.slice(j, endOfRegexIndex + 1)
 
@@ -219,53 +223,39 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
             regexps.push('(.*?)')
           }
 
-          let lastParamEndIndex = j
-          for (; lastParamEndIndex < path.length; lastParamEndIndex++) {
-            const charCode = path.charCodeAt(lastParamEndIndex)
-            const nextCharCode = path.charCodeAt(lastParamEndIndex + 1)
-            if (charCode === 58 && nextCharCode === 58) {
-              lastParamEndIndex++
-              continue
+          const staticPartStartIndex = j
+          for (; j < path.length; j++) {
+            const charCode = path.charCodeAt(j)
+            if (charCode === 47) break
+            if (charCode === 58) {
+              const nextCharCode = path.charCodeAt(j + 1)
+              if (nextCharCode === 58) j++
+              else break
             }
-            if (charCode === 58 || charCode === 47) break
           }
 
-          let staticPart = path.slice(j, lastParamEndIndex)
+          let staticPart = path.slice(staticPartStartIndex, j)
           if (staticPart) {
             staticPart = staticPart.split('::').join(':')
             staticPart = staticPart.split('%').join('%25')
             regexps.push(escapeRegExp(staticPart))
           }
 
-          lastParamStartIndex = lastParamEndIndex + 1
-          j = lastParamEndIndex
+          lastParamStartIndex = j + 1
 
-          if (path.charCodeAt(j) === 47 || j === path.length) {
-            staticEndingLength = staticPart.length
-          }
-        } else if (charCode === 47 || j === path.length) {
-          const paramName = path.slice(lastParamStartIndex, j)
-          params.push(paramName)
+          if (isEndOfNode || path.charCodeAt(j) === 47 || j === path.length) {
+            const nodePattern = isRegexNode ? '()' + staticPart : staticPart
 
-          if (regexps.length !== 0) {
-            regexps.push('(.*?)')
+            path = path.slice(0, i + 1) + nodePattern + path.slice(j)
+            i += nodePattern.length
+
+            const regex = isRegexNode ? new RegExp('^' + regexps.join('') + '$') : null
+            currentNode = currentNode.createParametricChild(regex, staticPart || null)
+            parentNodePathIndex = i + 1
+            break
           }
         }
-
-        if (path.charCodeAt(j) === 47 || j === path.length) {
-          path = path.slice(0, i + 1) + path.slice(j - staticEndingLength)
-          i += staticEndingLength
-          break
-        }
       }
-
-      let regex = null
-      if (isRegexNode) {
-        regex = new RegExp('^' + regexps.join('') + '$')
-      }
-
-      currentNode = currentNode.createParametricChild(regex)
-      parentNodePathIndex = i + 1
     } else if (isWildcardNode) {
       // add the wildcard parameter
       params.push('*')
@@ -282,25 +272,16 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     path = path.toLowerCase()
   }
 
-  const isRootWildcard = path === '*' || path === '/*'
-  for (const existRoute of this._routesPatterns) {
-    let samePath = false
+  if (path === '*') {
+    path = '/*'
+  }
 
-    if (existRoute.path === path) {
-      samePath = true
-    } else if (isRootWildcard && (existRoute.path === '/*' || existRoute.path === '*')) {
-      samePath = true
-    }
-
-    if (
-      samePath &&
-      existRoute.method === method &&
-      deepEqual(existRoute.constraints, constraints)
-    ) {
+  for (const existRoute of this._routesPatterns[method]) {
+    if (existRoute.path === path && deepEqual(existRoute.constraints, constraints)) {
       throw new Error(`Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
     }
   }
-  this._routesPatterns.push({ method, path, constraints })
+  this._routesPatterns[method].push({ path, params, constraints })
 
   currentNode.handlerStorage.addHandler(handler, params, store, this.constrainer, constraints)
 }
@@ -317,7 +298,7 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 Router.prototype.reset = function reset () {
   this.trees = {}
   this.routes = []
-  this._routesPatterns = []
+  this._routesPatterns = {}
 }
 
 Router.prototype.off = function off (method, path, constraints) {
