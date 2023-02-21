@@ -61,7 +61,7 @@ class StaticNode extends ParentNode {
     this._compilePrefixMatch()
   }
 
-  createParametricChild (regex) {
+  createParametricChild (regex, staticSuffix) {
     const regexpSource = regex && regex.source
 
     let parametricChild = this.parametricChildren.find(child => {
@@ -73,12 +73,21 @@ class StaticNode extends ParentNode {
       return parametricChild
     }
 
-    parametricChild = new ParametricNode(regex)
-    if (regex) {
-      this.parametricChildren.unshift(parametricChild)
-    } else {
-      this.parametricChildren.push(parametricChild)
-    }
+    parametricChild = new ParametricNode(regex, staticSuffix)
+    this.parametricChildren.push(parametricChild)
+    this.parametricChildren.sort((child1, child2) => {
+      if (!child1.isRegex) return 1
+      if (!child2.isRegex) return -1
+
+      if (child1.staticSuffix === null) return 1
+      if (child2.staticSuffix === null) return -1
+
+      if (child2.staticSuffix.endsWith(child1.staticSuffix)) return 1
+      if (child1.staticSuffix.endsWith(child2.staticSuffix)) return -1
+
+      return 0
+    })
+
     return parametricChild
   }
 
@@ -153,10 +162,11 @@ class StaticNode extends ParentNode {
 }
 
 class ParametricNode extends ParentNode {
-  constructor (regex) {
+  constructor (regex, staticSuffix) {
     super()
-    this.regex = regex || null
     this.isRegex = !!regex
+    this.regex = regex || null
+    this.staticSuffix = staticSuffix || null
     this.kind = NODE_TYPES.PARAMETRIC
   }
 

@@ -283,25 +283,34 @@ Having a route with multiple parameters may affect negatively the performance, s
 <a name="match-order"></a>
 ##### Match order
 
-The routing algorithm matches one chunk at a time (where the chunk is a string between two slashes),
+The routing algorithm matches one node at a time (where the node is a string between two slashes),
 this means that it cannot know if a route is static or dynamic until it finishes to match the URL.
 
-The chunks are matched in the following order:
+The nodes are matched in the following order:
 
 1. static
-1. parametric
-1. wildcards
-1. parametric(regex)
-1. multi parametric(regex)
+2. parametric node with static ending
+3. parametric(regex)/multi-parametric
+4. parametric
+5. wildcard
 
 So if you declare the following routes
 
-- `/:userId/foo/bar`
-- `/33/:a(^.*$)/:b`
+- `/foo/filename.png` - static route
+- `/foo/:filename.png` - route with param `filename` and static ending `.png`
+- `/foo/:filename.:ext` - route with two params `filename` and `ext`
+- `/foo/:filename` - route with one param `filename`
+- `/*` - wildcard route
 
-and the URL of the incoming request is /33/foo/bar,
-the second route will be matched because the first chunk (33) matches the static chunk.
-If the URL would have been /32/foo/bar, the first route would have been matched.
+You will have next matching rules:
+- the static node would have the highest priority. It will be matched only if incoming URL equals  `/foo/filename.png`
+- the parametric node with a static ending would have the higher priority than other parametric nodes without it. This node would match any filenames with `.png` extension. If one node static ending ends with another node static ending, the node with a longer static ending would have higher priority.
+  - `/foo/:filename.png.png` - higher priority, more specific route
+  - `/foo/:filename.png` - lower priority
+- the multi-parametric node (or any regexp node) without static ending would have lower priority than parametric node with static ending and higher priority than generic parametric node. You can declare only one node like that for the same route (see [caveats](#caveats)). It would match any filenames with any extensions.
+- the parametric node has lower priority than any other parametric node. It would match any filenames, even if they don't have an extension.
+- the wildcard node has the lowest priority of all nodes.
+
 Once a url has been matched, `find-my-way` will figure out which handler registered for that path matches the request if there are any constraints.
 `find-my-way` will check the most constrained handlers first, which means the handlers with the most keys in the `constraints` object.
 
