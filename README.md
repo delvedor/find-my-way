@@ -24,7 +24,7 @@ Do you need a real-world example that uses this router? Check out [Fastify](http
     - [off(methods, path, [constraints])](#offmethods-path-constraints)
   - [lookup(request, response, [context], [done])](#lookuprequest-response-context)
   - [find(method, path, [constraints])](#findmethod-path-constraints)
-  - [prettyPrint([{ commonPrefix: false, includeMeta: true || [] }])](#prettyprint-commonprefix-false-includemeta-true---)
+  - [prettyPrint([{ method: 'GET', commonPrefix: false, includeMeta: true || [] }])](#prettyprint-commonprefix-false-includemeta-true---)
   - [reset()](#reset)
   - [routes](#routes)
   - [Caveats](#caveats)
@@ -434,7 +434,9 @@ router.find('GET', '/example', { host: 'fastify.io', version: '1.x' })
 
 <a name="pretty-print"></a>
 #### prettyPrint([{ commonPrefix: false, includeMeta: true || [] }])
-Prints the representation of the internal radix tree, useful for debugging.
+`find-my-way` builds a tree of routes for each HTTP method. If you call the `prettyPrint`
+without specifying an HTTP method, it will merge all the trees to one and print it.
+The merged tree does't represent the internal router structure. Don't use it for debugging.
 
 ```js
 findMyWay.on('GET', '/test', () => {})
@@ -448,21 +450,45 @@ console.log(findMyWay.prettyPrint())
 //     ├── test (GET)
 //     │   ├── /hello (GET)
 //     │   └── ing (GET)
-//     │       └── /:param (GET)
+//     │       └── /
+//     │           └── :param (GET)
 //     └── update (PUT)
 ```
 
-`prettyPrint` accepts an optional setting to use the internal routes array
-to render the tree.
+If you want to print the internal tree, you can specify the `method` param.
+Printed tree will represent the internal router structure. Use it for debugging.
+
+```js
+findMyWay.on('GET', '/test', () => {})
+findMyWay.on('GET', '/test/hello', () => {})
+findMyWay.on('GET', '/testing', () => {})
+findMyWay.on('GET', '/testing/:param', () => {})
+findMyWay.on('PUT', '/update', () => {})
+
+console.log(findMyWay.prettyPrint({ method: 'GET' }))
+// └── /
+//     └── test (GET)
+//         ├── /hello (GET)
+//         └── ing (GET)
+//             └── /
+//                 └── :param (GET)
+
+console.log(findMyWay.prettyPrint({ method: 'PUT' }))
+// └── /
+//     └── update (PUT)
+```
+
+`prettyPrint` accepts an optional setting to print compressed routes. This is useful
+when you have a large number of routes with common prefixes. Doesn't represent the
+internal router structure. Don't use it for debugging.
 
 ```js
 console.log(findMyWay.prettyPrint({ commonPrefix: false }))
-// └── / (-)
-//     ├── test (GET)
-//     │   └── /hello (GET)
-//     ├── testing (GET)
-//     │   └── /:param (GET)
-//     └── update (PUT)
+// ├── /test (GET)
+// │   ├── /hello (GET)
+// │   └── ing (GET)
+// │       └── /:param (GET)
+// └── /update (PUT)
 ```
 
 To include a display of the `store` data passed to individual routes, the
@@ -473,31 +499,29 @@ by specifying a `buildPrettyMeta` function which consumes and returns
 an object.
 
 ```js
-findMyWay.on('GET', '/test', () => {}, { onRequest: () => {}, authIDs => [1,2,3] })
+findMyWay.on('GET', '/test', () => {}, { onRequest: () => {}, authIDs: [1, 2, 3] })
 findMyWay.on('GET', '/test/hello', () => {}, { token: 'df123-4567' })
 findMyWay.on('GET', '/testing', () => {})
 findMyWay.on('GET', '/testing/:param', () => {})
 findMyWay.on('PUT', '/update', () => {})
 
 console.log(findMyWay.prettyPrint({ commonPrefix: false, includeMeta: ['onRequest'] }))
-// └── /
-//     ├── test (GET)
-//     │   • (onRequest) "anonymous()"
-//     │   ├── /hello (GET)
-//     │   └── ing (GET)
-//     │       └── /:param (GET)
-//     └── update (PUT)
+// ├── /test (GET)
+// │   • (onRequest) "onRequest()"
+// │   ├── /hello (GET)
+// │   └── ing (GET)
+// │       └── /:param (GET)
+// └── /update (PUT)
 
-console.log(findMyWay.prettyPrint({ commonPrefix: true, includeMeta: true }))
-// └── / (-)
-//     ├── test (GET)
-//     │   • (onRequest) "anonymous()"
-//     │   • (authIDs) [1,2,3]
-//     │   └── /hello (GET)
-//     │       • (token) "df123-4567"
-//     ├── testing (GET)
-//     │   └── /:param (GET)
-//     └── update (PUT)
+console.log(findMyWay.prettyPrint({ commonPrefix: false, includeMeta: true }))
+// ├── /test (GET)
+// │   • (onRequest) "onRequest()"
+// │   • (authIDs) [1,2,3]
+// │   ├── /hello (GET)
+// │   │   • (token) "df123-4567"
+// │   └── ing (GET)
+// │       └── /:param (GET)
+// └── /update (PUT)
 ```
 
 <a name="reset"></a>

@@ -16,12 +16,15 @@ class HandlerStorage {
     return this._getHandlerMatchingConstraints(derivedConstraints)
   }
 
-  addHandler (handler, params, store, constrainer, constraints) {
+  addHandler (constrainer, route) {
+    const params = route.params
+    const constraints = route.opts.constraints || {}
+
     const handlerObject = {
-      handler,
       params,
       constraints,
-      store: store || null,
+      handler: route.handler,
+      store: route.store || null,
       _createParamsObject: this._compileCreateParamsObject(params)
     }
 

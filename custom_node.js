@@ -10,7 +10,21 @@ const NODE_TYPES = {
 
 class Node {
   constructor () {
-    this.handlerStorage = new HandlerStorage()
+    this.isLeafNode = false
+    this.routes = null
+    this.handlerStorage = null
+  }
+
+  addRoute (route, constrainer) {
+    if (this.routes === null) {
+      this.routes = []
+    }
+    if (this.handlerStorage === null) {
+      this.handlerStorage = new HandlerStorage()
+    }
+    this.isLeafNode = true
+    this.routes.push(route)
+    this.handlerStorage.addHandler(constrainer, route)
   }
 }
 
@@ -61,7 +75,7 @@ class StaticNode extends ParentNode {
     this._compilePrefixMatch()
   }
 
-  createParametricChild (regex, staticSuffix) {
+  createParametricChild (regex, staticSuffix, nodePath) {
     const regexpSource = regex && regex.source
 
     let parametricChild = this.parametricChildren.find(child => {
@@ -70,10 +84,11 @@ class StaticNode extends ParentNode {
     })
 
     if (parametricChild) {
+      parametricChild.nodePaths.add(nodePath)
       return parametricChild
     }
 
-    parametricChild = new ParametricNode(regex, staticSuffix)
+    parametricChild = new ParametricNode(regex, staticSuffix, nodePath)
     this.parametricChildren.push(parametricChild)
     this.parametricChildren.sort((child1, child2) => {
       if (!child1.isRegex) return 1
@@ -162,12 +177,14 @@ class StaticNode extends ParentNode {
 }
 
 class ParametricNode extends ParentNode {
-  constructor (regex, staticSuffix) {
+  constructor (regex, staticSuffix, nodePath) {
     super()
     this.isRegex = !!regex
     this.regex = regex || null
     this.staticSuffix = staticSuffix || null
     this.kind = NODE_TYPES.PARAMETRIC
+
+    this.nodePaths = new Set([nodePath])
   }
 
   getNextNode (path, pathIndex) {

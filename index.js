@@ -29,10 +29,11 @@ const assert = require('assert')
 const querystring = require('fast-querystring')
 const isRegexSafe = require('safe-regex2')
 const deepEqual = require('fast-deep-equal')
-const { flattenNode, compressFlattenedNode, prettyPrintFlattenedNode, prettyPrintRoutesArray } = require('./lib/pretty-print')
+const { prettyPrintTree } = require('./lib/pretty-print')
 const { StaticNode, NODE_TYPES } = require('./custom_node')
 const Constrainer = require('./lib/constrainer')
 const httpMethods = require('./lib/http-methods')
+const httpMethodStrategy = require('./lib/strategies/http-method')
 const { safeDecodeURI, safeDecodeURIComponent } = require('./lib/url-sanitizer')
 
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
@@ -51,6 +52,7 @@ function Router (opts) {
     return new Router(opts)
   }
   opts = opts || {}
+  this._opts = opts
 
   if (opts.defaultRoute) {
     assert(typeof opts.defaultRoute === 'function', 'The default route must be a function')
@@ -85,11 +87,10 @@ function Router (opts) {
   this.ignoreDuplicateSlashes = opts.ignoreDuplicateSlashes || false
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
-  this.routes = []
-  this.trees = {}
   this.constrainer = new Constrainer(opts.constraints)
 
-  this._routesPatterns = {}
+  this.routes = []
+  this.trees = {}
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -132,15 +133,13 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
 
   const methods = Array.isArray(method) ? method : [method]
   for (const method of methods) {
+    assert(typeof method === 'string', 'Method should be a string')
+    assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
     this._on(method, path, opts, handler, store, route)
-    this.routes.push({ method, path, opts, handler, store })
   }
 }
 
 Router.prototype._on = function _on (method, path, opts, handler, store) {
-  assert(typeof method === 'string', 'Method should be a string')
-  assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
-
   let constraints = {}
   if (opts.constraints !== undefined) {
     assert(typeof opts.constraints === 'object' && opts.constraints !== null, 'Constraints should be an object')
@@ -156,10 +155,10 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   // Boot the tree for this method if it doesn't exist yet
   if (this.trees[method] === undefined) {
     this.trees[method] = new StaticNode('/')
-    this._routesPatterns[method] = []
   }
 
-  if (path === '*' && this.trees[method].prefix.length !== 0) {
+  let pattern = path
+  if (pattern === '*' && this.trees[method].prefix.length !== 0) {
     const currentRoot = this.trees[method]
     this.trees[method] = new StaticNode('')
     this.trees[method].staticChildren['/'] = currentRoot
@@ -169,18 +168,18 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   let parentNodePathIndex = currentNode.prefix.length
 
   const params = []
-  for (let i = 0; i <= path.length; i++) {
-    if (path.charCodeAt(i) === 58 && path.charCodeAt(i + 1) === 58) {
+  for (let i = 0; i <= pattern.length; i++) {
+    if (pattern.charCodeAt(i) === 58 && pattern.charCodeAt(i + 1) === 58) {
       // It's a double colon
       i++
       continue
     }
 
-    const isParametricNode = path.charCodeAt(i) === 58 && path.charCodeAt(i + 1) !== 58
-    const isWildcardNode = path.charCodeAt(i) === 42
+    const isParametricNode = pattern.charCodeAt(i) === 58 && pattern.charCodeAt(i + 1) !== 58
+    const isWildcardNode = pattern.charCodeAt(i) === 42
 
-    if (isParametricNode || isWildcardNode || (i === path.length && i !== parentNodePathIndex)) {
-      let staticNodePath = path.slice(parentNodePathIndex, i)
+    if (isParametricNode || isWildcardNode || (i === pattern.length && i !== parentNodePathIndex)) {
+      let staticNodePath = pattern.slice(parentNodePathIndex, i)
       if (!this.caseSensitive) {
         staticNodePath = staticNodePath.toLowerCase()
       }
@@ -196,21 +195,21 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
       let lastParamStartIndex = i + 1
       for (let j = lastParamStartIndex; ; j++) {
-        const charCode = path.charCodeAt(j)
+        const charCode = pattern.charCodeAt(j)
 
         const isRegexParam = charCode === 40
         const isStaticPart = charCode === 45 || charCode === 46
-        const isEndOfNode = charCode === 47 || j === path.length
+        const isEndOfNode = charCode === 47 || j === pattern.length
 
         if (isRegexParam || isStaticPart || isEndOfNode) {
-          const paramName = path.slice(lastParamStartIndex, j)
+          const paramName = pattern.slice(lastParamStartIndex, j)
           params.push(paramName)
 
           isRegexNode = isRegexNode || isRegexParam || isStaticPart
 
           if (isRegexParam) {
-            const endOfRegexIndex = getClosingParenthensePosition(path, j)
-            const regexString = path.slice(j, endOfRegexIndex + 1)
+            const endOfRegexIndex = getClosingParenthensePosition(pattern, j)
+            const regexString = pattern.slice(j, endOfRegexIndex + 1)
 
             if (!this.allowUnsafeRegex) {
               assert(isRegexSafe(new RegExp(regexString)), `The regex '${regexString}' is not safe!`)
@@ -224,17 +223,17 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
           }
 
           const staticPartStartIndex = j
-          for (; j < path.length; j++) {
-            const charCode = path.charCodeAt(j)
+          for (; j < pattern.length; j++) {
+            const charCode = pattern.charCodeAt(j)
             if (charCode === 47) break
             if (charCode === 58) {
-              const nextCharCode = path.charCodeAt(j + 1)
+              const nextCharCode = pattern.charCodeAt(j + 1)
               if (nextCharCode === 58) j++
               else break
             }
           }
 
-          let staticPart = path.slice(staticPartStartIndex, j)
+          let staticPart = pattern.slice(staticPartStartIndex, j)
           if (staticPart) {
             staticPart = staticPart.split('::').join(':')
             staticPart = staticPart.split('%').join('%25')
@@ -243,14 +242,15 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
           lastParamStartIndex = j + 1
 
-          if (isEndOfNode || path.charCodeAt(j) === 47 || j === path.length) {
+          if (isEndOfNode || pattern.charCodeAt(j) === 47 || j === pattern.length) {
             const nodePattern = isRegexNode ? '()' + staticPart : staticPart
+            const nodePath = pattern.slice(i, j)
 
-            path = path.slice(0, i + 1) + nodePattern + path.slice(j)
+            pattern = pattern.slice(0, i + 1) + nodePattern + pattern.slice(j)
             i += nodePattern.length
 
             const regex = isRegexNode ? new RegExp('^' + regexps.join('') + '$') : null
-            currentNode = currentNode.createParametricChild(regex, staticPart || null)
+            currentNode = currentNode.createParametricChild(regex, staticPart || null, nodePath)
             parentNodePathIndex = i + 1
             break
           }
@@ -262,28 +262,34 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       currentNode = currentNode.createWildcardChild()
       parentNodePathIndex = i + 1
 
-      if (i !== path.length - 1) {
+      if (i !== pattern.length - 1) {
         throw new Error('Wildcard must be the last character in the route')
       }
     }
   }
 
   if (!this.caseSensitive) {
-    path = path.toLowerCase()
+    pattern = pattern.toLowerCase()
   }
 
-  if (path === '*') {
-    path = '/*'
+  if (pattern === '*') {
+    pattern = '/*'
   }
 
-  for (const existRoute of this._routesPatterns[method]) {
-    if (existRoute.path === path && deepEqual(existRoute.constraints, constraints)) {
-      throw new Error(`Method '${method}' already declared for route '${path}' with constraints '${JSON.stringify(constraints)}'`)
+  for (const existRoute of this.routes) {
+    const routeConstraints = existRoute.opts.constraints || {}
+    if (
+      existRoute.method === method &&
+      existRoute.pattern === pattern &&
+      deepEqual(routeConstraints, constraints)
+    ) {
+      throw new Error(`Method '${method}' already declared for route '${pattern}' with constraints '${JSON.stringify(constraints)}'`)
     }
   }
-  this._routesPatterns[method].push({ path, params, constraints })
 
-  currentNode.handlerStorage.addHandler(handler, params, store, this.constrainer, constraints)
+  const route = { method, path, pattern, params, opts, handler, store }
+  this.routes.push(route)
+  currentNode.addRoute(route, this.constrainer)
 }
 
 Router.prototype.hasConstraintStrategy = function (strategyName) {
@@ -298,7 +304,6 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 Router.prototype.reset = function reset () {
   this.trees = {}
   this.routes = []
-  this._routesPatterns = {}
 }
 
 Router.prototype.off = function off (method, path, constraints) {
@@ -441,9 +446,8 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   const brothersNodesStack = []
 
   while (true) {
-    if (pathIndex === pathLen) {
+    if (pathIndex === pathLen && currentNode.isLeafNode) {
       const handle = currentNode.handlerStorage.getMatchingHandler(derivedConstraints)
-
       if (handle !== null) {
         return {
           handler: handle.handler,
@@ -526,7 +530,6 @@ Router.prototype._rebuild = function (routes) {
   for (const route of routes) {
     const { method, path, opts, handler, store } = route
     this._on(method, path, opts, handler, store)
-    this.routes.push({ method, path, opts, handler, store })
   }
 }
 
@@ -553,25 +556,30 @@ Router.prototype._onBadUrl = function (path) {
   }
 }
 
-Router.prototype.prettyPrint = function (opts = {}) {
-  opts.commonPrefix = opts.commonPrefix === undefined ? true : opts.commonPrefix // default to original behaviour
-  if (!opts.commonPrefix) return prettyPrintRoutesArray.call(this, this.routes, opts)
-  const root = {
-    prefix: '/',
-    nodes: [],
-    children: {}
+Router.prototype.prettyPrint = function (options = {}) {
+  const method = options.method
+
+  options.buildPrettyMeta = this.buildPrettyMeta.bind(this)
+
+  if (method === undefined) {
+    const { version, host, ...constraints } = this.constrainer.strategies
+    constraints[httpMethodStrategy.name] = httpMethodStrategy
+
+    const mergedRouter = new Router({ ...this._opts, constraints })
+    const mergedRoutes = this.routes.map(route => {
+      const constraints = {
+        ...route.opts.constraints,
+        [httpMethodStrategy.name]: route.method
+      }
+      return { ...route, method: 'MERGED', opts: { constraints } }
+    })
+    mergedRouter._rebuild(mergedRoutes)
+
+    return prettyPrintTree(mergedRouter.trees.MERGED, options)
   }
 
-  for (const method in this.trees) {
-    const node = this.trees[method]
-    if (node) {
-      flattenNode(root, node, method)
-    }
-  }
-
-  compressFlattenedNode(root)
-
-  return prettyPrintFlattenedNode.call(this, root, '', true, opts)
+  const tree = this.trees[method]
+  return prettyPrintTree(tree, options)
 }
 
 for (var i in httpMethods) {
