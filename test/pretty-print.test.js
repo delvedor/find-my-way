@@ -497,6 +497,8 @@ test('pretty print includeMeta - commonPrefix: false', t => {
   const store = {
     onRequest: [() => {}, namedFunction],
     onTimeout: [() => {}],
+    onError: null,
+    onRegister: undefined,
     genericMeta: 'meta',
     mixedMeta: ['mixed items', { an: 'object' }],
     objectMeta: { one: '1', two: 2 },
