@@ -108,8 +108,7 @@ test('pretty print - mixed parametric routes', t => {
 └── /
     └── test (GET)
         └── /
-            └── :hello (GET)
-                :hello (POST)
+            └── :hello (GET, POST)
                 └── /world (GET)
 `
   t.equal(typeof tree, 'string')
@@ -152,8 +151,7 @@ test('pretty print - parametric routes with same parent and followed by a static
     └── test (GET)
         └── /hello
             ├── /
-            │   └── :id (GET)
-            │       :id (POST)
+            │   └── :id (GET, POST)
             └── world (GET)
 `
   t.equal(typeof tree, 'string')
@@ -331,8 +329,7 @@ test('pretty print commonPrefix - handle constrained routes', t => {
   const arrayExpected = `\
 └── /test (GET)
     /test (GET) {"host":"auth.fastify.io"}
-    └── /:hello (GET)
-        /:hello (PUT)
+    └── /:hello (GET, PUT)
         /:hello (GET) {"version":"1.1.2"}
         /:hello (GET) {"version":"2.0.0"}
 `
@@ -372,8 +369,7 @@ test('pretty print commonPrefix - handle method constraint', t => {
   const arrayExpected = `\
 └── /test (GET)
     /test (GET) {"method":"foo"}
-    └── /:hello (GET)
-        /:hello (PUT)
+    └── /:hello (GET, PUT)
         /:hello (GET) {"method":"bar"}
         /:hello (GET) {"method":"baz"}
 `
@@ -593,7 +589,7 @@ test('pretty print includeMeta - buildPrettyMeta function', t => {
 
   const findMyWay = FindMyWay({
     buildPrettyMeta: route => {
-      return { metaKey: route.method === 'GET' ? route.path : 'not a GET route' }
+      return { metaKey: route.method === 'PUT' ? 'Hide PUT route path' : route.path }
     }
   })
   const namedFunction = () => {}
@@ -612,6 +608,7 @@ test('pretty print includeMeta - buildPrettyMeta function', t => {
   findMyWay.on('GET', '/test', { constraints: { host: 'auth.fastify.io' } }, () => {}, store)
   findMyWay.on('GET', '/test/:hello', () => {}, store)
   findMyWay.on('PUT', '/test/:hello', () => {}, store)
+  findMyWay.on('POST', '/test/:hello', () => {}, store)
   findMyWay.on('GET', '/test/:hello', { constraints: { version: '1.1.2' } }, () => {})
   findMyWay.on('GET', '/test/:hello', { constraints: { version: '2.0.0' } }, () => {})
 
@@ -621,10 +618,10 @@ test('pretty print includeMeta - buildPrettyMeta function', t => {
     • (metaKey) "/test"
     /test (GET) {"host":"auth.fastify.io"}
     • (metaKey) "/test"
-    └── /:hello (GET)
+    └── /:hello (GET, POST)
         • (metaKey) "/test/:hello"
         /:hello (PUT)
-        • (metaKey) "not a GET route"
+        • (metaKey) "Hide PUT route path"
         /:hello (GET) {"version":"1.1.2"}
         • (metaKey) "/test/:hello"
         /:hello (GET) {"version":"2.0.0"}
@@ -638,10 +635,10 @@ test('pretty print includeMeta - buildPrettyMeta function', t => {
         test (GET) {"host":"auth.fastify.io"}
         • (metaKey) "/test"
         └── /
-            └── :hello (GET)
+            └── :hello (GET, POST)
                 • (metaKey) "/test/:hello"
                 :hello (PUT)
-                • (metaKey) "not a GET route"
+                • (metaKey) "Hide PUT route path"
                 :hello (GET) {"version":"1.1.2"}
                 • (metaKey) "/test/:hello"
                 :hello (GET) {"version":"2.0.0"}
