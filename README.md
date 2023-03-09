@@ -480,7 +480,7 @@ console.log(findMyWay.prettyPrint({ method: 'PUT' }))
 
 `prettyPrint` accepts an optional setting to print compressed routes. This is useful
 when you have a large number of routes with common prefixes. Doesn't represent the
-internal router structure. Don't use it for debugging.
+internal router structure. **Don't use it for debugging.**
 
 ```js
 console.log(findMyWay.prettyPrint({ commonPrefix: false }))
