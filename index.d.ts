@@ -161,7 +161,11 @@ declare namespace Router {
 
     reset(): void;
     prettyPrint(): string;
-    prettyPrint(opts: { commonPrefix?: boolean, includeMeta?: boolean | (string | symbol)[]  }): string;
+    prettyPrint(opts: {
+      method?: HTTPMethod,
+      commonPrefix?: boolean,
+      includeMeta?: boolean | (string | symbol)[]
+    }): string;
 
     hasConstraintStrategy(strategyName: string): boolean;
     addConstraintStrategy(constraintStrategy: ConstraintStrategy<V>): void;

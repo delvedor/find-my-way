@@ -1,5 +1,7 @@
 'use strict'
 
+const httpMethodStrategy = require('./lib/strategies/http-method')
+
 class HandlerStorage {
   constructor () {
     this.unconstrainedHandler = null // optimized reference to the handler that will match most of the time
@@ -16,20 +18,24 @@ class HandlerStorage {
     return this._getHandlerMatchingConstraints(derivedConstraints)
   }
 
-  addHandler (handler, params, store, constrainer, constraints) {
+  addHandler (constrainer, route) {
+    const params = route.params
+    const constraints = route.opts.constraints || {}
+
     const handlerObject = {
-      handler,
       params,
       constraints,
-      store: store || null,
+      handler: route.handler,
+      store: route.store || null,
       _createParamsObject: this._compileCreateParamsObject(params)
     }
 
-    if (Object.keys(constraints).length === 0) {
+    const constraintsNames = Object.keys(constraints)
+    if (constraintsNames.length === 0) {
       this.unconstrainedHandler = handlerObject
     }
 
-    for (const constraint of Object.keys(constraints)) {
+    for (const constraint of constraintsNames) {
       if (!this.constraints.includes(constraint)) {
         if (constraint === 'version') {
           // always check the version constraint first as it is the most selective
@@ -40,7 +46,8 @@ class HandlerStorage {
       }
     }
 
-    if (this.handlers.length >= 32) {
+    const isMergedTree = constraintsNames.includes(httpMethodStrategy.name)
+    if (!isMergedTree && this.handlers.length >= 32) {
       throw new Error('find-my-way supports a maximum of 32 route handlers per node when there are constraints, limit reached')
     }
 
@@ -48,7 +55,9 @@ class HandlerStorage {
     // Sort the most constrained handlers to the front of the list of handlers so they are tested first.
     this.handlers.sort((a, b) => Object.keys(a.constraints).length - Object.keys(b.constraints).length)
 
-    this._compileGetHandlerMatchingConstraints(constrainer, constraints)
+    if (!isMergedTree) {
+      this._compileGetHandlerMatchingConstraints(constrainer, constraints)
+    }
   }
 
   _compileCreateParamsObject (params) {

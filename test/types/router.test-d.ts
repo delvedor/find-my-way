@@ -57,6 +57,7 @@ let http2Res!: Http2ServerResponse;
 
   expectType<void>(router.reset())
   expectType<string>(router.prettyPrint())
+  expectType<string>(router.prettyPrint({ method: 'GET' }))
   expectType<string>(router.prettyPrint({ commonPrefix: false }))
   expectType<string>(router.prettyPrint({ commonPrefix: true }))
   expectType<string>(router.prettyPrint({ includeMeta: true }))
