@@ -13,7 +13,7 @@ Benchmark.options.minSamples = 500
 
 const suite = Benchmark.Suite()
 
-const FindMyWay = require('./')
+const FindMyWay = require('..')
 const findMyWay = new FindMyWay()
 
 for (const { method, url, opts } of benchmark.setupURLs) {
