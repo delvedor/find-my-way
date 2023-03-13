@@ -5,9 +5,9 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "bench": "node bench.js",
-    "bench:cmp": "node bench-cmp.js",
-    "bench:cmp:ci": "node bench-cmp.js --ci",
+    "bench": "node ./benchmark/bench.js",
+    "bench:cmp": "node ./benchmark/compare-branches.js",
+    "bench:cmp:ci": "node ./benchmark/compare-branches.js --ci",
     "test:lint": "standard",
     "test:typescript": "tsd",
     "test": "standard && tap -J test/*.test.js && npm run test:typescript",
