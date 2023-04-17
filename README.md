@@ -10,7 +10,7 @@ Do you need a real-world example that uses this router? Check out [Fastify](http
 - [Install](#install)
 - [Usage](#usage)
 - [API](#api)
-  - [FindMyWay([options])](#find-my-way)
+  - [FindMyWay([options])](#findmywayoptions)
   - [on(method, path, [opts], handler, [store])](#onmethod-path-opts-handler-store)
     - [Versioned routes](#versioned-routes)
       - [default](#default)
