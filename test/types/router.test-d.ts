@@ -154,7 +154,6 @@ let http2Res!: Http2ServerResponse;
     deriveConstraint<Context>(req: Router.Req<Router.HTTPVersion.V1>, ctx: Context | undefined): string {
       return req.headers.accept ?? ''
     },
-    validate(value: unknown): void {},
     storage () {
       return {
         get (version) { return handler },

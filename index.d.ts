@@ -67,7 +67,7 @@ declare namespace Router {
       del?(value: T) : void,
       empty?() : void
     },
-    validate(value: unknown): void,
+    validate?(value: unknown): void,
     deriveConstraint<Context>(req: Req<V>, ctx?: Context) : T,
   }
 
