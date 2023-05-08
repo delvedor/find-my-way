@@ -561,6 +561,7 @@ Router.prototype.prettyPrint = function (options = {}) {
 
   options.buildPrettyMeta = this.buildPrettyMeta.bind(this)
 
+  let tree = null
   if (method === undefined) {
     const { version, host, ...constraints } = this.constrainer.strategies
     constraints[httpMethodStrategy.name] = httpMethodStrategy
@@ -574,11 +575,12 @@ Router.prototype.prettyPrint = function (options = {}) {
       return { ...route, method: 'MERGED', opts: { constraints } }
     })
     mergedRouter._rebuild(mergedRoutes)
-
-    return prettyPrintTree(mergedRouter.trees.MERGED, options)
+    tree = mergedRouter.trees.MERGED
+  } else {
+    tree = this.trees[method]
   }
 
-  const tree = this.trees[method]
+  if (tree == null) return '(empty tree)'
   return prettyPrintTree(tree, options)
 }
 

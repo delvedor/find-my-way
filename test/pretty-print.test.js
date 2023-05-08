@@ -4,6 +4,17 @@ const t = require('tap')
 const test = t.test
 const FindMyWay = require('../')
 
+test('pretty print - empty tree', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay()
+  const tree = findMyWay.prettyPrint()
+
+  const expected = '(empty tree)'
+  t.equal(typeof tree, 'string')
+  t.equal(tree, expected)
+})
+
 test('pretty print - static routes', t => {
   t.plan(2)
 
