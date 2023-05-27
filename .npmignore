@@ -1,0 +1,5 @@
+.github/
+test/
+benchmark/
+.taprc
+example.js
