@@ -8,7 +8,7 @@ const FindMyWay = require('../')
 t.test('should support shorthand', t => {
   t.plan(httpMethods.length)
 
-  for (var i in httpMethods) {
+  for (const i in httpMethods) {
     const m = httpMethods[i]
     const methodName = m.toLowerCase()
 
