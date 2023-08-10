@@ -584,7 +584,7 @@ Router.prototype.prettyPrint = function (options = {}) {
   return prettyPrintTree(tree, options)
 }
 
-for (var i in httpMethods) {
+for (const i in httpMethods) {
   /* eslint no-prototype-builtins: "off" */
   if (!httpMethods.hasOwnProperty(i)) continue
   const m = httpMethods[i]
@@ -636,7 +636,7 @@ function getClosingParenthensePosition (path, idx) {
   // but it's inefficient for grouped or wrong regexp expressions.
   // see issues #62 and #63 for more info
 
-  var parentheses = 1
+  let parentheses = 1
 
   while (idx < path.length) {
     idx++

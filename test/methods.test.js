@@ -126,12 +126,12 @@ test('off with nested wildcards with parametric and static', t => {
   findMyWay.on('GET', '/foo3/*', () => {})
   findMyWay.on('GET', '/foo4/param/hello/test/long/route', () => {})
 
-  var route1 = findMyWay.find('GET', '/foo3/first/second')
+  const route1 = findMyWay.find('GET', '/foo3/first/second')
   t.equal(route1.params['*'], 'first/second')
 
   findMyWay.off('GET', '/foo3/*')
 
-  var route2 = findMyWay.find('GET', '/foo3/first/second')
+  const route2 = findMyWay.find('GET', '/foo3/first/second')
   t.equal(route2.params['*'], '/foo3/first/second')
 
   findMyWay.off('GET', '/foo2/*')
@@ -672,7 +672,7 @@ test('parametric route with different method', t => {
 test('params does not keep the object reference', t => {
   t.plan(2)
   const findMyWay = FindMyWay()
-  var first = true
+  let first = true
 
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
     if (first) {
@@ -745,8 +745,8 @@ test('register all known HTTP methods', t => {
 
   const httpMethods = require('../lib/http-methods')
   const handlers = {}
-  for (var i in httpMethods) {
-    var m = httpMethods[i]
+  for (const i in httpMethods) {
+    const m = httpMethods[i]
     handlers[m] = function myHandler () {}
     findMyWay.on(m, '/test', handlers[m])
   }

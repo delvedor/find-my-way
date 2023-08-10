@@ -33,7 +33,7 @@ test('find a store object', t => {
 test('update the store', t => {
   t.plan(2)
   const findMyWay = FindMyWay()
-  var bool = false
+  let bool = false
 
   findMyWay.on('GET', '/test', (req, res, params, store) => {
     if (!bool) {

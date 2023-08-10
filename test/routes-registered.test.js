@@ -20,7 +20,7 @@ test('verify routes registered', t => {
 
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
   t.equal(findMyWay.routes.length, quantity)
-  findMyWay.routes.map((route, idx) => {
+  findMyWay.routes.forEach((route, idx) => {
     t.match(route, {
       method: 'GET',
       path: '/test-route-' + idx,
