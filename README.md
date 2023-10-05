@@ -389,6 +389,51 @@ router.off(['POST', 'GET'], '/example', { host: 'fastify.io' })
 router.off(['POST', 'GET'], '/example', {})
 ```
 
+#### findRoute (method, path, [constraints])
+
+Finds a route by server route's path (not like `find` which finds a route by the url). Returns the route object if found, otherwise returns `null`. `findRoute` does not compare routes paths directly, instead it compares only paths patters. This means that `findRoute` will return a route even if the path passed to it does not match the route's path exactly. For example, if a route is registered with the path `/example/:param1`, `findRoute` will return the route if the path passed to it is `/example/:param2`.
+
+```js
+const handler = (req, res, params) => {
+  res.end('Hello World!')
+}
+router.on('GET', '/:file(^\\S+).png', handler)
+
+router.findRoute('GET', '/:file(^\\S+).png')
+// => { handler: Function, store: Object }
+
+router.findRoute('GET', '/:file(^\\D+).jpg')
+// => null
+```
+
+```js
+const handler = (req, res, params) => {
+  res.end('Hello World!')
+}
+router.on('GET', '/:param1', handler)
+
+router.findRoute('GET', '/:param1')
+// => { handler: Function, store: Object }
+
+router.findRoute('GET', '/:param2')
+// => { handler: Function, store: Object }
+```
+
+#### hasRoute (method, path, [constraints])
+
+Checks if a route exists by server route's path (see `findRoute` for more details). Returns `true` if found, otherwise returns `false`.
+
+```js
+router.on('GET', '/:file(^\\S+).png', handler)
+
+router.hasRoute('GET', '/:file(^\\S+).png')
+// => true
+
+router.hasRoute('GET', '/:file(^\\D+).jpg')
+// => false
+```
+
+```js
 #### lookup(request, response, [context], [done])
 Start a new search, `request` and `response` are the server req/res objects.<br>
 If a route is found it will automatically call the handler, otherwise the default route will be called.<br>
