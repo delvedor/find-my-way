@@ -24,6 +24,8 @@ Do you need a real-world example that uses this router? Check out [Fastify](http
     - [off(methods, path, constraints)](#offmethods-path-constraints-1)
     - [off(methods[], path)](#offmethods-path-1)
     - [off(methods[], path, constraints)](#offmethods-path-constraints-2)
+  - [findRoute (method, path, [constraints])](#findroute-method-path-constraints)
+  - [hasRoute (method, path, [constraints])](#hasroute-method-path-constraints)
   - [lookup(request, response, [context], [done])](#lookuprequest-response-context-done)
   - [find(method, path, [constraints])](#findmethod-path-constraints)
   - [prettyPrint([{ method: 'GET', commonPrefix: false, includeMeta: true || [] }])](#prettyprint-commonprefix-false-includemeta-true---)
