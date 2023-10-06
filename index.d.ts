@@ -116,6 +116,11 @@ declare namespace Router {
     searchParams: { [k: string]: string };
   }
 
+  interface FindRouteResult<V extends HTTPVersion> {
+    handler: Handler<V>;
+    store: any;
+  }
+
   interface Instance<V extends HTTPVersion> {
     on(
       method: HTTPMethod | HTTPMethod[],
@@ -158,6 +163,18 @@ declare namespace Router {
       path: string,
       constraints?: { [key: string]: any }
     ): FindResult<V> | null;
+
+    findRoute(
+      method: HTTPMethod,
+      path: string,
+      constraints?: { [key: string]: any }
+    ): FindRouteResult<V> | null;
+
+    hasRoute(
+      method: HTTPMethod,
+      path: string,
+      constraints?: { [key: string]: any }
+    ): boolean;
 
     reset(): void;
     prettyPrint(): string;
