@@ -696,7 +696,7 @@ const customResponseTypeStrategy = {
 const router = FindMyWay({ constraints: { accept: customResponseTypeStrategy } });
 ```
 
-Add a custom constraint strategy using the addConstraintStrategy method:
+Add an async custom constrain strategy when constructing a router:
 ```js
 const asyncCustomResponseTypeStrategy = {
   // strategy name for referencing in the route handler `constraints` options
@@ -720,7 +720,7 @@ const asyncCustomResponseTypeStrategy = {
 const router = FindMyWay({ constraints: { accept: asyncCustomResponseTypeStrategy } });
 ```
 
-Add an async custom constrain strategy when constructing a router:
+Add a custom constraint strategy using the `addConstraintStrategy` method:
 ```js
 const customResponseTypeStrategy = {
   // strategy name for referencing in the route handler `constraints` options
