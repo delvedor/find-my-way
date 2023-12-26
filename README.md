@@ -156,6 +156,14 @@ router.on('GET', '/', (req, res, params, store, searchParams) => {
 router.lookup({ method: 'GET', url: '/?foo=bar&baz=faz' }, null)
 ```
 
+According to [RFC3986](https://www.rfc-editor.org/rfc/rfc3986#section-3.4), find-my-way separates path and query string with `?` character. But earlier versions also used `;` as delimiter character.  To support this behaviour, add the `useSemicolonDelimiter` option to `true`:
+
+```js
+const router = require('find-my-way')({
+  useSemicolonDelimiter: true
+})
+```
+
 You can assign a `buildPrettyMeta` function to sanitize a route's `store` object to use with the `prettyPrint` functions. This function should accept a single object and return an object.
 
 ```js

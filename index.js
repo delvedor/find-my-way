@@ -88,6 +88,7 @@ function Router (opts) {
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.constrainer = new Constrainer(opts.constraints)
+  this.useSemicolonDelimiter = opts.useSemicolonDelimiter || false
 
   this.routes = []
   this.trees = {}
@@ -569,7 +570,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   let shouldDecodeParam
 
   try {
-    sanitizedUrl = safeDecodeURI(path)
+    sanitizedUrl = safeDecodeURI(path, this.useSemicolonDelimiter)
     path = sanitizedUrl.path
     querystring = sanitizedUrl.querystring
     shouldDecodeParam = sanitizedUrl.shouldDecodeParam
