@@ -54,6 +54,10 @@ let http2Res!: Http2ServerResponse;
   expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/'))
   expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/', {}))
   expectType<Router.FindResult<Router.HTTPVersion.V1> | null>(router.find('GET', '/', {version: '1.0.0'}))
+  
+  expectType<Router.FindRouteResult<Router.HTTPVersion.V1> | null>(router.findRoute('GET', '/'));
+  expectType<Router.FindRouteResult<Router.HTTPVersion.V1> | null>(router.findRoute('GET', '/', {}));
+  expectType<Router.FindRouteResult<Router.HTTPVersion.V1> | null>(router.findRoute('GET', '/', {version: '1.0.0'}));
 
   expectType<void>(router.reset())
   expectType<string>(router.prettyPrint())
