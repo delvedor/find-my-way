@@ -10,10 +10,7 @@ function equalRouters (t, router1, router2) {
   t.same(router1.routes, router2.routes)
   t.same(router1.trees, router2.trees)
 
-  t.strictSame(
-    router1.constrainer.strategies,
-    router2.constrainer.strategies
-  )
+  t.strictSame(router1.constrainer.strategies, router2.constrainer.strategies)
   t.strictSame(
     router1.constrainer.strategiesInUse,
     router2.constrainer.strategiesInUse
@@ -24,7 +21,7 @@ function equalRouters (t, router1, router2) {
   )
 }
 
-test('findRoute returns null if there is no routes', t => {
+test('findRoute returns null if there is no routes', (t) => {
   t.plan(7)
 
   const findMyWay = FindMyWay()
@@ -36,8 +33,8 @@ test('findRoute returns null if there is no routes', t => {
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns handler and store for a static route', t => {
-  t.plan(8)
+test('findRoute returns handler and store for a static route', (t) => {
+  t.plan(9)
 
   const findMyWay = FindMyWay()
 
@@ -50,11 +47,12 @@ test('findRoute returns handler and store for a static route', t => {
   const route = findMyWay.findRoute('GET', '/example')
   t.equal(route.handler, handler)
   t.equal(route.store, store)
+  t.deepEqual(route.params, [])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns null for a static route', t => {
+test('findRoute returns null for a static route', (t) => {
   t.plan(7)
 
   const findMyWay = FindMyWay()
@@ -70,8 +68,8 @@ test('findRoute returns null for a static route', t => {
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns handler for a parametric route', t => {
-  t.plan(7)
+test('findRoute returns handler and params for a parametric route', (t) => {
+  t.plan(8)
 
   const findMyWay = FindMyWay()
 
@@ -82,11 +80,12 @@ test('findRoute returns handler for a parametric route', t => {
 
   const route = findMyWay.findRoute('GET', '/:param')
   t.equal(route.handler, handler)
+  t.deepEqual(route.params, ['param'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns null for a parametric route', t => {
+test('findRoute returns null for a parametric route', (t) => {
   t.plan(7)
 
   const findMyWay = FindMyWay()
@@ -102,8 +101,8 @@ test('findRoute returns null for a parametric route', t => {
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns handler for a parametric route with static suffix', t => {
-  t.plan(7)
+test('findRoute returns handler and params for a parametric route with static suffix', (t) => {
+  t.plan(8)
 
   const findMyWay = FindMyWay()
 
@@ -114,11 +113,12 @@ test('findRoute returns handler for a parametric route with static suffix', t =>
 
   const route = findMyWay.findRoute('GET', '/:param-static')
   t.equal(route.handler, handler)
+  t.deepEqual(route.params, ['param'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns null for a parametric route with static suffix', t => {
+test('findRoute returns null for a parametric route with static suffix', (t) => {
   t.plan(7)
 
   const findMyWay = FindMyWay()
@@ -132,8 +132,8 @@ test('findRoute returns null for a parametric route with static suffix', t => {
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns handler even if a param name different', t => {
-  t.plan(7)
+test('findRoute returns handler and original params even if a param name different', (t) => {
+  t.plan(8)
 
   const findMyWay = FindMyWay()
 
@@ -144,12 +144,13 @@ test('findRoute returns handler even if a param name different', t => {
 
   const route = findMyWay.findRoute('GET', '/:param2')
   t.equal(route.handler, handler)
+  t.deepEqual(route.params, ['param1'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns handler for a multi-parametric route', t => {
-  t.plan(7)
+test('findRoute returns handler and params for a multi-parametric route', (t) => {
+  t.plan(8)
 
   const findMyWay = FindMyWay()
 
@@ -160,11 +161,12 @@ test('findRoute returns handler for a multi-parametric route', t => {
 
   const route = findMyWay.findRoute('GET', '/:param1-:param2')
   t.equal(route.handler, handler)
+  t.deepEqual(route.params, ['param1', 'param2'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns null for a multi-parametric route', t => {
+test('findRoute returns null for a multi-parametric route', (t) => {
   t.plan(7)
 
   const findMyWay = FindMyWay()
@@ -178,8 +180,8 @@ test('findRoute returns null for a multi-parametric route', t => {
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns handler for a regexp route', t => {
-  t.plan(7)
+test('findRoute returns handler and regexp param for a regexp route', (t) => {
+  t.plan(8)
 
   const findMyWay = FindMyWay()
 
@@ -190,11 +192,12 @@ test('findRoute returns handler for a regexp route', t => {
 
   const route = findMyWay.findRoute('GET', '/:param(^\\d+$)')
   t.equal(route.handler, handler)
+  t.deepEqual(route.params, ['param'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns null for a regexp route', t => {
+test('findRoute returns null for a regexp route', (t) => {
   t.plan(7)
 
   const findMyWay = FindMyWay()
@@ -208,8 +211,8 @@ test('findRoute returns null for a regexp route', t => {
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns handler for a wildcard route', t => {
-  t.plan(7)
+test('findRoute returns handler and wildcard param for a wildcard route', (t) => {
+  t.plan(8)
 
   const findMyWay = FindMyWay()
 
@@ -220,11 +223,12 @@ test('findRoute returns handler for a wildcard route', t => {
 
   const route = findMyWay.findRoute('GET', '/example/*')
   t.equal(route.handler, handler)
+  t.deepEqual(route.params, ['*'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns null for a wildcard route', t => {
+test('findRoute returns null for a wildcard route', (t) => {
   t.plan(7)
 
   const findMyWay = FindMyWay()
@@ -238,13 +242,18 @@ test('findRoute returns null for a wildcard route', t => {
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
-test('findRoute returns handler for a constrained route', t => {
+test('findRoute returns handler for a constrained route', (t) => {
   t.plan(9)
 
   const findMyWay = FindMyWay()
 
   const handler = () => {}
-  findMyWay.on('GET', '/example', { constraints: { version: '1.0.0' } }, handler)
+  findMyWay.on(
+    'GET',
+    '/example',
+    { constraints: { version: '1.0.0' } },
+    handler
+  )
 
   const fundMyWayClone = rfdc(findMyWay)
 

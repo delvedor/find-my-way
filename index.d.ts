@@ -119,6 +119,7 @@ declare namespace Router {
   interface FindRouteResult<V extends HTTPVersion> {
     handler: Handler<V>;
     store: any;
+    params: string[];
   }
 
   interface Instance<V extends HTTPVersion> {

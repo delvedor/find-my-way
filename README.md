@@ -410,7 +410,7 @@ const handler = (req, res, params) => {
 router.on('GET', '/:file(^\\S+).png', handler)
 
 router.findRoute('GET', '/:file(^\\S+).png')
-// => { handler: Function, store: Object }
+// => { handler: Function, store: Object, params: ['file'] }
 
 router.findRoute('GET', '/:file(^\\D+).jpg')
 // => null
@@ -423,10 +423,10 @@ const handler = (req, res, params) => {
 router.on('GET', '/:param1', handler)
 
 router.findRoute('GET', '/:param1')
-// => { handler: Function, store: Object }
+// => { handler: Function, store: Object, params: ['param1'] }
 
 router.findRoute('GET', '/:param2')
-// => { handler: Function, store: Object }
+// => { handler: Function, store: Object, params: ['param1'] }
 ```
 
 #### hasRoute (method, path, [constraints])
