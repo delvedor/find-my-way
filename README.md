@@ -1,6 +1,6 @@
 # find-my-way
 
-[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](http://standardjs.com/)  ![Node CI](https://github.com/delvedor/find-my-way/workflows/Node%20CI/badge.svg) [![NPM downloads](https://img.shields.io/npm/dm/find-my-way.svg?style=flat)](https://www.npmjs.com/package/find-my-way)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](http://standardjs.com/) [![Node CI](https://github.com/delvedor/find-my-way/actions/workflows/node.js.yml/badge.svg)](https://github.com/delvedor/find-my-way/actions/workflows/node.js.yml) [![NPM downloads](https://img.shields.io/npm/dm/find-my-way.svg?style=flat)](https://www.npmjs.com/package/find-my-way)
 
 A crazy fast HTTP router, internally uses an highly performant [Radix Tree](https://en.wikipedia.org/wiki/Radix_tree) (aka compact [Prefix Tree](https://en.wikipedia.org/wiki/Trie)), supports route params, wildcards, and it's framework independent.
 
@@ -19,10 +19,14 @@ Do you need a real-world example that uses this router? Check out [Fastify](http
     - [Supported path formats](#supported-path-formats)
     - [Match order](#match-order)
     - [Supported methods](#supported-methods)
-  - [off(method, path)](#offmethod-path)
-    - [off(methods[], path)](#offmethods-path)
-    - [off(methods, path, [constraints])](#offmethods-path-constraints)
-  - [lookup(request, response, [context], [done])](#lookuprequest-response-context)
+  - [off(methods[], path, [constraints])](#offmethods-path-constraints)
+    - [off(methods, path)](#offmethods-path)
+    - [off(methods, path, constraints)](#offmethods-path-constraints-1)
+    - [off(methods[], path)](#offmethods-path-1)
+    - [off(methods[], path, constraints)](#offmethods-path-constraints-2)
+  - [findRoute (method, path, [constraints])](#findroute-method-path-constraints)
+  - [hasRoute (method, path, [constraints])](#hasroute-method-path-constraints)
+  - [lookup(request, response, [context], [done])](#lookuprequest-response-context-done)
   - [find(method, path, [constraints])](#findmethod-path-constraints)
   - [prettyPrint([{ method: 'GET', commonPrefix: false, includeMeta: true || [] }])](#prettyprint-commonprefix-false-includemeta-true---)
   - [reset()](#reset)
@@ -150,6 +154,14 @@ router.on('GET', '/', (req, res, params, store, searchParams) => {
 })
 
 router.lookup({ method: 'GET', url: '/?foo=bar&baz=faz' }, null)
+```
+
+According to [RFC3986](https://www.rfc-editor.org/rfc/rfc3986#section-3.4), find-my-way separates path and query string with `?` character. But earlier versions also used `;` as delimiter character.  To support this behaviour, add the `useSemicolonDelimiter` option to `true`:
+
+```js
+const router = require('find-my-way')({
+  useSemicolonDelimiter: true
+})
 ```
 
 You can assign a `buildPrettyMeta` function to sanitize a route's `store` object to use with the `prettyPrint` functions. This function should accept a single object and return an object.
@@ -387,6 +399,51 @@ router.off(['POST', 'GET'], '/example', { host: 'fastify.io' })
 router.off(['POST', 'GET'], '/example', {})
 ```
 
+#### findRoute (method, path, [constraints])
+
+Finds a route by server route's path (not like `find` which finds a route by the url). Returns the route object if found, otherwise returns `null`. `findRoute` does not compare routes paths directly, instead it compares only paths patters. This means that `findRoute` will return a route even if the path passed to it does not match the route's path exactly. For example, if a route is registered with the path `/example/:param1`, `findRoute` will return the route if the path passed to it is `/example/:param2`.
+
+```js
+const handler = (req, res, params) => {
+  res.end('Hello World!')
+}
+router.on('GET', '/:file(^\\S+).png', handler)
+
+router.findRoute('GET', '/:file(^\\S+).png')
+// => { handler: Function, store: Object, params: ['file'] }
+
+router.findRoute('GET', '/:file(^\\D+).jpg')
+// => null
+```
+
+```js
+const handler = (req, res, params) => {
+  res.end('Hello World!')
+}
+router.on('GET', '/:param1', handler)
+
+router.findRoute('GET', '/:param1')
+// => { handler: Function, store: Object, params: ['param1'] }
+
+router.findRoute('GET', '/:param2')
+// => { handler: Function, store: Object, params: ['param1'] }
+```
+
+#### hasRoute (method, path, [constraints])
+
+Checks if a route exists by server route's path (see `findRoute` for more details). Returns `true` if found, otherwise returns `false`.
+
+```js
+router.on('GET', '/:file(^\\S+).png', handler)
+
+router.hasRoute('GET', '/:file(^\\S+).png')
+// => true
+
+router.hasRoute('GET', '/:file(^\\D+).jpg')
+// => false
+```
+
+```js
 #### lookup(request, response, [context], [done])
 Start a new search, `request` and `response` are the server req/res objects.<br>
 If a route is found it will automatically call the handler, otherwise the default route will be called.<br>
@@ -647,7 +704,7 @@ const customResponseTypeStrategy = {
 const router = FindMyWay({ constraints: { accept: customResponseTypeStrategy } });
 ```
 
-Add a custom constraint strategy using the addConstraintStrategy method:
+Add an async custom constrain strategy when constructing a router:
 ```js
 const asyncCustomResponseTypeStrategy = {
   // strategy name for referencing in the route handler `constraints` options
@@ -671,7 +728,7 @@ const asyncCustomResponseTypeStrategy = {
 const router = FindMyWay({ constraints: { accept: asyncCustomResponseTypeStrategy } });
 ```
 
-Add an async custom constrain strategy when constructing a router:
+Add a custom constraint strategy using the `addConstraintStrategy` method:
 ```js
 const customResponseTypeStrategy = {
   // strategy name for referencing in the route handler `constraints` options

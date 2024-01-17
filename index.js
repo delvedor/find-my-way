@@ -88,6 +88,7 @@ function Router (opts) {
   this.maxParamLength = opts.maxParamLength || 100
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.constrainer = new Constrainer(opts.constraints)
+  this.useSemicolonDelimiter = opts.useSemicolonDelimiter || false
 
   this.routes = []
   this.trees = {}
@@ -292,6 +293,157 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   currentNode.addRoute(route, this.constrainer)
 }
 
+Router.prototype.hasRoute = function hasRoute (method, path, constraints) {
+  const route = this.findRoute(method, path, constraints)
+  return route !== null
+}
+
+Router.prototype.findRoute = function findNode (method, path, constraints = {}) {
+  if (this.trees[method] === undefined) {
+    return null
+  }
+
+  let pattern = path
+
+  let currentNode = this.trees[method]
+  let parentNodePathIndex = currentNode.prefix.length
+
+  const params = []
+  for (let i = 0; i <= pattern.length; i++) {
+    if (pattern.charCodeAt(i) === 58 && pattern.charCodeAt(i + 1) === 58) {
+      // It's a double colon
+      i++
+      continue
+    }
+
+    const isParametricNode = pattern.charCodeAt(i) === 58 && pattern.charCodeAt(i + 1) !== 58
+    const isWildcardNode = pattern.charCodeAt(i) === 42
+
+    if (isParametricNode || isWildcardNode || (i === pattern.length && i !== parentNodePathIndex)) {
+      let staticNodePath = pattern.slice(parentNodePathIndex, i)
+      if (!this.caseSensitive) {
+        staticNodePath = staticNodePath.toLowerCase()
+      }
+      staticNodePath = staticNodePath.split('::').join(':')
+      staticNodePath = staticNodePath.split('%').join('%25')
+      // add the static part of the route to the tree
+      currentNode = currentNode.getStaticChild(staticNodePath)
+      if (currentNode === null) {
+        return null
+      }
+    }
+
+    if (isParametricNode) {
+      let isRegexNode = false
+      const regexps = []
+
+      let lastParamStartIndex = i + 1
+      for (let j = lastParamStartIndex; ; j++) {
+        const charCode = pattern.charCodeAt(j)
+
+        const isRegexParam = charCode === 40
+        const isStaticPart = charCode === 45 || charCode === 46
+        const isEndOfNode = charCode === 47 || j === pattern.length
+
+        if (isRegexParam || isStaticPart || isEndOfNode) {
+          const paramName = pattern.slice(lastParamStartIndex, j)
+          params.push(paramName)
+
+          isRegexNode = isRegexNode || isRegexParam || isStaticPart
+
+          if (isRegexParam) {
+            const endOfRegexIndex = getClosingParenthensePosition(pattern, j)
+            const regexString = pattern.slice(j, endOfRegexIndex + 1)
+
+            if (!this.allowUnsafeRegex) {
+              assert(isRegexSafe(new RegExp(regexString)), `The regex '${regexString}' is not safe!`)
+            }
+
+            regexps.push(trimRegExpStartAndEnd(regexString))
+
+            j = endOfRegexIndex + 1
+          } else {
+            regexps.push('(.*?)')
+          }
+
+          const staticPartStartIndex = j
+          for (; j < pattern.length; j++) {
+            const charCode = pattern.charCodeAt(j)
+            if (charCode === 47) break
+            if (charCode === 58) {
+              const nextCharCode = pattern.charCodeAt(j + 1)
+              if (nextCharCode === 58) j++
+              else break
+            }
+          }
+
+          let staticPart = pattern.slice(staticPartStartIndex, j)
+          if (staticPart) {
+            staticPart = staticPart.split('::').join(':')
+            staticPart = staticPart.split('%').join('%25')
+            regexps.push(escapeRegExp(staticPart))
+          }
+
+          lastParamStartIndex = j + 1
+
+          if (isEndOfNode || pattern.charCodeAt(j) === 47 || j === pattern.length) {
+            const nodePattern = isRegexNode ? '()' + staticPart : staticPart
+            const nodePath = pattern.slice(i, j)
+
+            pattern = pattern.slice(0, i + 1) + nodePattern + pattern.slice(j)
+            i += nodePattern.length
+
+            const regex = isRegexNode ? new RegExp('^' + regexps.join('') + '$') : null
+            currentNode = currentNode.getParametricChild(regex, staticPart || null, nodePath)
+            if (currentNode === null) {
+              return null
+            }
+            parentNodePathIndex = i + 1
+            break
+          }
+        }
+      }
+    } else if (isWildcardNode) {
+      // add the wildcard parameter
+      params.push('*')
+      currentNode = currentNode.getWildcardChild()
+      if (currentNode === null) {
+        return null
+      }
+      parentNodePathIndex = i + 1
+
+      if (i !== pattern.length - 1) {
+        throw new Error('Wildcard must be the last character in the route')
+      }
+    }
+  }
+
+  if (!this.caseSensitive) {
+    pattern = pattern.toLowerCase()
+  }
+
+  if (pattern === '*') {
+    pattern = '/*'
+  }
+
+  for (const existRoute of this.routes) {
+    const routeConstraints = existRoute.opts.constraints || {}
+    if (
+      existRoute.method === method &&
+      existRoute.pattern === pattern &&
+      deepEqual(routeConstraints, constraints)
+    ) {
+      return {
+        handler: existRoute.handler,
+        store: existRoute.store,
+        params: existRoute.params || []
+      }
+    }
+  }
+
+  return null
+}
+
 Router.prototype.hasConstraintStrategy = function (strategyName) {
   return this.constrainer.hasConstraintStrategy(strategyName)
 }
@@ -419,7 +571,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   let shouldDecodeParam
 
   try {
-    sanitizedUrl = safeDecodeURI(path)
+    sanitizedUrl = safeDecodeURI(path, this.useSemicolonDelimiter)
     path = sanitizedUrl.path
     querystring = sanitizedUrl.querystring
     shouldDecodeParam = sanitizedUrl.shouldDecodeParam
@@ -584,7 +736,7 @@ Router.prototype.prettyPrint = function (options = {}) {
   return prettyPrintTree(tree, options)
 }
 
-for (var i in httpMethods) {
+for (const i in httpMethods) {
   /* eslint no-prototype-builtins: "off" */
   if (!httpMethods.hasOwnProperty(i)) continue
   const m = httpMethods[i]
@@ -636,7 +788,7 @@ function getClosingParenthensePosition (path, idx) {
   // but it's inefficient for grouped or wrong regexp expressions.
   // see issues #62 and #63 for more info
 
-  var parentheses = 1
+  let parentheses = 1
 
   while (idx < path.length) {
     idx++

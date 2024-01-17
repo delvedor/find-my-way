@@ -74,3 +74,32 @@ test('A route supports multiple host constraints (lookup)', t => {
     headers: { host: 'bar.fancy.ca' }
   })
 })
+
+test('A route supports up to 31 host constraints', (t) => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay()
+
+  for (let i = 0; i < 31; i++) {
+    const host = `h${i.toString().padStart(2, '0')}`
+    findMyWay.on('GET', '/', { constraints: { host } }, alpha)
+  }
+
+  t.equal(findMyWay.find('GET', '/', { host: 'h01' }).handler, alpha)
+})
+
+test('A route throws when constraint limit exceeded', (t) => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay()
+
+  for (let i = 0; i < 31; i++) {
+    const host = `h${i.toString().padStart(2, '0')}`
+    findMyWay.on('GET', '/', { constraints: { host } }, alpha)
+  }
+
+  t.throws(
+    () => findMyWay.on('GET', '/', { constraints: { host: 'h31' } }, beta),
+    'find-my-way supports a maximum of 31 route handlers per node when there are constraints, limit reached'
+  )
+})
