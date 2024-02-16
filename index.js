@@ -25,7 +25,7 @@
     '~': 126 - ~
 */
 
-const assert = require('assert')
+const assert = require('node:assert')
 const querystring = require('fast-querystring')
 const isRegexSafe = require('safe-regex2')
 const deepEqual = require('fast-deep-equal')
