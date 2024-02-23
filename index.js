@@ -371,9 +371,8 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
             if (charCode === 47) break
             if (charCode === 58) {
               const nextCharCode = pattern.charCodeAt(j + 1)
-              if (nextCharCode === 58) {
-                j++
-              } else break
+              if (nextCharCode === 58) j++
+              else break
             }
           }
 
