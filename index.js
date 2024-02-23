@@ -344,7 +344,6 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
         const isRegexParam = charCode === 40
         const isStaticPart = charCode === 45 || charCode === 46
         const isEndOfNode = charCode === 47 || j === pattern.length
-
         if (isRegexParam || isStaticPart || isEndOfNode) {
           const paramName = pattern.slice(lastParamStartIndex, j)
           params.push(paramName)
@@ -372,8 +371,9 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
             if (charCode === 47) break
             if (charCode === 58) {
               const nextCharCode = pattern.charCodeAt(j + 1)
-              if (nextCharCode === 58) j++
-              else break
+              if (nextCharCode === 58) {
+                j++
+              } else break
             }
           }
 
@@ -672,6 +672,8 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       }
 
       pathIndex = paramEndIndex
+    } else {
+      throw new Error(`Unexpected node kind ${node.kind}`)
     }
   }
 }
