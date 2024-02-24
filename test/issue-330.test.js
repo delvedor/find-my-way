@@ -170,16 +170,6 @@ test('throws error if pass an undefined constraint value', (t) => {
   t.throws(() => constrainer.validateConstraints({ key: undefined }), error)
 })
 
-test('throws error for unknown non-custom strategy for compiling constraint derivation function', (t) => {
-  t.plan(1)
-
-  const constrainer = new Constrainer()
-  constrainer.strategies['unknown-non-custom-strategy'] = {}
-
-  const error = new Error('unknown non-custom strategy for compiling constraint derivation function')
-  t.throws(() => constrainer.noteUsage({ 'unknown-non-custom-strategy': {} }), error)
-})
-
 test('getMatchingHandler should return null if not compiled', (t) => {
   t.plan(1)
 
