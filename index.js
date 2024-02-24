@@ -406,9 +406,7 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
       // add the wildcard parameter
       params.push('*')
       currentNode = currentNode.getWildcardChild()
-      if (currentNode === null) {
-        return null
-      }
+
       parentNodePathIndex = i + 1
 
       if (i !== pattern.length - 1) {

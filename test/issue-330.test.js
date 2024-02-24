@@ -1,7 +1,6 @@
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('..')
-const { StaticNode } = require('../lib/node')
 const proxyquire = require('proxyquire')
 const HandlerStorage = require('../lib/handler-storage')
 const Constrainer = require('../lib/constrainer')
@@ -58,21 +57,6 @@ test('double colon does not define parametric node', (t) => {
   findMyWay.get('/:foo(\\d+)::bar', () => {})
   const route2 = findMyWay.findRoute('GET', '/:foo(\\d+)::bar')
   t.strictSame(route2.params, ['foo'])
-})
-
-test('should return null if no wildchar child', (t) => {
-  t.plan(2)
-
-  const findMyWay = FindMyWay()
-
-  findMyWay.get('*', () => {})
-  t.ok(findMyWay.findRoute('GET', '*'))
-
-  const savedGetWildcardChild = StaticNode.prototype.getWildcardChild
-  StaticNode.prototype.getWildcardChild = () => null
-  t.equal(findMyWay.findRoute('GET', '*'), null)
-
-  StaticNode.prototype.getWildcardChild = savedGetWildcardChild
 })
 
 test('case insensitive static routes', (t) => {
