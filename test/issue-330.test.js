@@ -38,11 +38,11 @@ test('double colon does not define parametric node', (t) => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.get('/::id', () => {})
+  findMyWay.on('GET', '/::id', () => {})
   const route1 = findMyWay.findRoute('GET', '/::id')
   t.strictSame(route1.params, [])
 
-  findMyWay.get('/:foo(\\d+)::bar', () => {})
+  findMyWay.on('GET', '/:foo(\\d+)::bar', () => {})
   const route2 = findMyWay.findRoute('GET', '/:foo(\\d+)::bar')
   t.strictSame(route2.params, ['foo'])
 })
@@ -54,9 +54,9 @@ test('case insensitive static routes', (t) => {
     caseSensitive: false
   })
 
-  findMyWay.get('/foo', () => {})
-  findMyWay.get('/foo/bar', () => {})
-  findMyWay.get('/foo/bar/baz', () => {})
+  findMyWay.on('GET', '/foo', () => {})
+  findMyWay.on('GET', '/foo/bar', () => {})
+  findMyWay.on('GET', '/foo/bar/baz', () => {})
 
   t.ok(findMyWay.findRoute('GET', '/FoO'))
   t.ok(findMyWay.findRoute('GET', '/FOo/Bar'))
@@ -70,7 +70,7 @@ test('wildcard must be the last character in the route', (t) => {
 
   const findMyWay = FindMyWay()
 
-  findMyWay.get('*', () => {})
+  findMyWay.on('GET', '*', () => {})
   t.throws(() => findMyWay.findRoute('GET', '*1'), expectedError)
   t.throws(() => findMyWay.findRoute('GET', '*/'), expectedError)
   t.throws(() => findMyWay.findRoute('GET', '*?'), expectedError)
@@ -82,7 +82,7 @@ test('does not find the route if maxParamLength is exceeded', t => {
     maxParamLength: 2
   })
 
-  findMyWay.get('/:id(\\d+)', () => {})
+  findMyWay.on('GET', '/:id(\\d+)', () => {})
 
   t.equal(findMyWay.find('GET', '/123'), null)
   t.ok(findMyWay.find('GET', '/12'))
@@ -95,7 +95,7 @@ test('Should check if a regex is safe to use', (t) => {
 
   // we must pass a safe regex to register the route
   // findRoute will still throws the expected assertion error if we try to access it with unsafe reggex
-  findMyWay.get('/test/:id(\\d+)', () => {})
+  findMyWay.on('GET', '/test/:id(\\d+)', () => {})
 
   const unSafeRegex = /(x+x+)+y/
   t.throws(() => findMyWay.findRoute('GET', `/test/:id(${unSafeRegex.toString()})`), {
@@ -109,7 +109,7 @@ test('Disable safe regex check', (t) => {
   const findMyWay = FindMyWay({ allowUnsafeRegex: true })
 
   const unSafeRegex = /(x+x+)+y/
-  findMyWay.get(`/test2/:id(${unSafeRegex.toString()})`, () => {})
+  findMyWay.on('GET', `/test2/:id(${unSafeRegex.toString()})`, () => {})
   t.doesNotThrow(() => findMyWay.findRoute('GET', `/test2/:id(${unSafeRegex.toString()})`))
 })
 
