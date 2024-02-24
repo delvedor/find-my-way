@@ -88,34 +88,6 @@ test('wildcard must be the last character in the route', (t) => {
   t.throws(() => findMyWay.findRoute('GET', '*?'), expectedError)
 })
 
-test('findRoute should default route params to empty array if not defined', (t) => {
-  t.plan(4)
-
-  const findMyWay = FindMyWay()
-  findMyWay.get('/', () => {})
-
-  t.equal(findMyWay.routes.length, 1)
-  t.strictSame(findMyWay.routes[0].params, [])
-  t.strictSame(findMyWay.findRoute('GET', '/').params, [])
-
-  findMyWay.routes[0].params = undefined
-  t.strictSame(findMyWay.findRoute('GET', '/').params, [])
-})
-
-test('name test', (t) => {
-  t.plan(4)
-
-  const findMyWay = FindMyWay()
-  findMyWay.get('/', () => {})
-
-  t.equal(findMyWay.routes.length, 1)
-  t.strictSame(findMyWay.routes[0].params, [])
-  t.strictSame(findMyWay.findRoute('GET', '/').params, [])
-
-  findMyWay.routes[0].params = undefined
-  t.strictSame(findMyWay.findRoute('GET', '/').params, [])
-})
-
 test('does not find the route if maxParamLength is exceeded', t => {
   t.plan(2)
   const findMyWay = FindMyWay({

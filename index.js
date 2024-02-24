@@ -429,7 +429,7 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
       return {
         handler: existRoute.handler,
         store: existRoute.store,
-        params: existRoute.params || []
+        params: existRoute.params
       }
     }
   }
