@@ -33,18 +33,6 @@ test('Should throw an error for unsafe OPTIONAL_PARAM_REGEXP', (t) => {
   }), new Error('the OPTIONAL_PARAM_REGEXP is not safe, update this module'))
 })
 
-test('Should find an error if httpMethods contain duplicates', (t) => {
-  t.plan(2)
-
-  t.doesNotThrow(() => proxyquire.noCallThru()('../index', {
-    './lib/http-methods': ['GET']
-  }))
-
-  t.throws(() => proxyquire.noCallThru()('../index', {
-    './lib/http-methods': ['GET', 'GET']
-  }), new Error('Method already exists: get'))
-})
-
 test('double colon does not define parametric node', (t) => {
   t.plan(2)
 

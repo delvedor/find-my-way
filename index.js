@@ -733,8 +733,6 @@ for (const i in httpMethods) {
   const m = httpMethods[i]
   const methodName = m.toLowerCase()
 
-  if (Router.prototype[methodName]) throw new Error('Method already exists: ' + methodName)
-
   Router.prototype[methodName] = function (path, handler, store) {
     return this.on(m, path, handler, store)
   }
