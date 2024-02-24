@@ -185,6 +185,15 @@ test('SemVerStore version should be a string', (t) => {
   t.throws(() => new Storage().set(1), new TypeError('Version should be a string'))
 })
 
+test('Major version must be a numeric value', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay()
+
+  t.throws(() => findMyWay.on('GET', '/test', { constraints: { version: 'x' } }, () => {}),
+    new TypeError('Major version must be a numeric value'))
+})
+
 test('httpMethodStrategy storage handles set and get operations correctly', (t) => {
   t.plan(2)
 
