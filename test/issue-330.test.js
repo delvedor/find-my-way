@@ -155,6 +155,15 @@ test('Constrainer.noteUsage', (t) => {
   t.equal(constrainer.strategiesInUse.size, 1)
 })
 
+test('Cannot derive constraints without active strategies.', (t) => {
+  t.plan(1)
+
+  const constrainer = new Constrainer()
+  const before = constrainer.deriveSyncConstraints
+  constrainer._buildDeriveConstraints()
+  t.sameStrict(constrainer.deriveSyncConstraints, before)
+})
+
 test('getMatchingHandler should return null if not compiled', (t) => {
   t.plan(1)
 
