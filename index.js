@@ -419,10 +419,6 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
     pattern = pattern.toLowerCase()
   }
 
-  if (pattern === '*') {
-    pattern = '/*'
-  }
-
   for (const existRoute of this.routes) {
     const routeConstraints = existRoute.opts.constraints || {}
     if (

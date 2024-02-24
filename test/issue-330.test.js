@@ -88,24 +88,6 @@ test('wildcard must be the last character in the route', (t) => {
   t.throws(() => findMyWay.findRoute('GET', '*?'), expectedError)
 })
 
-test('findRoute normalizes wildcard patterns with leading slash', (t) => {
-  t.plan(4)
-
-  const findMyWay = FindMyWay()
-  findMyWay.get('*', () => {})
-
-  t.equal(findMyWay.routes.length, 1)
-  // will match with leading slash
-  t.equal(findMyWay.routes[0].pattern, '/*')
-
-  t.ok(findMyWay.findRoute('GET', '*'))
-
-  // will fail if we remove it
-  findMyWay.routes[0].pattern = '*'
-
-  t.equal(findMyWay.findRoute('GET', '*'), null)
-})
-
 test('findRoute should default route params to empty array if not defined', (t) => {
   t.plan(4)
 
