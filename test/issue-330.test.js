@@ -9,22 +9,6 @@ const { safeDecodeURIComponent } = require('../lib/url-sanitizer')
 const acceptVersionStrategy = require('../lib/strategies/accept-version')
 const httpMethodStrategy = require('../lib/strategies/http-method')
 
-test('should throw an error if unexpected node kind', (t) => {
-  t.plan(1)
-
-  const findMyWay = FindMyWay()
-
-  const savedGetNextNode = StaticNode.prototype.getNextNode
-  StaticNode.prototype.getNextNode = () => {
-    return { kind: 6 }
-  }
-
-  findMyWay.get('/a', () => {})
-  t.throws(() => findMyWay.find('GET', '/a'), new Error('Unexpected node kind 6'))
-
-  StaticNode.prototype.getNextNode = savedGetNextNode
-})
-
 test('FULL_PATH_REGEXP and OPTIONAL_PARAM_REGEXP should be considered safe', (t) => {
   t.plan(1)
 

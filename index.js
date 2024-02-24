@@ -624,7 +624,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     currentNode = node
 
-    // static route
     if (currentNode.kind === NODE_TYPES.STATIC) {
       pathIndex += currentNode.prefix.length
       continue
@@ -641,39 +640,36 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       continue
     }
 
-    if (currentNode.kind === NODE_TYPES.PARAMETRIC) {
-      let paramEndIndex = originPath.indexOf('/', pathIndex)
-      if (paramEndIndex === -1) {
-        paramEndIndex = pathLen
-      }
+    // parametric node
+    let paramEndIndex = originPath.indexOf('/', pathIndex)
+    if (paramEndIndex === -1) {
+      paramEndIndex = pathLen
+    }
 
-      let param = originPath.slice(pathIndex, paramEndIndex)
-      if (shouldDecodeParam) {
-        param = safeDecodeURIComponent(param)
-      }
+    let param = originPath.slice(pathIndex, paramEndIndex)
+    if (shouldDecodeParam) {
+      param = safeDecodeURIComponent(param)
+    }
 
-      if (currentNode.isRegex) {
-        const matchedParameters = currentNode.regex.exec(param)
-        if (matchedParameters === null) continue
+    if (currentNode.isRegex) {
+      const matchedParameters = currentNode.regex.exec(param)
+      if (matchedParameters === null) continue
 
-        for (let i = 1; i < matchedParameters.length; i++) {
-          const matchedParam = matchedParameters[i]
-          if (matchedParam.length > maxParamLength) {
-            return null
-          }
-          params.push(matchedParam)
-        }
-      } else {
-        if (param.length > maxParamLength) {
+      for (let i = 1; i < matchedParameters.length; i++) {
+        const matchedParam = matchedParameters[i]
+        if (matchedParam.length > maxParamLength) {
           return null
         }
-        params.push(param)
+        params.push(matchedParam)
       }
-
-      pathIndex = paramEndIndex
     } else {
-      throw new Error(`Unexpected node kind ${node.kind}`)
+      if (param.length > maxParamLength) {
+        return null
+      }
+      params.push(param)
     }
+
+    pathIndex = paramEndIndex
   }
 }
 
