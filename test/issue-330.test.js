@@ -185,6 +185,21 @@ test('SemVerStore version should be a string', (t) => {
   t.throws(() => new Storage().set(1), new TypeError('Version should be a string'))
 })
 
+test('SemVerStore.maxMajor should increase automatically', (t) => {
+  t.plan(3)
+
+  const Storage = acceptVersionStrategy.storage
+  const storage = new Storage()
+
+  t.equal(storage.maxMajor, 0)
+
+  storage.set('2')
+  t.equal(storage.maxMajor, 2)
+
+  storage.set('1')
+  t.equal(storage.maxMajor, 2)
+})
+
 test('Major version must be a numeric value', t => {
   t.plan(1)
 
