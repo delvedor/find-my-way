@@ -142,6 +142,19 @@ test('throws error if pass an undefined constraint value', (t) => {
   t.throws(() => constrainer.validateConstraints({ key: undefined }), error)
 })
 
+test('Constrainer.noteUsage', (t) => {
+  t.plan(3)
+
+  const constrainer = new Constrainer()
+  t.equal(constrainer.strategiesInUse.size, 0)
+
+  constrainer.noteUsage()
+  t.equal(constrainer.strategiesInUse.size, 0)
+
+  constrainer.noteUsage({ host: 'fastify.io' })
+  t.equal(constrainer.strategiesInUse.size, 1)
+})
+
 test('getMatchingHandler should return null if not compiled', (t) => {
   t.plan(1)
 
