@@ -228,5 +228,5 @@ test('if buildPrettyMeta argument is undefined, will return an object', (t) => {
   t.plan(1)
 
   const findMyWay = FindMyWay()
-  t.sameStrict(findMyWay.buildPrettyMeta(undefined), {})
+  t.sameStrict(findMyWay.buildPrettyMeta(), {})
 })
