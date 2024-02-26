@@ -618,6 +618,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     currentNode = node
 
+    // static route
     if (currentNode.kind === NODE_TYPES.STATIC) {
       pathIndex += currentNode.prefix.length
       continue
