@@ -1,6 +1,11 @@
 name: Node CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - next
+  pull_request:
 
 permissions:
   contents: read
@@ -63,4 +68,3 @@ jobs:
     - uses: fastify/github-action-merge-dependabot@9e7bfb249c69139d7bdcd8d984f9665edd49020b # v3.10.1
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-      
