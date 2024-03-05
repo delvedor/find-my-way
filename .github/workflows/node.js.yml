@@ -1,6 +1,11 @@
 name: Node CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - next
+  pull_request:
 
 permissions:
   contents: read
@@ -12,11 +17,19 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x, 20.x]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        node-version:
+          - 14
+          - 16
+          - 18
+          - 20
+          - 21
+        os: 
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
         exclude:
           - os: windows-latest
-            node-version: 14.x    
+            node-version: 14
 
     steps:
     - uses: actions/checkout@v3
@@ -41,3 +54,17 @@ jobs:
     - name: Type Definitions
       run: |
         npm run test:typescript
+
+  automerge:
+    if: >
+      github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      pull-requests: write
+      contents: write
+    steps:
+    - uses: fastify/github-action-merge-dependabot@9e7bfb249c69139d7bdcd8d984f9665edd49020b # v3.10.1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
