@@ -3,6 +3,7 @@
 const t = require('tap')
 const test = t.test
 const FindMyWay = require('..')
+const rfdc = require('rfdc')({ proto: true })
 
 const customHeaderConstraint = {
   name: 'requestedBy',
@@ -23,11 +24,14 @@ const customHeaderConstraint = {
   }
 }
 
-test('should derive async constraint', t => {
+test('should derive multiple async constraints', t => {
   t.plan(2)
 
-  const router = FindMyWay({ constraints: { requestedBy: customHeaderConstraint } })
-  router.on('GET', '/', { constraints: { requestedBy: 'node' } }, () => 'asyncHandler')
+  const customHeaderConstraint2 = rfdc(customHeaderConstraint)
+  customHeaderConstraint2.name = 'requestedBy2'
+
+  const router = FindMyWay({ constraints: { requestedBy: customHeaderConstraint, requestedBy2: customHeaderConstraint2 } })
+  router.on('GET', '/', { constraints: { requestedBy: 'node', requestedBy2: 'node' } }, () => 'asyncHandler')
 
   router.lookup(
     {
