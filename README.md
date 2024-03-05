@@ -443,8 +443,8 @@ router.hasRoute('GET', '/:file(^\\D+).jpg')
 // => false
 ```
 
-```js
 #### lookup(request, response, [context], [done])
+
 Start a new search, `request` and `response` are the server req/res objects.<br>
 If a route is found it will automatically call the handler, otherwise the default route will be called.<br>
 The url is sanitized internally, all the parameters and wildcards are decoded automatically.
