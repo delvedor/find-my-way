@@ -25,7 +25,7 @@
     '~': 126 - ~
 */
 
-const assert = require('assert')
+const assert = require('node:assert')
 const querystring = require('fast-querystring')
 const isRegexSafe = require('safe-regex2')
 const deepEqual = require('fast-deep-equal')
@@ -344,7 +344,6 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
         const isRegexParam = charCode === 40
         const isStaticPart = charCode === 45 || charCode === 46
         const isEndOfNode = charCode === 47 || j === pattern.length
-
         if (isRegexParam || isStaticPart || isEndOfNode) {
           const paramName = pattern.slice(lastParamStartIndex, j)
           params.push(paramName)
@@ -407,9 +406,7 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
       // add the wildcard parameter
       params.push('*')
       currentNode = currentNode.getWildcardChild()
-      if (currentNode === null) {
-        return null
-      }
+
       parentNodePathIndex = i + 1
 
       if (i !== pattern.length - 1) {
@@ -422,10 +419,6 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
     pattern = pattern.toLowerCase()
   }
 
-  if (pattern === '*') {
-    pattern = '/*'
-  }
-
   for (const existRoute of this.routes) {
     const routeConstraints = existRoute.opts.constraints || {}
     if (
@@ -436,7 +429,7 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
       return {
         handler: existRoute.handler,
         store: existRoute.store,
-        params: existRoute.params || []
+        params: existRoute.params
       }
     }
   }
@@ -642,37 +635,36 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       continue
     }
 
-    if (currentNode.kind === NODE_TYPES.PARAMETRIC) {
-      let paramEndIndex = originPath.indexOf('/', pathIndex)
-      if (paramEndIndex === -1) {
-        paramEndIndex = pathLen
-      }
+    // parametric node
+    let paramEndIndex = originPath.indexOf('/', pathIndex)
+    if (paramEndIndex === -1) {
+      paramEndIndex = pathLen
+    }
 
-      let param = originPath.slice(pathIndex, paramEndIndex)
-      if (shouldDecodeParam) {
-        param = safeDecodeURIComponent(param)
-      }
+    let param = originPath.slice(pathIndex, paramEndIndex)
+    if (shouldDecodeParam) {
+      param = safeDecodeURIComponent(param)
+    }
 
-      if (currentNode.isRegex) {
-        const matchedParameters = currentNode.regex.exec(param)
-        if (matchedParameters === null) continue
+    if (currentNode.isRegex) {
+      const matchedParameters = currentNode.regex.exec(param)
+      if (matchedParameters === null) continue
 
-        for (let i = 1; i < matchedParameters.length; i++) {
-          const matchedParam = matchedParameters[i]
-          if (matchedParam.length > maxParamLength) {
-            return null
-          }
-          params.push(matchedParam)
-        }
-      } else {
-        if (param.length > maxParamLength) {
+      for (let i = 1; i < matchedParameters.length; i++) {
+        const matchedParam = matchedParameters[i]
+        if (matchedParam.length > maxParamLength) {
           return null
         }
-        params.push(param)
+        params.push(matchedParam)
       }
-
-      pathIndex = paramEndIndex
+    } else {
+      if (param.length > maxParamLength) {
+        return null
+      }
+      params.push(param)
     }
+
+    pathIndex = paramEndIndex
   }
 }
 
@@ -741,8 +733,6 @@ for (const i in httpMethods) {
   if (!httpMethods.hasOwnProperty(i)) continue
   const m = httpMethods[i]
   const methodName = m.toLowerCase()
-
-  if (Router.prototype[methodName]) throw new Error('Method already exists: ' + methodName)
 
   Router.prototype[methodName] = function (path, handler, store) {
     return this.on(m, path, handler, store)
