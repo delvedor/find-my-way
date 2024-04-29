@@ -30,6 +30,10 @@ jobs:
         exclude:
           - os: windows-latest
             node-version: 14
+          - os: macos-latest
+            node-version: 14
+          - os: macos-latest
+            node-version: 16
 
     steps:
     - uses: actions/checkout@v4
