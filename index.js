@@ -115,7 +115,7 @@ Router.prototype.on = function on (method, path, opts, handler, store) {
     assert(path.length === optionalParamMatch.index + optionalParamMatch[0].length, 'Optional Parameter needs to be the last parameter of the path')
 
     const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
-    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
+    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2') || '/'
 
     this.on(method, pathFull, opts, handler, store)
     this.on(method, pathOptional, opts, handler, store)
