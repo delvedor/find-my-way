@@ -43,3 +43,5 @@ jspm_packages
 *.swp
 
 package-lock.json
+
+.tap
