@@ -47,7 +47,7 @@ test('findRoute returns handler and store for a static route', (t) => {
   const route = findMyWay.findRoute('GET', '/example')
   t.equal(route.handler, handler)
   t.equal(route.store, store)
-  t.deepEqual(route.params, [])
+  t.same(route.params, [])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -80,7 +80,7 @@ test('findRoute returns handler and params for a parametric route', (t) => {
 
   const route = findMyWay.findRoute('GET', '/:param')
   t.equal(route.handler, handler)
-  t.deepEqual(route.params, ['param'])
+  t.same(route.params, ['param'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -113,7 +113,7 @@ test('findRoute returns handler and params for a parametric route with static su
 
   const route = findMyWay.findRoute('GET', '/:param-static')
   t.equal(route.handler, handler)
-  t.deepEqual(route.params, ['param'])
+  t.same(route.params, ['param'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -144,7 +144,7 @@ test('findRoute returns handler and original params even if a param name differe
 
   const route = findMyWay.findRoute('GET', '/:param2')
   t.equal(route.handler, handler)
-  t.deepEqual(route.params, ['param1'])
+  t.same(route.params, ['param1'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -161,7 +161,7 @@ test('findRoute returns handler and params for a multi-parametric route', (t) =>
 
   const route = findMyWay.findRoute('GET', '/:param1-:param2')
   t.equal(route.handler, handler)
-  t.deepEqual(route.params, ['param1', 'param2'])
+  t.same(route.params, ['param1', 'param2'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -192,7 +192,7 @@ test('findRoute returns handler and regexp param for a regexp route', (t) => {
 
   const route = findMyWay.findRoute('GET', '/:param(^\\d+$)')
   t.equal(route.handler, handler)
-  t.deepEqual(route.params, ['param'])
+  t.same(route.params, ['param'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -223,7 +223,7 @@ test('findRoute returns handler and wildcard param for a wildcard route', (t) =>
 
   const route = findMyWay.findRoute('GET', '/example/*')
   t.equal(route.handler, handler)
-  t.deepEqual(route.params, ['*'])
+  t.same(route.params, ['*'])
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })

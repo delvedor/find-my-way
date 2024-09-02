@@ -149,7 +149,7 @@ test('Cannot derive constraints without active strategies.', (t) => {
   const constrainer = new Constrainer()
   const before = constrainer.deriveSyncConstraints
   constrainer._buildDeriveConstraints()
-  t.sameStrict(constrainer.deriveSyncConstraints, before)
+  t.same(constrainer.deriveSyncConstraints, before)
 })
 
 test('getMatchingHandler should return null if not compiled', (t) => {
@@ -195,13 +195,13 @@ test('SemVerStore.maxPatches should increase automatically', (t) => {
   const storage = new Storage()
 
   storage.set('2.0.0')
-  t.sameStrict(storage.maxPatches, { '2.0': 0 })
+  t.same(storage.maxPatches, { '2.0': 0 })
 
   storage.set('2.0.2')
-  t.sameStrict(storage.maxPatches, { '2.0': 2 })
+  t.same(storage.maxPatches, { '2.0': 2 })
 
   storage.set('2.0.1')
-  t.sameStrict(storage.maxPatches, { '2.0': 2 })
+  t.same(storage.maxPatches, { '2.0': 2 })
 })
 
 test('Major version must be a numeric value', t => {
@@ -228,5 +228,5 @@ test('if buildPrettyMeta argument is undefined, will return an object', (t) => {
   t.plan(1)
 
   const findMyWay = FindMyWay()
-  t.sameStrict(findMyWay.buildPrettyMeta(), {})
+  t.same(findMyWay.buildPrettyMeta(), {})
 })
