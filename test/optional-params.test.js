@@ -195,3 +195,23 @@ test('deregister a route with optional param', (t) => {
   t.notOk(findMyWay.find('GET', '/a/:param/b'))
   t.notOk(findMyWay.find('GET', '/a/:param/b/:optional'))
 })
+
+test('optional parameter on root', (t) => {
+  t.plan(2)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.fail('Should not be defaultRoute')
+    }
+  })
+
+  findMyWay.on('GET', '/:optional?', (req, res, params) => {
+    if (params.optional) {
+      t.equal(params.optional, 'foo')
+    } else {
+      t.equal(params.optional, undefined)
+    }
+  })
+
+  findMyWay.lookup({ method: 'GET', url: '/', headers: {} }, null)
+  findMyWay.lookup({ method: 'GET', url: '/foo', headers: {} }, null)
+})
