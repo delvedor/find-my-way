@@ -12,7 +12,7 @@ test('NullObject', t => {
 
 test('has no methods from generic Object class', t => {
   function getAllPropertyNames (obj) {
-    var props = []
+    const props = []
 
     do {
       Object.getOwnPropertyNames(obj).forEach(function (prop) {

@@ -1,5 +1,5 @@
 import { expectType } from 'tsd'
-import * as Router from '../../'
+import Router from '../../'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 import { IncomingMessage, ServerResponse } from 'http'
 
