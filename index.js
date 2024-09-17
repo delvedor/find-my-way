@@ -192,6 +192,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
     if (isParametricNode) {
       let isRegexNode = false
+      let isParamSafe = true
+      let backtrack = ''
       const regexps = []
 
       let lastParamStartIndex = i + 1
@@ -219,8 +221,10 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
             regexps.push(trimRegExpStartAndEnd(regexString))
 
             j = endOfRegexIndex + 1
+            isParamSafe = true
           } else {
-            regexps.push('(.*?)')
+            regexps.push(isParamSafe ? '(.*?)' : `(${backtrack}|(?:(?!${backtrack}).)*)`)
+            isParamSafe = false
           }
 
           const staticPartStartIndex = j
@@ -238,7 +242,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
           if (staticPart) {
             staticPart = staticPart.split('::').join(':')
             staticPart = staticPart.split('%').join('%25')
-            regexps.push(escapeRegExp(staticPart))
+            regexps.push(backtrack = escapeRegExp(staticPart))
           }
 
           lastParamStartIndex = j + 1
@@ -335,6 +339,8 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
 
     if (isParametricNode) {
       let isRegexNode = false
+      let isParamSafe = true
+      let backtrack = ''
       const regexps = []
 
       let lastParamStartIndex = i + 1
@@ -344,6 +350,7 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
         const isRegexParam = charCode === 40
         const isStaticPart = charCode === 45 || charCode === 46
         const isEndOfNode = charCode === 47 || j === pattern.length
+
         if (isRegexParam || isStaticPart || isEndOfNode) {
           const paramName = pattern.slice(lastParamStartIndex, j)
           params.push(paramName)
@@ -361,8 +368,10 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
             regexps.push(trimRegExpStartAndEnd(regexString))
 
             j = endOfRegexIndex + 1
+            isParamSafe = false
           } else {
-            regexps.push('(.*?)')
+            regexps.push(isParamSafe ? '(.*?)' : `(${backtrack}|(?:(?!${backtrack}).)*)`)
+            isParamSafe = false
           }
 
           const staticPartStartIndex = j
@@ -380,7 +389,7 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
           if (staticPart) {
             staticPart = staticPart.split('::').join(':')
             staticPart = staticPart.split('%').join('%25')
-            regexps.push(escapeRegExp(staticPart))
+            regexps.push(backtrack = escapeRegExp(staticPart))
           }
 
           lastParamStartIndex = j + 1
