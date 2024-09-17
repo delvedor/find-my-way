@@ -255,3 +255,17 @@ test('Disable safe regex check', t => {
     }
   })
 })
+
+test('prevent back-tracking', (t) => {
+  t.plan(0)
+  t.setTimeout(20)
+
+  const findMyWay = FindMyWay({
+    defaultRoute: () => {
+      t.fail('route not matched')
+    }
+  })
+
+  findMyWay.on('GET', '/:foo-:bar-', (req, res, params) => {})
+  findMyWay.find('GET', '/' + '-'.repeat(16_000) + 'a', { host: 'fastify.io' })
+})

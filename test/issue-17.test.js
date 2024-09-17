@@ -132,8 +132,8 @@ test('Multi parametric route / 2', t => {
   })
 
   findMyWay.on('GET', '/a/:p1-:p2', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar-baz')
+    t.equal(params.p1, 'foo-bar')
+    t.equal(params.p2, 'baz')
   })
 
   findMyWay.on('GET', '/b/:p1.:p2', (req, res, params) => {

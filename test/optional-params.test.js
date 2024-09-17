@@ -68,8 +68,8 @@ test('Multi parametric route with optional param', (t) => {
 
   findMyWay.on('GET', '/a/:p1-:p2?', (req, res, params) => {
     if (params.p1 && params.p2) {
-      t.equal(params.p1, 'foo')
-      t.equal(params.p2, 'bar-baz')
+      t.equal(params.p1, 'foo-bar')
+      t.equal(params.p2, 'baz')
     }
   })
 
