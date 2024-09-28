@@ -267,5 +267,5 @@ test('prevent back-tracking', (t) => {
   })
 
   findMyWay.on('GET', '/:foo-:bar-', (req, res, params) => {})
-  findMyWay.find('GET', '/' + '-'.repeat(16_000) + 'a', { host: 'fastify.io' })
+  findMyWay.find('GET', '/' + '-'.repeat(16000) + 'a', { host: 'fastify.io' })
 })
