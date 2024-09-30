@@ -4,6 +4,11 @@
   "description": "Crazy fast http radix based router",
   "main": "index.js",
   "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib"
+  ],
   "scripts": {
     "bench": "node ./benchmark/bench.js",
     "bench:cmp": "node ./benchmark/compare-branches.js",
