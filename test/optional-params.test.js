@@ -104,7 +104,7 @@ test('Optional Parameter with ignoreTrailingSlash = false', (t) => {
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false,
     defaultRoute: (req, res) => {
-      t.assert.match(req.url, '/test/hello/foo/')
+      t.assert.equal(req.url, '/test/hello/foo/')
     }
   })
 

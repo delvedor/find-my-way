@@ -21,13 +21,11 @@ test('verify routes registered', t => {
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
   t.assert.equal(findMyWay.routes.length, quantity)
   findMyWay.routes.forEach((route, idx) => {
-    t.assert.match(route, {
-      method: 'GET',
-      path: '/test-route-' + idx,
-      opts: {},
-      handler: defaultHandler,
-      store: undefined
-    })
+    t.assert.equal(route.method, 'GET')
+    t.assert.equal(route.path, '/test-route-' + idx)
+    t.assert.deepStrictEqual(route.opts, {})
+    t.assert.equal(route.handler, defaultHandler)
+    t.assert.equal(route.store, undefined)
   })
 })
 

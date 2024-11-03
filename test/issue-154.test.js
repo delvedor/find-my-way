@@ -9,13 +9,13 @@ test('Should throw when not sending a string', t => {
 
   const findMyWay = FindMyWay()
 
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.on('GET', '/t1', { constraints: { version: 42 } }, noop)
   })
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.on('GET', '/t2', { constraints: { version: null } }, noop)
   })
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.on('GET', '/t2', { constraints: { version: true } }, noop)
   })
 })

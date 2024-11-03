@@ -18,7 +18,7 @@ test('on throws for invalid method', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
 
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.on('INVALID', '/a/b')
   })
 })
@@ -28,17 +28,17 @@ test('on throws for invalid path', t => {
   const findMyWay = FindMyWay()
 
   // Non string
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.on('GET', 1)
   })
 
   // Empty
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.on('GET', '')
   })
 
   // Doesn't start with / or *
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.on('GET', 'invalid')
   })
 })
@@ -83,7 +83,7 @@ test('off throws for invalid method', t => {
   t.plan(1)
   const findMyWay = FindMyWay()
 
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.off('INVALID', '/a/b')
   })
 })
@@ -93,17 +93,17 @@ test('off throws for invalid path', t => {
   const findMyWay = FindMyWay()
 
   // Non string
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.off('GET', 1)
   })
 
   // Empty
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.off('GET', '')
   })
 
   // Doesn't start with / or *
-  t.throws(() => {
+  t.assert.throws(() => {
     findMyWay.off('GET', 'invalid')
   })
 })
@@ -806,9 +806,9 @@ test('off validates that constraints is an object or undefined', t => {
 
   const findMyWay = FindMyWay()
 
-  t.throws(() => findMyWay.off('GET', '/', 2))
-  t.throws(() => findMyWay.off('GET', '/', 'should throw'))
-  t.throws(() => findMyWay.off('GET', '/', []))
+  t.assert.throws(() => findMyWay.off('GET', '/', 2))
+  t.assert.throws(() => findMyWay.off('GET', '/', 'should throw'))
+  t.assert.throws(() => findMyWay.off('GET', '/', []))
   t.doesNotThrow(() => findMyWay.off('GET', '/', undefined))
   t.doesNotThrow(() => findMyWay.off('GET', '/', {}))
   t.doesNotThrow(() => findMyWay.off('GET', '/'))

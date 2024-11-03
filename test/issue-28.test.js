@@ -608,11 +608,11 @@ test('Wildcard must be the last character in the route', (t) => {
 
   const findMyWay = FindMyWay()
 
-  t.throws(() => findMyWay.on('GET', '*1', () => {}), expectedError)
-  t.throws(() => findMyWay.on('GET', '*/', () => {}), expectedError)
-  t.throws(() => findMyWay.on('GET', '*?', () => {}), expectedError)
+  t.assert.throws(() => findMyWay.on('GET', '*1', () => {}), expectedError)
+  t.assert.throws(() => findMyWay.on('GET', '*/', () => {}), expectedError)
+  t.assert.throws(() => findMyWay.on('GET', '*?', () => {}), expectedError)
 
-  t.throws(() => findMyWay.on('GET', '/foo*123', () => {}), expectedError)
-  t.throws(() => findMyWay.on('GET', '/foo*?', () => {}), expectedError)
-  t.throws(() => findMyWay.on('GET', '/foo*/', () => {}), expectedError)
+  t.assert.throws(() => findMyWay.on('GET', '/foo*123', () => {}), expectedError)
+  t.assert.throws(() => findMyWay.on('GET', '/foo*?', () => {}), expectedError)
+  t.assert.throws(() => findMyWay.on('GET', '/foo*/', () => {}), expectedError)
 })

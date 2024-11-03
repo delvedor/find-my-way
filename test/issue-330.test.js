@@ -16,7 +16,7 @@ test('FULL_PATH_REGEXP and OPTIONAL_PARAM_REGEXP should be considered safe', (t)
 test('should throw an error for unsafe FULL_PATH_REGEXP', (t) => {
   t.plan(1)
 
-  t.throws(() => proxyquire('..', {
+  t.assert.throws(() => proxyquire('..', {
     'safe-regex2': () => false
   }), new Error('the FULL_PATH_REGEXP is not safe, update this module'))
 })
@@ -25,7 +25,7 @@ test('Should throw an error for unsafe OPTIONAL_PARAM_REGEXP', (t) => {
   t.plan(1)
 
   let callCount = 0
-  t.throws(() => proxyquire('..', {
+  t.assert.throws(() => proxyquire('..', {
     'safe-regex2': () => {
       return ++callCount < 2
     }
@@ -70,9 +70,9 @@ test('wildcard must be the last character in the route', (t) => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '*', () => {})
-  t.throws(() => findMyWay.findRoute('GET', '*1'), expectedError)
-  t.throws(() => findMyWay.findRoute('GET', '*/'), expectedError)
-  t.throws(() => findMyWay.findRoute('GET', '*?'), expectedError)
+  t.assert.throws(() => findMyWay.findRoute('GET', '*1'), expectedError)
+  t.assert.throws(() => findMyWay.findRoute('GET', '*/'), expectedError)
+  t.assert.throws(() => findMyWay.findRoute('GET', '*?'), expectedError)
 })
 
 test('does not find the route if maxParamLength is exceeded', t => {
@@ -97,7 +97,7 @@ test('Should check if a regex is safe to use', (t) => {
   findMyWay.on('GET', '/test/:id(\\d+)', () => {})
 
   const unSafeRegex = /(x+x+)+y/
-  t.throws(() => findMyWay.findRoute('GET', `/test/:id(${unSafeRegex.toString()})`), {
+  t.assert.throws(() => findMyWay.findRoute('GET', `/test/:id(${unSafeRegex.toString()})`), {
     message: "The regex '(/(x+x+)+y/)' is not safe!"
   })
 })
@@ -117,8 +117,8 @@ test('throws error if no strategy registered for constraint key', (t) => {
 
   const constrainer = new Constrainer()
   const error = new Error('No strategy registered for constraint key invalid-constraint')
-  t.throws(() => constrainer.newStoreForConstraint('invalid-constraint'), error)
-  t.throws(() => constrainer.validateConstraints({ 'invalid-constraint': 'foo' }), error)
+  t.assert.throws(() => constrainer.newStoreForConstraint('invalid-constraint'), error)
+  t.assert.throws(() => constrainer.validateConstraints({ 'invalid-constraint': 'foo' }), error)
 })
 
 test('throws error if pass an undefined constraint value', (t) => {
@@ -126,7 +126,7 @@ test('throws error if pass an undefined constraint value', (t) => {
 
   const constrainer = new Constrainer()
   const error = new Error('Can\'t pass an undefined constraint value, must pass null or no key at all')
-  t.throws(() => constrainer.validateConstraints({ key: undefined }), error)
+  t.assert.throws(() => constrainer.validateConstraints({ key: undefined }), error)
 })
 
 test('Constrainer.noteUsage', (t) => {
@@ -169,7 +169,7 @@ test('SemVerStore version should be a string', (t) => {
 
   const Storage = acceptVersionStrategy.storage
 
-  t.throws(() => new Storage().set(1), new TypeError('Version should be a string'))
+  t.assert.throws(() => new Storage().set(1), new TypeError('Version should be a string'))
 })
 
 test('SemVerStore.maxMajor should increase automatically', (t) => {
@@ -208,7 +208,7 @@ test('Major version must be a numeric value', t => {
 
   const findMyWay = FindMyWay()
 
-  t.throws(() => findMyWay.on('GET', '/test', { constraints: { version: 'x' } }, () => {}),
+  t.assert.throws(() => findMyWay.on('GET', '/test', { constraints: { version: 'x' } }, () => {}),
     new TypeError('Major version must be a numeric value'))
 })
 

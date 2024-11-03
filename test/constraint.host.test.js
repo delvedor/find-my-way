@@ -97,7 +97,7 @@ test('A route throws when constraint limit exceeded', (t) => {
     findMyWay.on('GET', '/', { constraints: { host } }, alpha)
   }
 
-  t.throws(
+  t.assert.throws(
     () => findMyWay.on('GET', '/', { constraints: { host: 'h31' } }, beta),
     'find-my-way supports a maximum of 31 route handlers per node when there are constraints, limit reached'
   )

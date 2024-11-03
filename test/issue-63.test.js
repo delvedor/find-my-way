@@ -10,7 +10,7 @@ test('issue-63', (t) => {
 
   const fmw = factory()
 
-  t.throws(function () {
+  t.assert.throws(function () {
     fmw.on('GET', '/foo/:id(a', noop)
   })
 

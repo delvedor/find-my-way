@@ -39,7 +39,7 @@ test('should throw when set upping two parametric nodes', t => {
   const findMyWay = FindMyWay()
   findMyWay.on('GET', '/foo/:bar', () => {})
 
-  t.throws(() => findMyWay.on('GET', '/foo/:baz', () => {}))
+  t.assert.throws(() => findMyWay.on('GET', '/foo/:baz', () => {}))
 })
 
 test('should throw when set upping two regexp nodes', t => {
@@ -48,7 +48,7 @@ test('should throw when set upping two regexp nodes', t => {
   const findMyWay = FindMyWay()
   findMyWay.on('GET', '/foo/:bar(123)', () => {})
 
-  t.throws(() => findMyWay.on('GET', '/foo/:bar(456)', () => {}))
+  t.assert.throws(() => findMyWay.on('GET', '/foo/:bar(456)', () => {}))
 })
 
 test('should set up two parametric nodes with static ending', t => {
