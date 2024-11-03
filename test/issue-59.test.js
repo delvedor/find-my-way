@@ -117,7 +117,7 @@ test('with parameter / 6', t => {
 
   t.assert.equal(findMyWay.find('GET', '/bulk'), null)
   t.assert.equal(findMyWay.find('GET', '/static/foo/bulk'), null)
-  t.not(findMyWay.find('GET', '/static/foo/static/bulk'), null)
+  t.assert.notEqual(findMyWay.find('GET', '/static/foo/static/bulk'), null)
 })
 
 test('wildcard / 1', t => {

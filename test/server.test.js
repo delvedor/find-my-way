@@ -371,7 +371,7 @@ test('does map // when ignoreDuplicateSlashes is true', t => {
   })
 
   server.listen(0, err => {
-    t.error(err)
+    t.assert.equal(err, undefined)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
@@ -410,7 +410,7 @@ test('versioned routes', t => {
   })
 
   server.listen(0, err => {
-    t.error(err)
+    t.assert.equal(err, undefined)
     server.unref()
 
     http.get(
