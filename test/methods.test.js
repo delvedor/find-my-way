@@ -112,7 +112,7 @@ test('off with nested wildcards with parametric and static', t => {
   t.plan(3)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
@@ -562,7 +562,7 @@ test('static routes should be inserted before parametric / 1', t => {
   })
 
   findMyWay.on('GET', '/test/:id', () => {
-    t.fail('wrong handler')
+    t.assert.fail('wrong handler')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/hello', headers: {} }, null)
@@ -573,7 +573,7 @@ test('static routes should be inserted before parametric / 2', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/test/:id', () => {
-    t.fail('wrong handler')
+    t.assert.fail('wrong handler')
   })
 
   findMyWay.on('GET', '/test/hello', () => {
@@ -588,7 +588,7 @@ test('static routes should be inserted before parametric / 3', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/:id', () => {
-    t.fail('wrong handler')
+    t.assert.fail('wrong handler')
   })
 
   findMyWay.on('GET', '/test', () => {
@@ -596,7 +596,7 @@ test('static routes should be inserted before parametric / 3', t => {
   })
 
   findMyWay.on('GET', '/test/:id', () => {
-    t.fail('wrong handler')
+    t.assert.fail('wrong handler')
   })
 
   findMyWay.on('GET', '/test/hello', () => {
@@ -616,7 +616,7 @@ test('static routes should be inserted before parametric / 4', t => {
   })
 
   findMyWay.on('GET', '/test', () => {
-    t.fail('wrong handler')
+    t.assert.fail('wrong handler')
   })
 
   findMyWay.on('GET', '/test/:id', () => {
@@ -624,7 +624,7 @@ test('static routes should be inserted before parametric / 4', t => {
   })
 
   findMyWay.on('GET', '/test/hello', () => {
-    t.fail('wrong handler')
+    t.assert.fail('wrong handler')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test/id', headers: {} }, null)
@@ -641,7 +641,7 @@ test('Static parametric with shared part of the path', t => {
   })
 
   findMyWay.on('GET', '/example/shared/nested/test', (req, res, params) => {
-    t.fail('We should not be here')
+    t.assert.fail('We should not be here')
   })
 
   findMyWay.on('GET', '/example/:param/nested/oops', (req, res, params) => {
@@ -699,7 +699,7 @@ test('Unsupported method (static)', t => {
   })
 
   findMyWay.on('GET', '/', (req, res, params) => {
-    t.fail('We should not be here')
+    t.assert.fail('We should not be here')
   })
 
   findMyWay.lookup({ method: 'TROLL', url: '/', headers: {} }, null)
@@ -714,7 +714,7 @@ test('Unsupported method (wildcard)', t => {
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('We should not be here')
+    t.assert.fail('We should not be here')
   })
 
   findMyWay.lookup({ method: 'TROLL', url: '/hello/world', headers: {} }, null)

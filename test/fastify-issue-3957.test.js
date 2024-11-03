@@ -8,7 +8,7 @@ test('wildcard should not limit by maxParamLength', t => {
 
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 

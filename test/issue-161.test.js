@@ -8,7 +8,7 @@ test('Falling back for node\'s parametric brother without ignoreTrailingSlash', 
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -27,7 +27,7 @@ test('Falling back for node\'s parametric brother with ignoreTrailingSlash', t =
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: true,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -46,7 +46,7 @@ test('Falling back for node\'s parametric brother without ignoreTrailingSlash', 
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -69,7 +69,7 @@ test('Falling back for node\'s parametric brother with ignoreTrailingSlash', t =
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: true,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 

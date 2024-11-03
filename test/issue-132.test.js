@@ -7,7 +7,7 @@ test('Wildcard mixed with dynamic and common prefix / 1', t => {
   t.plan(5)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -42,7 +42,7 @@ test('Wildcard mixed with dynamic and common prefix / 2', t => {
   t.plan(6)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 

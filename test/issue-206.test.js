@@ -100,7 +100,7 @@ test('Multi parametric route with encoded colon separator', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 

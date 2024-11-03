@@ -7,12 +7,12 @@ test('Wildcard route should not be blocked by Parametric with different method /
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
-    t.fail('Should not be here')
+    t.assert.fail('Should not be here')
   })
 
   findMyWay.on('OPTIONS', '/obj/*', (req, res, params) => {
@@ -20,7 +20,7 @@ test('Wildcard route should not be blocked by Parametric with different method /
   })
 
   findMyWay.on('GET', '/obj/:id', (req, res, params) => {
-    t.fail('Should not be GET')
+    t.assert.fail('Should not be GET')
   })
 
   findMyWay.lookup({ method: 'OPTIONS', url: '/obj/params', headers: {} }, null)
@@ -30,12 +30,12 @@ test('Wildcard route should not be blocked by Parametric with different method /
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('OPTIONS', '/*', { version: '1.2.3' }, (req, res, params) => {
-    t.fail('Should not be here')
+    t.assert.fail('Should not be here')
   })
 
   findMyWay.on('OPTIONS', '/obj/*', { version: '1.2.3' }, (req, res, params) => {
@@ -43,7 +43,7 @@ test('Wildcard route should not be blocked by Parametric with different method /
   })
 
   findMyWay.on('GET', '/obj/:id', { version: '1.2.3' }, (req, res, params) => {
-    t.fail('Should not be GET')
+    t.assert.fail('Should not be GET')
   })
 
   findMyWay.lookup({

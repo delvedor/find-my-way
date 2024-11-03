@@ -7,7 +7,7 @@ test('Parametric route, request.url contains dash', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -21,7 +21,7 @@ test('Parametric route, request.url contains dash', t => {
 test('Parametric route with fixed suffix', t => {
   t.plan(6)
   const findMyWay = FindMyWay({
-    defaultRoute: () => t.fail('Should not be defaultRoute')
+    defaultRoute: () => t.assert.fail('Should not be defaultRoute')
   })
 
   findMyWay.on('GET', '/a/:param-static', () => {})
@@ -46,7 +46,7 @@ test('Regex param exceeds max parameter length', t => {
   })
 
   findMyWay.on('GET', '/a/:param(^\\w{3})', (req, res, params) => {
-    t.fail('regex match')
+    t.assert.fail('regex match')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/fool', headers: {} }, null)
@@ -61,7 +61,7 @@ test('Parametric route with regexp and fixed suffix / 1', t => {
   })
 
   findMyWay.on('GET', '/a/:param(^\\w{3})bar', (req, res, params) => {
-    t.fail('regex match')
+    t.assert.fail('regex match')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/$mebar', headers: {} }, null)
@@ -74,7 +74,7 @@ test('Parametric route with regexp and fixed suffix / 2', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -89,7 +89,7 @@ test('Parametric route with regexp and fixed suffix / 3', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -104,7 +104,7 @@ test('Multi parametric route / 1', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -126,7 +126,7 @@ test('Multi parametric route / 2', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -148,7 +148,7 @@ test('Multi parametric route / 3', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -175,11 +175,11 @@ test('Multi parametric route / 4', t => {
   })
 
   findMyWay.on('GET', '/a/:p1-:p2', (req, res, params) => {
-    t.fail('Should not match this route')
+    t.assert.fail('Should not match this route')
   })
 
   findMyWay.on('GET', '/b/:p1.:p2', (req, res, params) => {
-    t.fail('Should not match this route')
+    t.assert.fail('Should not match this route')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo', headers: {} }, null)
@@ -190,7 +190,7 @@ test('Multi parametric route with regexp / 1', t => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -206,7 +206,7 @@ test('Multi parametric route with colon separator', t => {
   t.plan(3)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -227,7 +227,7 @@ test('Multi parametric route with regexp / 2', t => {
   t.plan(8)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -262,7 +262,7 @@ test('Multi parametric route with fixed suffix', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -284,7 +284,7 @@ test('Multi parametric route with regexp and fixed suffix', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -306,7 +306,7 @@ test('Multi parametric route with wildcard', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -328,7 +328,7 @@ test('Nested multi parametric route', t => {
   t.plan(6)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -352,7 +352,7 @@ test('Nested multi parametric route with regexp / 1', t => {
   t.plan(6)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -376,7 +376,7 @@ test('Nested multi parametric route with regexp / 2', t => {
   t.plan(6)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 

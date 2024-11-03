@@ -7,7 +7,7 @@ test('Test route with optional parameter', (t) => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -27,7 +27,7 @@ test('Test for duplicate route with optional param', (t) => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -35,7 +35,7 @@ test('Test for duplicate route with optional param', (t) => {
 
   try {
     findMyWay.on('GET', '/foo', (req, res, params) => {})
-    t.fail('method is already declared for route with optional param')
+    t.assert.fail('method is already declared for route with optional param')
   } catch (e) {
     t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/foo\' with constraints \'{}\'')
   }
@@ -45,13 +45,13 @@ test('Test for param with ? not at the end', (t) => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   try {
     findMyWay.on('GET', '/foo/:bar?/baz', (req, res, params) => {})
-    t.fail('Optional Param in the middle of the path is not allowed')
+    t.assert.fail('Optional Param in the middle of the path is not allowed')
   } catch (e) {
     t.assert.equal(e.message, 'Optional Parameter needs to be the last parameter of the path')
   }
@@ -61,7 +61,7 @@ test('Multi parametric route with optional param', (t) => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -81,7 +81,7 @@ test('Optional Parameter with ignoreTrailingSlash = true', (t) => {
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: true,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -129,7 +129,7 @@ test('Optional Parameter with ignoreDuplicateSlashes = true', (t) => {
   const findMyWay = FindMyWay({
     ignoreDuplicateSlashes: true,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -180,7 +180,7 @@ test('deregister a route with optional param', (t) => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -199,7 +199,7 @@ test('optional parameter on root', (t) => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 

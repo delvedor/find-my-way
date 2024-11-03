@@ -7,7 +7,7 @@ test('wildcard (more complex test)', t => {
   t.plan(3)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
@@ -23,7 +23,7 @@ test('wildcard (more complex test)', t => {
         t.assert.ok('correct parameter')
         break
       default:
-        t.fail('wrong parameter: ' + params['*'])
+        t.assert.fail('wrong parameter: ' + params['*'])
     }
   })
 
@@ -47,7 +47,7 @@ test('Wildcard inside a node with a static route but different method', t => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
@@ -77,7 +77,7 @@ test('Wildcard inside a node with a static route but different method (more comp
       if (req.url === '/test/helloo' && req.method === 'GET') {
         t.assert.ok('Everything fine')
       } else {
-        t.fail('we should not be here, the url is: ' + req.url)
+        t.assert.fail('we should not be here, the url is: ' + req.url)
       }
     }
   })
@@ -120,16 +120,16 @@ test('Wildcard edge cases', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '/test1/foo', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/test2/foo', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
@@ -146,7 +146,7 @@ test('Wildcard edge cases same method', t => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
@@ -155,7 +155,7 @@ test('Wildcard edge cases same method', t => {
   })
 
   findMyWay.on('OPTIONS', '/test2/foo', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
@@ -177,7 +177,7 @@ test('Wildcard and parametric edge cases', t => {
   t.plan(3)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
@@ -186,7 +186,7 @@ test('Wildcard and parametric edge cases', t => {
   })
 
   findMyWay.on('OPTIONS', '/test2/foo', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/:test/foo', (req, res, params) => {
@@ -217,20 +217,20 @@ test('Mixed wildcard and static with same method', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '/foo1/bar1/baz', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/bar2/baz', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo2/bar2/baz', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
@@ -247,12 +247,12 @@ test('Nested wildcards case - 1', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
@@ -260,7 +260,7 @@ test('Nested wildcards case - 1', t => {
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(
@@ -273,12 +273,12 @@ test('Nested wildcards case - 2', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
@@ -286,7 +286,7 @@ test('Nested wildcards case - 2', t => {
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(
@@ -299,12 +299,12 @@ test('Nested wildcards with parametric and static - 1', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
@@ -312,15 +312,15 @@ test('Nested wildcards with parametric and static - 1', t => {
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo4/param', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(
@@ -333,20 +333,20 @@ test('Nested wildcards with parametric and static - 2', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
@@ -354,7 +354,7 @@ test('Nested wildcards with parametric and static - 2', t => {
   })
 
   findMyWay.on('GET', '/foo4/param', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(
@@ -367,24 +367,24 @@ test('Nested wildcards with parametric and static - 3', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo4/param', (req, res, params) => {
@@ -401,24 +401,24 @@ test('Nested wildcards with parametric and static - 4', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/param', (req, res, params) => {
@@ -435,12 +435,12 @@ test('Nested wildcards with parametric and static - 5', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
@@ -448,15 +448,15 @@ test('Nested wildcards with parametric and static - 5', t => {
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/param/hello/test/long/route', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(
@@ -469,7 +469,7 @@ test('Nested wildcards with parametric and static - 6', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
@@ -478,19 +478,19 @@ test('Nested wildcards with parametric and static - 6', t => {
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo4/param/hello/test/long/route', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(
@@ -503,20 +503,20 @@ test('Nested wildcards with parametric and static - 7', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
@@ -524,11 +524,11 @@ test('Nested wildcards with parametric and static - 7', t => {
   })
 
   findMyWay.on('GET', '/foo3/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo4/example/hello/test/long/route', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(
@@ -541,24 +541,24 @@ test('Nested wildcards with parametric and static - 8', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo2/*', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/:param', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo3/*', (req, res, params) => {
@@ -566,7 +566,7 @@ test('Nested wildcards with parametric and static - 8', t => {
   })
 
   findMyWay.on('GET', '/foo4/param/hello/test/long/route', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(
@@ -579,7 +579,7 @@ test('Wildcard node with constraints', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
@@ -588,11 +588,11 @@ test('Wildcard node with constraints', t => {
   })
 
   findMyWay.on('GET', '/foo1/*', { constraints: { host: 'something-else.io' } }, (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.on('GET', '/foo1/foo2', (req, res, params) => {
-    t.fail('we should not be here, the url is: ' + req.url)
+    t.assert.fail('we should not be here, the url is: ' + req.url)
   })
 
   findMyWay.lookup(

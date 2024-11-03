@@ -7,7 +7,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (find
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     },
     onBadUrl: (path, req, res) => {
       t.assert.equal(path, '/%world', { todo: 'this is not executed' })
@@ -15,7 +15,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (find
   })
 
   findMyWay.on('GET', '/hello/:id', (req, res) => {
-    t.fail('Should not be here')
+    t.assert.fail('Should not be here')
   })
 
   const handle = findMyWay.find('GET', '/hello/%world')
@@ -26,7 +26,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (look
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     },
     onBadUrl: (path, req, res) => {
       t.assert.equal(path, '/hello/%world')
@@ -34,7 +34,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (look
   })
 
   findMyWay.on('GET', '/hello/:id', (req, res) => {
-    t.fail('Should not be here')
+    t.assert.fail('Should not be here')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/hello/%world', headers: {} }, null)
@@ -44,12 +44,12 @@ test('If onBadUrl is not defined, then we should call the defaultRoute (find)', 
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/hello/:id', (req, res) => {
-    t.fail('Should not be here')
+    t.assert.fail('Should not be here')
   })
 
   const handle = findMyWay.find('GET', '/hello/%world')
@@ -65,7 +65,7 @@ test('If onBadUrl is not defined, then we should call the defaultRoute (lookup)'
   })
 
   findMyWay.on('GET', '/hello/:id', (req, res) => {
-    t.fail('Should not be here')
+    t.assert.fail('Should not be here')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/hello/%world', headers: {} }, null)

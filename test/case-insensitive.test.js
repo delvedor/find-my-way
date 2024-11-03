@@ -9,7 +9,7 @@ test('case insensitive static routes of level 1', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -26,7 +26,7 @@ test('case insensitive static routes of level 2', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -43,7 +43,7 @@ test('case insensitive static routes of level 3', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -60,7 +60,7 @@ test('parametric case insensitive', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -77,7 +77,7 @@ test('parametric case insensitive with a static part', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -94,7 +94,7 @@ test('parametric case insensitive with capital letter', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -111,7 +111,7 @@ test('case insensitive with capital letter in static path with param', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -132,7 +132,7 @@ test('case insensitive with multiple paths containing capital letter in static p
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -154,7 +154,7 @@ test('case insensitive with multiple mixed-case params within same slash couple'
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -172,7 +172,7 @@ test('case insensitive with multiple mixed-case params', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -190,7 +190,7 @@ test('case insensitive with wildcard', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -207,7 +207,7 @@ test('parametric case insensitive with multiple routes', t => {
   const findMyWay = FindMyWay({
     caseSensitive: false,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 

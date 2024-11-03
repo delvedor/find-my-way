@@ -167,7 +167,7 @@ test('It should always choose the highest version of a route', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/', { constraints: { version: '2.3.0' } }, (req, res) => {
-    t.fail('We should not be here')
+    t.assert.fail('We should not be here')
   })
 
   findMyWay.on('GET', '/', { constraints: { version: '2.4.0' } }, (req, res) => {
@@ -179,15 +179,15 @@ test('It should always choose the highest version of a route', t => {
   })
 
   findMyWay.on('GET', '/', { constraints: { version: '3.2.0' } }, (req, res) => {
-    t.fail('We should not be here')
+    t.assert.fail('We should not be here')
   })
 
   findMyWay.on('GET', '/', { constraints: { version: '3.2.2' } }, (req, res) => {
-    t.fail('We should not be here')
+    t.assert.fail('We should not be here')
   })
 
   findMyWay.on('GET', '/', { constraints: { version: '4.4.0' } }, (req, res) => {
-    t.fail('We should not be here')
+    t.assert.fail('We should not be here')
   })
 
   findMyWay.on('GET', '/', { constraints: { version: '4.3.2' } }, (req, res) => {
@@ -234,7 +234,7 @@ test('It should throw if you declare multiple times the same route', t => {
 
   try {
     findMyWay.on('GET', '/', { constraints: { version: '1.2.3' } }, noop)
-    t.fail('It should throw')
+    t.assert.fail('It should throw')
   } catch (err) {
     t.assert.equal(err.message, 'Method \'GET\' already declared for route \'/\' with constraints \'{"version":"1.2.3"}\'')
   }
@@ -245,7 +245,7 @@ test('Versioning won\'t work if there are no versioned routes', t => {
 
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('We should not be here')
+      t.assert.fail('We should not be here')
     }
   })
 
@@ -275,10 +275,10 @@ test('Unversioned routes aren\'t triggered when unknown versions are requested',
   })
 
   findMyWay.on('GET', '/', (req, res) => {
-    t.fail('unversioned route shouldnt be hit!')
+    t.assert.fail('unversioned route shouldnt be hit!')
   })
   findMyWay.on('GET', '/', { constraints: { version: '1.0.0' } }, (req, res) => {
-    t.fail('versioned route shouldnt be hit for wrong version!')
+    t.assert.fail('versioned route shouldnt be hit for wrong version!')
   })
 
   findMyWay.lookup({

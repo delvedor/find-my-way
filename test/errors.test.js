@@ -9,7 +9,7 @@ test('Method should be a string', t => {
 
   try {
     findMyWay.on(0, '/test', () => {})
-    t.fail('method shoukd be a string')
+    t.assert.fail('method shoukd be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Method should be a string')
   }
@@ -21,7 +21,7 @@ test('Method should be a string [ignoreTrailingSlash=true]', t => {
 
   try {
     findMyWay.on(0, '/test', () => {})
-    t.fail('method shoukd be a string')
+    t.assert.fail('method shoukd be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Method should be a string')
   }
@@ -33,7 +33,7 @@ test('Method should be a string [ignoreDuplicateSlashes=true]', t => {
 
   try {
     findMyWay.on(0, '/test', () => {})
-    t.fail('method shoukd be a string')
+    t.assert.fail('method shoukd be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Method should be a string')
   }
@@ -45,7 +45,7 @@ test('Method should be a string (array)', t => {
 
   try {
     findMyWay.on(['GET', 0], '/test', () => {})
-    t.fail('method shoukd be a string')
+    t.assert.fail('method shoukd be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Method should be a string')
   }
@@ -57,7 +57,7 @@ test('Method should be a string (array) [ignoreTrailingSlash=true]', t => {
 
   try {
     findMyWay.on(['GET', 0], '/test', () => {})
-    t.fail('method shoukd be a string')
+    t.assert.fail('method shoukd be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Method should be a string')
   }
@@ -69,7 +69,7 @@ test('Method should be a string (array) [ignoreDuplicateSlashes=true]', t => {
 
   try {
     findMyWay.on(['GET', 0], '/test', () => {})
-    t.fail('method shoukd be a string')
+    t.assert.fail('method shoukd be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Method should be a string')
   }
@@ -81,7 +81,7 @@ test('Path should be a string', t => {
 
   try {
     findMyWay.on('GET', 0, () => {})
-    t.fail('path should be a string')
+    t.assert.fail('path should be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Path should be a string')
   }
@@ -93,7 +93,7 @@ test('Path should be a string [ignoreTrailingSlash=true]', t => {
 
   try {
     findMyWay.on('GET', 0, () => {})
-    t.fail('path should be a string')
+    t.assert.fail('path should be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Path should be a string')
   }
@@ -105,7 +105,7 @@ test('Path should be a string [ignoreDuplicateSlashes=true]', t => {
 
   try {
     findMyWay.on('GET', 0, () => {})
-    t.fail('path should be a string')
+    t.assert.fail('path should be a string')
   } catch (e) {
     t.assert.equal(e.message, 'Path should be a string')
   }
@@ -117,7 +117,7 @@ test('The path could not be empty', t => {
 
   try {
     findMyWay.on('GET', '', () => {})
-    t.fail('The path could not be empty')
+    t.assert.fail('The path could not be empty')
   } catch (e) {
     t.assert.equal(e.message, 'The path could not be empty')
   }
@@ -129,7 +129,7 @@ test('The path could not be empty [ignoreTrailingSlash=true]', t => {
 
   try {
     findMyWay.on('GET', '', () => {})
-    t.fail('The path could not be empty')
+    t.assert.fail('The path could not be empty')
   } catch (e) {
     t.assert.equal(e.message, 'The path could not be empty')
   }
@@ -141,7 +141,7 @@ test('The path could not be empty [ignoreDuplicateSlashes=true]', t => {
 
   try {
     findMyWay.on('GET', '', () => {})
-    t.fail('The path could not be empty')
+    t.assert.fail('The path could not be empty')
   } catch (e) {
     t.assert.equal(e.message, 'The path could not be empty')
   }
@@ -153,7 +153,7 @@ test('The first character of a path should be `/` or `*`', t => {
 
   try {
     findMyWay.on('GET', 'a', () => {})
-    t.fail('The first character of a path should be `/` or `*`')
+    t.assert.fail('The first character of a path should be `/` or `*`')
   } catch (e) {
     t.assert.equal(e.message, 'The first character of a path should be `/` or `*`')
   }
@@ -165,7 +165,7 @@ test('The first character of a path should be `/` or `*` [ignoreTrailingSlash=tr
 
   try {
     findMyWay.on('GET', 'a', () => {})
-    t.fail('The first character of a path should be `/` or `*`')
+    t.assert.fail('The first character of a path should be `/` or `*`')
   } catch (e) {
     t.assert.equal(e.message, 'The first character of a path should be `/` or `*`')
   }
@@ -177,7 +177,7 @@ test('The first character of a path should be `/` or `*` [ignoreDuplicateSlashes
 
   try {
     findMyWay.on('GET', 'a', () => {})
-    t.fail('The first character of a path should be `/` or `*`')
+    t.assert.fail('The first character of a path should be `/` or `*`')
   } catch (e) {
     t.assert.equal(e.message, 'The first character of a path should be `/` or `*`')
   }
@@ -189,7 +189,7 @@ test('Handler should be a function', t => {
 
   try {
     findMyWay.on('GET', '/test', 0)
-    t.fail('handler should be a function')
+    t.assert.fail('handler should be a function')
   } catch (e) {
     t.assert.equal(e.message, 'Handler should be a function')
   }
@@ -201,7 +201,7 @@ test('Method is not an http method.', t => {
 
   try {
     findMyWay.on('GETT', '/test', () => {})
-    t.fail('method is not a valid http method')
+    t.assert.fail('method is not a valid http method')
   } catch (e) {
     t.assert.equal(e.message, 'Method \'GETT\' is not an http method.')
   }
@@ -213,7 +213,7 @@ test('Method is not an http method. (array)', t => {
 
   try {
     findMyWay.on(['POST', 'GETT'], '/test', () => {})
-    t.fail('method is not a valid http method')
+    t.assert.fail('method is not a valid http method')
   } catch (e) {
     t.assert.equal(e.message, 'Method \'GETT\' is not an http method.')
   }
@@ -225,7 +225,7 @@ test('The default route must be a function', t => {
     FindMyWay({
       defaultRoute: '/404'
     })
-    t.fail('default route must be a function')
+    t.assert.fail('default route must be a function')
   } catch (e) {
     t.assert.equal(e.message, 'The default route must be a function')
   }
@@ -238,7 +238,7 @@ test('Method already declared', t => {
   findMyWay.on('GET', '/test', () => {})
   try {
     findMyWay.on('GET', '/test', () => {})
-    t.fail('method already declared')
+    t.assert.fail('method already declared')
   } catch (e) {
     t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
   }
@@ -251,7 +251,7 @@ test('Method already declared if * is used', t => {
   findMyWay.on('GET', '/*', () => {})
   try {
     findMyWay.on('GET', '*', () => {})
-    t.fail('should throw error')
+    t.assert.fail('should throw error')
   } catch (e) {
     t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/*\' with constraints \'{}\'')
   }
@@ -264,7 +264,7 @@ test('Method already declared if /* is used', t => {
   findMyWay.on('GET', '*', () => {})
   try {
     findMyWay.on('GET', '/*', () => {})
-    t.fail('should throw error')
+    t.assert.fail('should throw error')
   } catch (e) {
     t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/*\' with constraints \'{}\'')
   }
@@ -281,14 +281,14 @@ test('Method already declared [ignoreTrailingSlash=true]', t => {
 
     try {
       findMyWay.on('GET', '/test', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test/', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
@@ -302,14 +302,14 @@ test('Method already declared [ignoreTrailingSlash=true]', t => {
 
     try {
       findMyWay.on('GET', '/test', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test/', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
@@ -327,14 +327,14 @@ test('Method already declared [ignoreDuplicateSlashes=true]', t => {
 
     try {
       findMyWay.on('GET', '/test', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '//test', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
@@ -348,14 +348,14 @@ test('Method already declared [ignoreDuplicateSlashes=true]', t => {
 
     try {
       findMyWay.on('GET', '/test', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '//test', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{}\'')
     }
@@ -372,7 +372,7 @@ test('Method already declared nested route', t => {
 
   try {
     findMyWay.on('GET', '/test/hello', () => {})
-    t.fail('method already delcared in nested route')
+    t.assert.fail('method already delcared in nested route')
   } catch (e) {
     t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
   }
@@ -391,14 +391,14 @@ test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
 
     try {
       findMyWay.on('GET', '/test/hello', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test/hello/', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
@@ -411,7 +411,7 @@ test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
     findMyWay.on('GET', '/test', { constraints: { host: 'fastify.io' } }, () => {})
     try {
       findMyWay.on('GET', '/test', { constraints: { host: 'fastify.io' } }, () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test\' with constraints \'{"host":"fastify.io"}\'')
     }
@@ -427,14 +427,14 @@ test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
 
     try {
       findMyWay.on('GET', '/test/hello', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test/hello/', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
@@ -454,14 +454,14 @@ test('Method already declared nested route [ignoreDuplicateSlashes=true]', t => 
 
     try {
       findMyWay.on('GET', '/test/hello', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test//hello', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
@@ -477,14 +477,14 @@ test('Method already declared nested route [ignoreDuplicateSlashes=true]', t => 
 
     try {
       findMyWay.on('GET', '/test/hello', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }
 
     try {
       findMyWay.on('GET', '/test//hello', () => {})
-      t.fail('method already declared')
+      t.assert.fail('method already declared')
     } catch (e) {
       t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/test/hello\' with constraints \'{}\'')
     }

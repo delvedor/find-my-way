@@ -7,7 +7,7 @@ test('Falling back for node\'s parametric brother', t => {
   t.plan(3)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 

@@ -7,7 +7,7 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   t.plan(3)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -22,7 +22,7 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   t.plan(3)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -40,7 +40,7 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   t.plan(3)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -59,7 +59,7 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 

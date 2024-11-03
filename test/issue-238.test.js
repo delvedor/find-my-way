@@ -6,7 +6,7 @@ const FindMyWay = require('../')
 test('Multi-parametric tricky path', t => {
   t.plan(6)
   const findMyWay = FindMyWay({
-    defaultRoute: () => t.fail('Should not be defaultRoute')
+    defaultRoute: () => t.assert.fail('Should not be defaultRoute')
   })
 
   findMyWay.on('GET', '/:param1-static-:param2', () => {})
@@ -40,7 +40,7 @@ test('Multi-parametric tricky path', t => {
 test('Multi-parametric nodes with different static ending 1', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
-    defaultRoute: () => t.fail('Should not be defaultRoute')
+    defaultRoute: () => t.assert.fail('Should not be defaultRoute')
   })
 
   const paramHandler = () => {}
@@ -59,7 +59,7 @@ test('Multi-parametric nodes with different static ending 1', t => {
 test('Multi-parametric nodes with different static ending 2', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
-    defaultRoute: () => t.fail('Should not be defaultRoute')
+    defaultRoute: () => t.assert.fail('Should not be defaultRoute')
   })
 
   const jpgHandler = () => {}
@@ -78,7 +78,7 @@ test('Multi-parametric nodes with different static ending 2', t => {
 test('Multi-parametric nodes with different static ending 3', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
-    defaultRoute: () => t.fail('Should not be defaultRoute')
+    defaultRoute: () => t.assert.fail('Should not be defaultRoute')
   })
 
   const jpgHandler = () => {}
@@ -97,7 +97,7 @@ test('Multi-parametric nodes with different static ending 3', t => {
 test('Multi-parametric nodes with different static ending 4', t => {
   t.plan(6)
   const findMyWay = FindMyWay({
-    defaultRoute: () => t.fail('Should not be defaultRoute')
+    defaultRoute: () => t.assert.fail('Should not be defaultRoute')
   })
 
   const handler = () => {}
