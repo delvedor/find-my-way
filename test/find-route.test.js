@@ -5,16 +5,16 @@ const rfdc = require('rfdc')({ proto: true })
 const FindMyWay = require('..')
 
 function equalRouters (t, router1, router2) {
-  t.strictSame(router1._opts, router2._opts)
+  t.assert.deepStrictEqual(router1._opts, router2._opts)
   t.assert.deepEqual(router1.routes, router2.routes)
   t.assert.deepEqual(router1.trees, router2.trees)
 
-  t.strictSame(router1.constrainer.strategies, router2.constrainer.strategies)
-  t.strictSame(
+  t.assert.deepStrictEqual(router1.constrainer.strategies, router2.constrainer.strategies)
+  t.assert.deepStrictEqual(
     router1.constrainer.strategiesInUse,
     router2.constrainer.strategiesInUse
   )
-  t.strictSame(
+  t.assert.deepStrictEqual(
     router1.constrainer.asyncStrategiesInUse,
     router2.constrainer.asyncStrategiesInUse
   )

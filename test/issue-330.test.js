@@ -39,11 +39,11 @@ test('double colon does not define parametric node', (t) => {
 
   findMyWay.on('GET', '/::id', () => {})
   const route1 = findMyWay.findRoute('GET', '/::id')
-  t.strictSame(route1.params, [])
+  t.assert.deepStrictEqual(route1.params, [])
 
   findMyWay.on('GET', '/:foo(\\d+)::bar', () => {})
   const route2 = findMyWay.findRoute('GET', '/:foo(\\d+)::bar')
-  t.strictSame(route2.params, ['foo'])
+  t.assert.deepStrictEqual(route2.params, ['foo'])
 })
 
 test('case insensitive static routes', (t) => {
@@ -220,7 +220,7 @@ test('httpMethodStrategy storage handles set and get operations correctly', (t) 
   t.assert.equal(storage.get('foo'), null)
 
   storage.set('foo', { bar: 'baz' })
-  t.strictSame(storage.get('foo'), { bar: 'baz' })
+  t.assert.deepStrictEqual(storage.get('foo'), { bar: 'baz' })
 })
 
 test('if buildPrettyMeta argument is undefined, will return an object', (t) => {
