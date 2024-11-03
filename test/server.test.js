@@ -181,7 +181,7 @@ test('does not trim trailing slash when ignoreTrailingSlash is false', (t, done)
   })
 })
 
-test('does not map // when ignoreTrailingSlash is true', t => {
+test('does not map // when ignoreTrailingSlash is true', (t, done) => {
   t.plan(7)
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false
@@ -198,24 +198,20 @@ test('does not map // when ignoreTrailingSlash is true', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
+  server.listen(0, async err => {
     t.assert.equal(err, undefined)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '/', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.assert.equal(res.statusCode, 200)
-      t.assert.deepEqual(body, 'test')
-    })
+    let res = await fetch(`${baseURL}/`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '//', async (res) => {
-      t.assert.equal(res.statusCode, 404)
-    })
+    res = await fetch(`${baseURL}//`)
+    t.assert.equal(res.status, 404)
+
+    done()
   })
 })
 
