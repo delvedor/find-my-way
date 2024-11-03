@@ -10,7 +10,7 @@
     "bench:cmp:ci": "node ./benchmark/compare-branches.js --ci",
     "test:lint": "standard",
     "test:typescript": "tsd",
-    "test": "standard && node --test test/*.test.js test/**/*.test.js && npm run test:typescript"
+    "test": "standard && borp && npm run test:typescript"
   },
   "repository": {
     "type": "git",
@@ -35,6 +35,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "benchmark": "^2.1.4",
+    "borp": "^0.18.0",
     "chalk": "^4.1.2",
     "inquirer": "^8.2.4",
     "pre-commit": "^1.2.2",
