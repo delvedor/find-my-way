@@ -668,7 +668,7 @@ test('parametric route with different method', t => {
   findMyWay.lookup({ method: 'POST', url: '/test/world', headers: {} }, null)
 })
 
-test('params does not keep the object reference', t => {
+test('params does not keep the object reference', (t, done) => {
   t.plan(2)
   const findMyWay = FindMyWay()
   let first = true
@@ -681,6 +681,7 @@ test('params does not keep the object reference', t => {
     } else {
       setTimeout(() => {
         t.assert.equal(params.id, 'world')
+        done()
       }, 10)
     }
     first = false
