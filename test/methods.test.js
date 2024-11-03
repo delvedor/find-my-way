@@ -809,9 +809,9 @@ test('off validates that constraints is an object or undefined', t => {
   t.assert.throws(() => findMyWay.off('GET', '/', 2))
   t.assert.throws(() => findMyWay.off('GET', '/', 'should throw'))
   t.assert.throws(() => findMyWay.off('GET', '/', []))
-  t.doesNotThrow(() => findMyWay.off('GET', '/', undefined))
-  t.doesNotThrow(() => findMyWay.off('GET', '/', {}))
-  t.doesNotThrow(() => findMyWay.off('GET', '/'))
+  t.assert.doesNotThrow(() => findMyWay.off('GET', '/', undefined))
+  t.assert.doesNotThrow(() => findMyWay.off('GET', '/', {}))
+  t.assert.doesNotThrow(() => findMyWay.off('GET', '/'))
 })
 
 test('off removes only unconstrainted route if an empty object is given as constraints', t => {

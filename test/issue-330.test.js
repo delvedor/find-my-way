@@ -10,7 +10,7 @@ const httpMethodStrategy = require('../lib/strategies/http-method')
 test('FULL_PATH_REGEXP and OPTIONAL_PARAM_REGEXP should be considered safe', (t) => {
   t.plan(1)
 
-  t.doesNotThrow(() => require('..'))
+  t.assert.doesNotThrow(() => require('..'))
 })
 
 test('should throw an error for unsafe FULL_PATH_REGEXP', (t) => {
@@ -109,7 +109,7 @@ test('Disable safe regex check', (t) => {
 
   const unSafeRegex = /(x+x+)+y/
   findMyWay.on('GET', `/test2/:id(${unSafeRegex.toString()})`, () => {})
-  t.doesNotThrow(() => findMyWay.findRoute('GET', `/test2/:id(${unSafeRegex.toString()})`))
+  t.assert.doesNotThrow(() => findMyWay.findRoute('GET', `/test2/:id(${unSafeRegex.toString()})`))
 })
 
 test('throws error if no strategy registered for constraint key', (t) => {

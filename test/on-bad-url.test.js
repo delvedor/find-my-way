@@ -19,7 +19,7 @@ test('If onBadUrl is defined, then a bad url should be handled differently (find
   })
 
   const handle = findMyWay.find('GET', '/hello/%world')
-  t.not(handle, null)
+  t.assert.notDeepStrictEqual(handle, null)
 })
 
 test('If onBadUrl is defined, then a bad url should be handled differently (lookup)', t => {
