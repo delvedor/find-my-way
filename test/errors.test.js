@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('node:test')
+const { test, describe } = require('node:test')
 const FindMyWay = require('../')
 
 test('Method should be a string', t => {
@@ -270,10 +270,8 @@ test('Method already declared if /* is used', t => {
   }
 })
 
-test('Method already declared [ignoreTrailingSlash=true]', t => {
-  t.plan(2)
-
-  t.test('without trailing slash', t => {
+describe('Method already declared [ignoreTrailingSlash=true]', t => {
+  test('without trailing slash', t => {
     t.plan(2)
     const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
 
@@ -294,7 +292,7 @@ test('Method already declared [ignoreTrailingSlash=true]', t => {
     }
   })
 
-  t.test('with trailing slash', t => {
+  test('with trailing slash', t => {
     t.plan(2)
     const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
 
@@ -316,10 +314,8 @@ test('Method already declared [ignoreTrailingSlash=true]', t => {
   })
 })
 
-test('Method already declared [ignoreDuplicateSlashes=true]', t => {
-  t.plan(2)
-
-  t.test('without duplicate slashes', t => {
+describe('Method already declared [ignoreDuplicateSlashes=true]', t => {
+  test('without duplicate slashes', t => {
     t.plan(2)
     const findMyWay = FindMyWay({ ignoreDuplicateSlashes: true })
 
@@ -340,7 +336,7 @@ test('Method already declared [ignoreDuplicateSlashes=true]', t => {
     }
   })
 
-  t.test('with duplicate slashes', t => {
+  test('with duplicate slashes', t => {
     t.plan(2)
     const findMyWay = FindMyWay({ ignoreDuplicateSlashes: true })
 
@@ -378,10 +374,8 @@ test('Method already declared nested route', t => {
   }
 })
 
-test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
-  t.plan(2)
-
-  t.test('without trailing slash', t => {
+describe('Method already declared nested route [ignoreTrailingSlash=true]', t => {
+  test('without trailing slash', t => {
     t.plan(2)
     const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
 
@@ -417,7 +411,7 @@ test('Method already declared nested route [ignoreTrailingSlash=true]', t => {
     }
   })
 
-  t.test('with trailing slash', t => {
+  test('with trailing slash', t => {
     t.plan(2)
     const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
 
@@ -467,7 +461,7 @@ test('Method already declared nested route [ignoreDuplicateSlashes=true]', t => 
     }
   })
 
-  t.test('with duplicate slashes', t => {
+  test('with duplicate slashes', t => {
     t.plan(2)
     const findMyWay = FindMyWay({ ignoreDuplicateSlashes: true })
 
