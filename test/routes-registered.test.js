@@ -11,9 +11,10 @@ function initializeRoutes (router, handler, quantity) {
 }
 
 test('verify routes registered', t => {
+  const assertPerTest = 5
   const quantity = 5
   // 1 (check length) + quantity of routes * quantity of tests per route
-  t.plan(1 + (quantity * 1))
+  t.plan(1 + (quantity * assertPerTest))
 
   let findMyWay = FindMyWay()
   const defaultHandler = (req, res, params) => res.end(JSON.stringify({ hello: 'world' }))
