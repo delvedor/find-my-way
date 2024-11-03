@@ -1,6 +1,6 @@
 'use strict'
 
-const {test} = require('node:test')
+const { test } = require('node:test')
 const querystring = require('fast-querystring')
 const FindMyWay = require('../')
 

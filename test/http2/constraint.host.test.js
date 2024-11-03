@@ -1,6 +1,6 @@
 'use strict'
 
-const {test} = require('node:test')
+const { test } = require('node:test')
 const FindMyWay = require('../..')
 
 test('A route supports host constraints under http2 protocol', t => {

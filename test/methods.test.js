@@ -1,6 +1,6 @@
 'use strict'
 
-const {test} = require('node:test')
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 test('the router is an object with methods', t => {

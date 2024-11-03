@@ -1,6 +1,6 @@
 'use strict'
 
-const {test} = require('node:test')
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 test('If the prefixLen is higher than the pathLen we should not save the wildcard child', t => {

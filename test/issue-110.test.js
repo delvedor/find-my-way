@@ -1,6 +1,6 @@
 'use strict'
 
-const {test} = require('node:test')
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 test('Nested static parametric route, url with parameter common prefix > 1', t => {

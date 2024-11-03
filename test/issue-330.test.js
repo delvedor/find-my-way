@@ -1,4 +1,4 @@
-const {test} = require('node:test')
+const { test } = require('node:test')
 const FindMyWay = require('..')
 const proxyquire = require('proxyquire')
 const HandlerStorage = require('../lib/handler-storage')

@@ -1,6 +1,6 @@
 'use strict'
 
-const {test} = require('node:test')
+const { test } = require('node:test')
 const FindMyWay = require('..')
 
 test('Constraints should not be overrided when multiple router is created', t => {

@@ -1,6 +1,6 @@
 'use strict'
 
-const {test} = require('node:test')
+const { test } = require('node:test')
 const rfdc = require('rfdc')({ proto: true })
 const FindMyWay = require('..')
 

@@ -1,6 +1,6 @@
 'use strict'
 
-const {test} = require('node:test')
+const { test } = require('node:test')
 const FindMyWay = require('..')
 
 test('double colon is replaced with single colon, no parameters', t => {
