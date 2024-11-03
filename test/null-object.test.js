@@ -30,7 +30,7 @@ test('has no methods from generic Object class', t => {
   const nullObject = new NullObject()
 
   for (const propertyName of propertyNames) {
-    t.assert.ok(!propertyName in nullObject, propertyName)
+    t.assert.ok(!(propertyName in nullObject), propertyName)
   }
   t.assert.equal(getAllPropertyNames(nullObject).length, 0)
 })

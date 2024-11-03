@@ -4,7 +4,7 @@ const httpMethods = require('../lib/http-methods')
 const { test } = require('node:test')
 const FindMyWay = require('../')
 
-t.test('should support shorthand', t => {
+test('should support shorthand', t => {
   t.plan(httpMethods.length)
 
   for (const i in httpMethods) {
