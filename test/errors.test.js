@@ -435,10 +435,8 @@ describe('Method already declared nested route [ignoreTrailingSlash=true]', t =>
   })
 })
 
-test('Method already declared nested route [ignoreDuplicateSlashes=true]', t => {
-  t.plan(2)
-
-  t.test('without duplicate slashes', t => {
+describe('Method already declared nested route [ignoreDuplicateSlashes=true]', t => {
+  test('without duplicate slashes', t => {
     t.plan(2)
     const findMyWay = FindMyWay({ ignoreDuplicateSlashes: true })
 
