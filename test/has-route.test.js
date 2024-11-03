@@ -7,7 +7,7 @@ const FindMyWay = require('..')
 function equalRouters (t, router1, router2) {
   t.assert.deepStrictEqual(router1._opts, router2._opts)
   t.assert.deepEqual(router1.routes, router2.routes)
-  t.assert.deepEqual(router1.trees, router2.trees)
+  t.assert.deepEqual(JSON.stringify(router1.trees), JSON.stringify(router2.trees))
 
   t.assert.deepStrictEqual(
     router1.constrainer.strategies,

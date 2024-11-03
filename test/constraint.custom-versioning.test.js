@@ -113,7 +113,7 @@ test('Overriding custom strategies throws as error (add strategy outside constru
   findMyWay.addConstraintStrategy(customVersioning)
 
   t.assert.throws(() => findMyWay.addConstraintStrategy(customVersioning),
-    'There already exists a custom constraint with the name version.'
+    new Error('There already exists a custom constraint with the name version.')
   )
 })
 
@@ -125,6 +125,6 @@ test('Overriding default strategies after defining a route with constraint', t =
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '1.0.0' } }, () => {})
 
   t.assert.throws(() => findMyWay.addConstraintStrategy(customVersioning),
-    'There already exists a route with version constraint.'
+    new Error('There already exists a route with version constraint.')
   )
 })
