@@ -257,7 +257,7 @@ test('Disable safe regex check', t => {
 
 test('prevent back-tracking', (t) => {
   t.plan(0)
-  t.setTimeout(20)
+  setTimeout(() => t.assert.fail('timeout'), 20)
 
   const findMyWay = FindMyWay({
     defaultRoute: () => {
