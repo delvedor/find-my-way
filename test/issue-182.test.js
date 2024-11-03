@@ -14,5 +14,5 @@ test('Set method property when splitting node', t => {
   findMyWay.on('GET', '/health-a/health', handler)
   findMyWay.on('GET', '/health-b/health', handler)
 
-  t.notMatch(findMyWay.prettyPrint(), /undefined/)
+  t.assert.ok(!findMyWay.prettyPrint().includes('undefined'))
 })
