@@ -265,7 +265,7 @@ test('maps two routes when duplicate slashes should be trimmed', (t, done) => {
   })
 })
 
-test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', t => {
+test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', (t, done) => {
   t.plan(7)
   const findMyWay = FindMyWay({
     ignoreDuplicateSlashes: false
@@ -282,28 +282,24 @@ test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', t =
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
+  server.listen(0, async err => {
     t.assert.equal(err, undefined)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '//test', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.assert.equal(res.statusCode, 200)
-      t.assert.deepEqual(body, 'test')
-    })
+    let res = await fetch(`${baseURL}//test`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/test', async (res) => {
-      t.assert.equal(res.statusCode, 404)
-    })
+    res = await fetch(`${baseURL}/test`)
+    t.assert.equal(res.status, 404)
+
+    done()
   })
 })
 
-test('does map // when ignoreDuplicateSlashes is true', t => {
+test('does map // when ignoreDuplicateSlashes is true', (t, done) => {
   t.plan(11)
   const findMyWay = FindMyWay({
     ignoreDuplicateSlashes: true
@@ -320,29 +316,21 @@ test('does map // when ignoreDuplicateSlashes is true', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
+  server.listen(0, async err => {
     t.assert.equal(err, undefined)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '/', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.assert.equal(res.statusCode, 200)
-      t.assert.deepEqual(body, 'test')
-    })
+    let res = await fetch(`${baseURL}/`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '//', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.assert.equal(res.statusCode, 200)
-      t.assert.deepEqual(body, 'test')
-    })
+    res = await fetch(`${baseURL}//`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
+
+    done()
   })
 })
 
