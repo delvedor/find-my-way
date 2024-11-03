@@ -19,7 +19,7 @@ test('basic router with http server', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const res = await fetch(`http://localhost:${server.address().port}/test`)
@@ -45,7 +45,7 @@ test('router with params with http server', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const res = await fetch(`http://localhost:${server.address().port}/test/hello`)
@@ -70,7 +70,7 @@ test('default route', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const res = await fetch(`http://localhost:${server.address().port}`)
@@ -88,7 +88,7 @@ test('automatic default route', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const res = await fetch(`http://localhost:${server.address().port}`)
@@ -122,7 +122,7 @@ test('maps two routes when trailing slash should be trimmed', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
@@ -165,7 +165,7 @@ test('does not trim trailing slash when ignoreTrailingSlash is false', (t, done)
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
@@ -199,7 +199,7 @@ test('does not map // when ignoreTrailingSlash is true', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
@@ -240,7 +240,7 @@ test('maps two routes when duplicate slashes should be trimmed', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
@@ -283,7 +283,7 @@ test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', (t,
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
@@ -317,7 +317,7 @@ test('does map // when ignoreDuplicateSlashes is true', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
@@ -348,7 +348,7 @@ test('versioned routes', (t, done) => {
   })
 
   server.listen(0, async err => {
-    t.assert.equal(err, undefined)
+    t.assert.ifError(err)
     server.unref()
 
     let res = await fetch(`http://localhost:${server.address().port}/test`, {
