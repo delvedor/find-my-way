@@ -10,9 +10,7 @@
     "bench:cmp:ci": "node ./benchmark/compare-branches.js --ci",
     "test:lint": "standard",
     "test:typescript": "tsd",
-    "test": "standard && node --test test/*.test.js test/**/*.test.js && npm run test:typescript",
-    "test:report": "node --test test/*.test.js test/**/*.test.js --test-reporter tap --test-reporter-destination out.tap",
-    "test:reporter": "node --test test/*.test.js test/**/*.test.js --test-reporter junit --test-reporter-destination test/junit-testresults.xml"
+    "test": "standard && node --test test/*.test.js test/**/*.test.js && npm run test:typescript"
   },
   "repository": {
     "type": "git",
