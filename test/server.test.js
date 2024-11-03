@@ -215,7 +215,7 @@ test('does not map // when ignoreTrailingSlash is true', (t, done) => {
   })
 })
 
-test('maps two routes when duplicate slashes should be trimmed', t => {
+test('maps two routes when duplicate slashes should be trimmed', (t, done) => {
   t.plan(21)
   const findMyWay = FindMyWay({
     ignoreDuplicateSlashes: true
@@ -239,47 +239,29 @@ test('maps two routes when duplicate slashes should be trimmed', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
+  server.listen(0, async err => {
     t.assert.equal(err, undefined)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '//test', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.assert.equal(res.statusCode, 200)
-      t.assert.deepEqual(body, 'test')
-    })
+    let res = await fetch(`${baseURL}//test`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/test', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.assert.equal(res.statusCode, 200)
-      t.assert.deepEqual(body, 'test')
-    })
+    res = await fetch(`${baseURL}/test`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/othertest', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.assert.equal(res.statusCode, 200)
-      t.assert.deepEqual(body, 'othertest')
-    })
+    res = await fetch(`${baseURL}/othertest`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'othertest')
 
-    http.get(baseURL + '//othertest', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.assert.equal(res.statusCode, 200)
-      t.assert.deepEqual(body, 'othertest')
-    })
+    res = await fetch(`${baseURL}//othertest`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'othertest')
+
+    done()
   })
 })
 
