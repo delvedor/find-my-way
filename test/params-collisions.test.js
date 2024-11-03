@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('..')
 
 test('should setup parametric and regexp node', t => {
@@ -15,8 +14,8 @@ test('should setup parametric and regexp node', t => {
   findMyWay.on('GET', '/foo/:bar', paramHandler)
   findMyWay.on('GET', '/foo/:bar(123)', regexpHandler)
 
-  t.equal(findMyWay.find('GET', '/foo/value').handler, paramHandler)
-  t.equal(findMyWay.find('GET', '/foo/123').handler, regexpHandler)
+  t.assert.equal(findMyWay.find('GET', '/foo/value').handler, paramHandler)
+  t.assert.equal(findMyWay.find('GET', '/foo/123').handler, regexpHandler)
 })
 
 test('should setup parametric and multi-parametric node', t => {
@@ -30,8 +29,8 @@ test('should setup parametric and multi-parametric node', t => {
   findMyWay.on('GET', '/foo/:bar', paramHandler)
   findMyWay.on('GET', '/foo/:bar.png', regexpHandler)
 
-  t.equal(findMyWay.find('GET', '/foo/value').handler, paramHandler)
-  t.equal(findMyWay.find('GET', '/foo/value.png').handler, regexpHandler)
+  t.assert.equal(findMyWay.find('GET', '/foo/value').handler, paramHandler)
+  t.assert.equal(findMyWay.find('GET', '/foo/value.png').handler, regexpHandler)
 })
 
 test('should throw when set upping two parametric nodes', t => {
@@ -63,8 +62,8 @@ test('should set up two parametric nodes with static ending', t => {
   findMyWay.on('GET', '/foo/:bar.png', paramHandler1)
   findMyWay.on('GET', '/foo/:bar.jpeg', paramHandler2)
 
-  t.equal(findMyWay.find('GET', '/foo/value.png').handler, paramHandler1)
-  t.equal(findMyWay.find('GET', '/foo/value.jpeg').handler, paramHandler2)
+  t.assert.equal(findMyWay.find('GET', '/foo/value.png').handler, paramHandler1)
+  t.assert.equal(findMyWay.find('GET', '/foo/value.jpeg').handler, paramHandler2)
 })
 
 test('should set up two regexp nodes with static ending', t => {
@@ -78,8 +77,8 @@ test('should set up two regexp nodes with static ending', t => {
   findMyWay.on('GET', '/foo/:bar(123).png', paramHandler1)
   findMyWay.on('GET', '/foo/:bar(456).jpeg', paramHandler2)
 
-  t.equal(findMyWay.find('GET', '/foo/123.png').handler, paramHandler1)
-  t.equal(findMyWay.find('GET', '/foo/456.jpeg').handler, paramHandler2)
+  t.assert.equal(findMyWay.find('GET', '/foo/123.png').handler, paramHandler1)
+  t.assert.equal(findMyWay.find('GET', '/foo/456.jpeg').handler, paramHandler2)
 })
 
 test('node with longer static suffix should have higher priority', t => {
@@ -93,8 +92,8 @@ test('node with longer static suffix should have higher priority', t => {
   findMyWay.on('GET', '/foo/:bar.png', paramHandler1)
   findMyWay.on('GET', '/foo/:bar.png.png', paramHandler2)
 
-  t.equal(findMyWay.find('GET', '/foo/value.png').handler, paramHandler1)
-  t.equal(findMyWay.find('GET', '/foo/value.png.png').handler, paramHandler2)
+  t.assert.equal(findMyWay.find('GET', '/foo/value.png').handler, paramHandler1)
+  t.assert.equal(findMyWay.find('GET', '/foo/value.png.png').handler, paramHandler2)
 })
 
 test('node with longer static suffix should have higher priority', t => {
@@ -108,8 +107,8 @@ test('node with longer static suffix should have higher priority', t => {
   findMyWay.on('GET', '/foo/:bar.png.png', paramHandler2)
   findMyWay.on('GET', '/foo/:bar.png', paramHandler1)
 
-  t.equal(findMyWay.find('GET', '/foo/value.png').handler, paramHandler1)
-  t.equal(findMyWay.find('GET', '/foo/value.png.png').handler, paramHandler2)
+  t.assert.equal(findMyWay.find('GET', '/foo/value.png').handler, paramHandler1)
+  t.assert.equal(findMyWay.find('GET', '/foo/value.png.png').handler, paramHandler2)
 })
 
 test('should set up regexp node and node with static ending', t => {
@@ -122,6 +121,6 @@ test('should set up regexp node and node with static ending', t => {
   findMyWay.on('GET', '/foo/:bar(123)', regexHandler)
   findMyWay.on('GET', '/foo/:bar(123).jpeg', multiParamHandler)
 
-  t.equal(findMyWay.find('GET', '/foo/123.jpeg').handler, multiParamHandler)
-  t.equal(findMyWay.find('GET', '/foo/123').handler, regexHandler)
+  t.assert.equal(findMyWay.find('GET', '/foo/123.jpeg').handler, multiParamHandler)
+  t.assert.equal(findMyWay.find('GET', '/foo/123').handler, regexHandler)
 })

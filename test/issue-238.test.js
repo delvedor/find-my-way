@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('Multi-parametric tricky path', t => {
@@ -12,27 +11,27 @@ test('Multi-parametric tricky path', t => {
 
   findMyWay.on('GET', '/:param1-static-:param2', () => {})
 
-  t.same(
+  t.assert.deepEqual(
     findMyWay.find('GET', '/param1-static-param2', {}).params,
     { param1: 'param1', param2: 'param2' }
   )
-  t.same(
+  t.assert.deepEqual(
     findMyWay.find('GET', '/param1.1-param1.2-static-param2.1-param2.2', {}).params,
     { param1: 'param1.1-param1.2', param2: 'param2.1-param2.2' }
   )
-  t.same(
+  t.assert.deepEqual(
     findMyWay.find('GET', '/param1-1-param1-2-static-param2-1-param2-2', {}).params,
     { param1: 'param1-1-param1-2', param2: 'param2-1-param2-2' }
   )
-  t.same(
+  t.assert.deepEqual(
     findMyWay.find('GET', '/static-static-static', {}).params,
     { param1: 'static', param2: 'static' }
   )
-  t.same(
+  t.assert.deepEqual(
     findMyWay.find('GET', '/static-static-static-static', {}).params,
     { param1: 'static', param2: 'static-static' }
   )
-  t.same(
+  t.assert.deepEqual(
     findMyWay.find('GET', '/static-static1-static-static', {}).params,
     { param1: 'static-static1', param2: 'static' }
   )
@@ -50,11 +49,11 @@ test('Multi-parametric nodes with different static ending 1', t => {
   findMyWay.on('GET', '/v1/foo/:code', paramHandler)
   findMyWay.on('GET', '/v1/foo/:code.png', multiParamHandler)
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello', {}).handler, paramHandler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello', {}).handler, paramHandler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello', {}).params, { code: 'hello' })
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello.png', {}).handler, multiParamHandler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello.png', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.png', {}).handler, multiParamHandler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.png', {}).params, { code: 'hello' })
 })
 
 test('Multi-parametric nodes with different static ending 2', t => {
@@ -69,11 +68,11 @@ test('Multi-parametric nodes with different static ending 2', t => {
   findMyWay.on('GET', '/v1/foo/:code.jpg', jpgHandler)
   findMyWay.on('GET', '/v1/foo/:code.png', pngHandler)
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello.jpg', {}).handler, jpgHandler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello.jpg', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.jpg', {}).handler, jpgHandler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.jpg', {}).params, { code: 'hello' })
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello.png', {}).handler, pngHandler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello.png', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.png', {}).handler, pngHandler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.png', {}).params, { code: 'hello' })
 })
 
 test('Multi-parametric nodes with different static ending 3', t => {
@@ -88,11 +87,11 @@ test('Multi-parametric nodes with different static ending 3', t => {
   findMyWay.on('GET', '/v1/foo/:code.jpg/bar', jpgHandler)
   findMyWay.on('GET', '/v1/foo/:code.png/bar', pngHandler)
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello.jpg/bar', {}).handler, jpgHandler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello.jpg/bar', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.jpg/bar', {}).handler, jpgHandler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.jpg/bar', {}).params, { code: 'hello' })
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello.png/bar', {}).handler, pngHandler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello.png/bar', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.png/bar', {}).handler, pngHandler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.png/bar', {}).params, { code: 'hello' })
 })
 
 test('Multi-parametric nodes with different static ending 4', t => {
@@ -109,12 +108,12 @@ test('Multi-parametric nodes with different static ending 4', t => {
   findMyWay.on('GET', '/v1/foo/:code.jpg/bar', jpgHandler)
   findMyWay.on('GET', '/v1/foo/:code.png/bar', pngHandler)
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello/bar', {}).handler, handler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello/bar', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello/bar', {}).handler, handler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello/bar', {}).params, { code: 'hello' })
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello.jpg/bar', {}).handler, jpgHandler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello.jpg/bar', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.jpg/bar', {}).handler, jpgHandler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.jpg/bar', {}).params, { code: 'hello' })
 
-  t.same(findMyWay.find('GET', '/v1/foo/hello.png/bar', {}).handler, pngHandler)
-  t.same(findMyWay.find('GET', '/v1/foo/hello.png/bar', {}).params, { code: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.png/bar', {}).handler, pngHandler)
+  t.assert.deepEqual(findMyWay.find('GET', '/v1/foo/hello.png/bar', {}).params, { code: 'hello' })
 })

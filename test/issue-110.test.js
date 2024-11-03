@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('Nested static parametric route, url with parameter common prefix > 1', t => {
@@ -28,5 +27,5 @@ test('Nested static parametric route, url with parameter common prefix > 1', t =
     res.end('{"message":"hello world"}')
   })
 
-  t.same(findMyWay.find('GET', '/api/foo/b-123/bar').params, { id: 'b-123' })
+  t.assert.deepEqual(findMyWay.find('GET', '/api/foo/b-123/bar').params, { id: 'b-123' })
 })

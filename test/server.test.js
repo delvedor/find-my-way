@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const http = require('http')
 const FindMyWay = require('../')
 
@@ -9,9 +8,9 @@ test('basic router with http server', t => {
   t.plan(6)
   const findMyWay = FindMyWay()
   findMyWay.on('GET', '/test', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end(JSON.stringify({ hello: 'world' }))
   })
 
@@ -28,8 +27,8 @@ test('basic router with http server', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(JSON.parse(body), { hello: 'world' })
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(JSON.parse(body), { hello: 'world' })
     })
   })
 })
@@ -38,9 +37,9 @@ test('router with params with http server', t => {
   t.plan(6)
   const findMyWay = FindMyWay()
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.equal(params.id, 'hello')
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.equal(params.id, 'hello')
     res.end(JSON.stringify({ hello: 'world' }))
   })
 
@@ -57,8 +56,8 @@ test('router with params with http server', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(JSON.parse(body), { hello: 'world' })
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(JSON.parse(body), { hello: 'world' })
     })
   })
 })
@@ -81,7 +80,7 @@ test('default route', t => {
     server.unref()
 
     http.get('http://localhost:' + server.address().port, async (res) => {
-      t.equal(res.statusCode, 404)
+      t.assert.equal(res.statusCode, 404)
     })
   })
 })
@@ -99,7 +98,7 @@ test('automatic default route', t => {
     server.unref()
 
     http.get('http://localhost:' + server.address().port, async (res) => {
-      t.equal(res.statusCode, 404)
+      t.assert.equal(res.statusCode, 404)
     })
   })
 })
@@ -111,16 +110,16 @@ test('maps two routes when trailing slash should be trimmed', t => {
   })
 
   findMyWay.on('GET', '/test/', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
   findMyWay.on('GET', '/othertest', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('othertest')
   })
 
@@ -139,8 +138,8 @@ test('maps two routes when trailing slash should be trimmed', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
 
     http.get(baseURL + '/test', async (res) => {
@@ -148,8 +147,8 @@ test('maps two routes when trailing slash should be trimmed', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
 
     http.get(baseURL + '/othertest', async (res) => {
@@ -157,8 +156,8 @@ test('maps two routes when trailing slash should be trimmed', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'othertest')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'othertest')
     })
 
     http.get(baseURL + '/othertest/', async (res) => {
@@ -166,8 +165,8 @@ test('maps two routes when trailing slash should be trimmed', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'othertest')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'othertest')
     })
   })
 })
@@ -179,9 +178,9 @@ test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
   })
 
   findMyWay.on('GET', '/test/', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
@@ -200,12 +199,12 @@ test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
 
     http.get(baseURL + '/test', async (res) => {
-      t.equal(res.statusCode, 404)
+      t.assert.equal(res.statusCode, 404)
     })
   })
 })
@@ -217,9 +216,9 @@ test('does not map // when ignoreTrailingSlash is true', t => {
   })
 
   findMyWay.on('GET', '/', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
@@ -238,12 +237,12 @@ test('does not map // when ignoreTrailingSlash is true', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
 
     http.get(baseURL + '//', async (res) => {
-      t.equal(res.statusCode, 404)
+      t.assert.equal(res.statusCode, 404)
     })
   })
 })
@@ -255,16 +254,16 @@ test('maps two routes when duplicate slashes should be trimmed', t => {
   })
 
   findMyWay.on('GET', '//test', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
   findMyWay.on('GET', '/othertest', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('othertest')
   })
 
@@ -283,8 +282,8 @@ test('maps two routes when duplicate slashes should be trimmed', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
 
     http.get(baseURL + '/test', async (res) => {
@@ -292,8 +291,8 @@ test('maps two routes when duplicate slashes should be trimmed', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
 
     http.get(baseURL + '/othertest', async (res) => {
@@ -301,8 +300,8 @@ test('maps two routes when duplicate slashes should be trimmed', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'othertest')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'othertest')
     })
 
     http.get(baseURL + '//othertest', async (res) => {
@@ -310,8 +309,8 @@ test('maps two routes when duplicate slashes should be trimmed', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'othertest')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'othertest')
     })
   })
 })
@@ -323,9 +322,9 @@ test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', t =
   })
 
   findMyWay.on('GET', '//test', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
@@ -344,12 +343,12 @@ test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', t =
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
 
     http.get(baseURL + '/test', async (res) => {
-      t.equal(res.statusCode, 404)
+      t.assert.equal(res.statusCode, 404)
     })
   })
 })
@@ -361,9 +360,9 @@ test('does map // when ignoreDuplicateSlashes is true', t => {
   })
 
   findMyWay.on('GET', '/', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
@@ -382,8 +381,8 @@ test('does map // when ignoreDuplicateSlashes is true', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
 
     http.get(baseURL + '//', async (res) => {
@@ -391,8 +390,8 @@ test('does map // when ignoreDuplicateSlashes is true', t => {
       for await (const chunk of res) {
         body += chunk
       }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
+      t.assert.equal(res.statusCode, 200)
+      t.assert.deepEqual(body, 'test')
     })
   })
 })
@@ -420,7 +419,7 @@ test('versioned routes', t => {
         headers: { 'Accept-Version': '1.x' }
       },
       async (res) => {
-        t.equal(res.statusCode, 200)
+        t.assert.equal(res.statusCode, 200)
       }
     )
 
@@ -430,7 +429,7 @@ test('versioned routes', t => {
         headers: { 'Accept-Version': '2.x' }
       },
       async (res) => {
-        t.equal(res.statusCode, 404)
+        t.assert.equal(res.statusCode, 404)
       }
     )
   })

@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('If the prefixLen is higher than the pathLen we should not save the wildcard child', t => {
@@ -14,9 +13,9 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
 
   findMyWay.get('/static/*', () => {})
 
-  t.same(findMyWay.find('GET', '/static/').params, { '*': '' })
-  t.same(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
-  t.same(findMyWay.find('GET', '/static'), null)
+  t.assert.deepEqual(findMyWay.find('GET', '/static/').params, { '*': '' })
+  t.assert.deepEqual(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/static'), null)
 })
 
 test('If the prefixLen is higher than the pathLen we should not save the wildcard child (mixed routes)', t => {
@@ -32,9 +31,9 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   findMyWay.get('/simple/:bar', () => {})
   findMyWay.get('/hello', () => {})
 
-  t.same(findMyWay.find('GET', '/static/').params, { '*': '' })
-  t.same(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
-  t.same(findMyWay.find('GET', '/static'), null)
+  t.assert.deepEqual(findMyWay.find('GET', '/static/').params, { '*': '' })
+  t.assert.deepEqual(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/static'), null)
 })
 
 test('If the prefixLen is higher than the pathLen we should not save the wildcard child (with a root wildcard)', t => {
@@ -51,9 +50,9 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   findMyWay.get('/simple/:bar', () => {})
   findMyWay.get('/hello', () => {})
 
-  t.same(findMyWay.find('GET', '/static/').params, { '*': '' })
-  t.same(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
-  t.same(findMyWay.find('GET', '/static').params, { '*': '/static' })
+  t.assert.deepEqual(findMyWay.find('GET', '/static/').params, { '*': '' })
+  t.assert.deepEqual(findMyWay.find('GET', '/static/hello').params, { '*': 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/static').params, { '*': '/static' })
 })
 
 test('If the prefixLen is higher than the pathLen we should not save the wildcard child (404)', t => {
@@ -69,8 +68,8 @@ test('If the prefixLen is higher than the pathLen we should not save the wildcar
   findMyWay.get('/simple/:bar', () => {})
   findMyWay.get('/hello', () => {})
 
-  t.same(findMyWay.find('GET', '/stati'), null)
-  t.same(findMyWay.find('GET', '/staticc'), null)
-  t.same(findMyWay.find('GET', '/stati/hello'), null)
-  t.same(findMyWay.find('GET', '/staticc/hello'), null)
+  t.assert.deepEqual(findMyWay.find('GET', '/stati'), null)
+  t.assert.deepEqual(findMyWay.find('GET', '/staticc'), null)
+  t.assert.deepEqual(findMyWay.find('GET', '/stati/hello'), null)
+  t.assert.deepEqual(findMyWay.find('GET', '/staticc/hello'), null)
 })

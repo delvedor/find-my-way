@@ -1,14 +1,13 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const rfdc = require('rfdc')({ proto: true })
 const FindMyWay = require('..')
 
 function equalRouters (t, router1, router2) {
   t.strictSame(router1._opts, router2._opts)
-  t.same(router1.routes, router2.routes)
-  t.same(router1.trees, router2.trees)
+  t.assert.deepEqual(router1.routes, router2.routes)
+  t.assert.deepEqual(router1.trees, router2.trees)
 
   t.strictSame(
     router1.constrainer.strategies,
@@ -31,7 +30,7 @@ test('hasRoute returns false if there is no routes', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/example')
-  t.equal(hasRoute, false)
+  t.assert.equal(hasRoute, false)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -45,7 +44,7 @@ test('hasRoute returns true for a static route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/example')
-  t.equal(hasRoute, true)
+  t.assert.equal(hasRoute, true)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -59,7 +58,7 @@ test('hasRoute returns false for a static route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/example1')
-  t.equal(hasRoute, false)
+  t.assert.equal(hasRoute, false)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -73,7 +72,7 @@ test('hasRoute returns true for a parametric route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/:param')
-  t.equal(hasRoute, true)
+  t.assert.equal(hasRoute, true)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -87,7 +86,7 @@ test('hasRoute returns false for a parametric route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/bar/:param')
-  t.equal(hasRoute, false)
+  t.assert.equal(hasRoute, false)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -101,7 +100,7 @@ test('hasRoute returns true for a parametric route with static suffix', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/:param-static')
-  t.equal(hasRoute, true)
+  t.assert.equal(hasRoute, true)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -115,7 +114,7 @@ test('hasRoute returns false for a parametric route with static suffix', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/:param-static2')
-  t.equal(hasRoute, false)
+  t.assert.equal(hasRoute, false)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -129,7 +128,7 @@ test('hasRoute returns true even if a param name different', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/:param2')
-  t.equal(hasRoute, true)
+  t.assert.equal(hasRoute, true)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -143,7 +142,7 @@ test('hasRoute returns true for a multi-parametric route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/:param1-:param2')
-  t.equal(hasRoute, true)
+  t.assert.equal(hasRoute, true)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -157,7 +156,7 @@ test('hasRoute returns false for a multi-parametric route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/foo/:param1-:param2/bar2')
-  t.equal(hasRoute, false)
+  t.assert.equal(hasRoute, false)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -171,7 +170,7 @@ test('hasRoute returns true for a regexp route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/:param(^\\d+$)')
-  t.equal(hasRoute, true)
+  t.assert.equal(hasRoute, true)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -185,7 +184,7 @@ test('hasRoute returns false for a regexp route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/:file(^\\D+).png')
-  t.equal(hasRoute, false)
+  t.assert.equal(hasRoute, false)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -199,7 +198,7 @@ test('hasRoute returns true for a wildcard route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/example/*')
-  t.equal(hasRoute, true)
+  t.assert.equal(hasRoute, true)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
@@ -213,7 +212,7 @@ test('hasRoute returns false for a wildcard route', t => {
   const fundMyWayClone = rfdc(findMyWay)
 
   const hasRoute = findMyWay.hasRoute('GET', '/foo2/*')
-  t.equal(hasRoute, false)
+  t.assert.equal(hasRoute, false)
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })

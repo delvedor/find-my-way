@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('Wildcard route should not be blocked by Parametric with different method / 1', t => {
@@ -17,7 +16,7 @@ test('Wildcard route should not be blocked by Parametric with different method /
   })
 
   findMyWay.on('OPTIONS', '/obj/*', (req, res, params) => {
-    t.equal(req.method, 'OPTIONS')
+    t.assert.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('GET', '/obj/:id', (req, res, params) => {
@@ -40,7 +39,7 @@ test('Wildcard route should not be blocked by Parametric with different method /
   })
 
   findMyWay.on('OPTIONS', '/obj/*', { version: '1.2.3' }, (req, res, params) => {
-    t.equal(req.method, 'OPTIONS')
+    t.assert.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('GET', '/obj/:id', { version: '1.2.3' }, (req, res, params) => {

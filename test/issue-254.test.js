@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('..')
 
 test('Constraints should not be overrided when multiple router is created', t => {
@@ -28,5 +27,5 @@ test('Constraints should not be overrided when multiple router is created', t =>
   router1.on('GET', '/', { constraints: { secret: 'alpha' } }, () => {})
   router1.find('GET', '/', { secret: 'alpha' })
 
-  t.pass('constraints is not overrided')
+  t.assert.ok('constraints is not overrided')
 })

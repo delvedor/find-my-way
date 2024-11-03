@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('pretty print - empty tree', t => {
@@ -11,8 +10,8 @@ test('pretty print - empty tree', t => {
   const tree = findMyWay.prettyPrint()
 
   const expected = '(empty tree)'
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - static routes', t => {
@@ -30,8 +29,8 @@ test('pretty print - static routes', t => {
     │   └── /hello (GET)
     └── hello/world (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - parametric routes', t => {
@@ -51,8 +50,8 @@ test('pretty print - parametric routes', t => {
     └── hello/
         └── :world (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - parametric routes', t => {
@@ -79,8 +78,8 @@ test('pretty print - parametric routes', t => {
             └── :param
                 └── /suffix1 (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - parametric routes', t => {
@@ -101,8 +100,8 @@ test('pretty print - parametric routes', t => {
     ├── /:param1(123).:param2(456)/suffix4 (GET)
     └── /:param/suffix1 (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - mixed parametric routes', t => {
@@ -122,8 +121,8 @@ test('pretty print - mixed parametric routes', t => {
             └── :hello (GET, POST)
                 └── /world (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - wildcard routes', t => {
@@ -143,8 +142,8 @@ test('pretty print - wildcard routes', t => {
     └── hello/
         └── * (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - parametric routes with same parent and followed by a static route which has the same prefix with the former routes', t => {
@@ -165,8 +164,8 @@ test('pretty print - parametric routes with same parent and followed by a static
             │   └── :id (GET, POST)
             └── world (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - constrained parametric routes', t => {
@@ -189,8 +188,8 @@ test('pretty print - constrained parametric routes', t => {
                 :hello (GET) {"version":"1.1.2"}
                 :hello (GET) {"version":"2.0.0"}
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - multiple parameters are drawn appropriately', t => {
@@ -210,8 +209,8 @@ test('pretty print - multiple parameters are drawn appropriately', t => {
     └── /:hello/there/:ladies (GET)
         └── /and/:gents (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print - multiple parameters are drawn appropriately', t => {
@@ -231,8 +230,8 @@ test('pretty print - multiple parameters are drawn appropriately', t => {
     └── /:hello/there/:ladies (GET)
         └── /and/:gents (GET)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })
 
 test('pretty print commonPrefix - use routes array to draw flattened routes', t => {
@@ -267,11 +266,11 @@ test('pretty print commonPrefix - use routes array to draw flattened routes', t 
 └── /update (PUT)
 `
 
-  t.equal(typeof radixTree, 'string')
-  t.equal(radixTree, radixExpected)
+  t.assert.equal(typeof radixTree, 'string')
+  t.assert.equal(radixTree, radixExpected)
 
-  t.equal(typeof arrayTree, 'string')
-  t.equal(arrayTree, arrayExpected)
+  t.assert.equal(typeof arrayTree, 'string')
+  t.assert.equal(arrayTree, arrayExpected)
 })
 
 test('pretty print commonPrefix - handle wildcard root', t => {
@@ -293,8 +292,8 @@ test('pretty print commonPrefix - handle wildcard root', t => {
 ├── /update (PUT)
 └── * (OPTIONS)
 `
-  t.equal(typeof arrayTree, 'string')
-  t.equal(arrayTree, arrayExpected)
+  t.assert.equal(typeof arrayTree, 'string')
+  t.assert.equal(arrayTree, arrayExpected)
 })
 
 test('pretty print commonPrefix - handle wildcard root', t => {
@@ -320,8 +319,8 @@ test('pretty print commonPrefix - handle wildcard root', t => {
     │   └── update (PUT)
     └── * (GET)
 `
-  t.equal(typeof radixTree, 'string')
-  t.equal(radixTree, radixExpected)
+  t.assert.equal(typeof radixTree, 'string')
+  t.assert.equal(radixTree, radixExpected)
 })
 
 test('pretty print commonPrefix - handle constrained routes', t => {
@@ -344,8 +343,8 @@ test('pretty print commonPrefix - handle constrained routes', t => {
         /:hello (GET) {"version":"1.1.2"}
         /:hello (GET) {"version":"2.0.0"}
 `
-  t.equal(typeof arrayTree, 'string')
-  t.equal(arrayTree, arrayExpected)
+  t.assert.equal(typeof arrayTree, 'string')
+  t.assert.equal(arrayTree, arrayExpected)
 })
 
 test('pretty print commonPrefix - handle method constraint', t => {
@@ -384,8 +383,8 @@ test('pretty print commonPrefix - handle method constraint', t => {
         /:hello (GET) {"method":"bar"}
         /:hello (GET) {"method":"baz"}
 `
-  t.equal(typeof arrayTree, 'string')
-  t.equal(arrayTree, arrayExpected)
+  t.assert.equal(typeof arrayTree, 'string')
+  t.assert.equal(arrayTree, arrayExpected)
 })
 
 test('pretty print includeMeta - commonPrefix: true', t => {
@@ -486,14 +485,14 @@ test('pretty print includeMeta - commonPrefix: true', t => {
             └── :hello (GET) {"version":"1.1.2"}
                 :hello (GET) {"version":"2.0.0"}
 `
-  t.equal(typeof radixTree, 'string')
-  t.equal(radixTree, radixTreeExpected)
+  t.assert.equal(typeof radixTree, 'string')
+  t.assert.equal(radixTree, radixTreeExpected)
 
-  t.equal(typeof radixTreeSpecific, 'string')
-  t.equal(radixTreeSpecific, radixTreeSpecificExpected)
+  t.assert.equal(typeof radixTreeSpecific, 'string')
+  t.assert.equal(radixTreeSpecific, radixTreeSpecificExpected)
 
-  t.equal(typeof radixTreeNoMeta, 'string')
-  t.equal(radixTreeNoMeta, radixTreeNoMetaExpected)
+  t.assert.equal(typeof radixTreeNoMeta, 'string')
+  t.assert.equal(radixTreeNoMeta, radixTreeNoMetaExpected)
 })
 
 test('pretty print includeMeta - commonPrefix: false', t => {
@@ -585,14 +584,14 @@ test('pretty print includeMeta - commonPrefix: false', t => {
         /:hello (GET) {"version":"2.0.0"}
 `
 
-  t.equal(typeof arrayTree, 'string')
-  t.equal(arrayTree, arrayExpected)
+  t.assert.equal(typeof arrayTree, 'string')
+  t.assert.equal(arrayTree, arrayExpected)
 
-  t.equal(typeof arraySpecific, 'string')
-  t.equal(arraySpecific, arraySpecificExpected)
+  t.assert.equal(typeof arraySpecific, 'string')
+  t.assert.equal(arraySpecific, arraySpecificExpected)
 
-  t.equal(typeof arrayNoMeta, 'string')
-  t.equal(arrayNoMeta, arrayNoMetaExpected)
+  t.assert.equal(typeof arrayNoMeta, 'string')
+  t.assert.equal(arrayNoMeta, arrayNoMetaExpected)
 })
 
 test('pretty print includeMeta - buildPrettyMeta function', t => {
@@ -655,11 +654,11 @@ test('pretty print includeMeta - buildPrettyMeta function', t => {
                 :hello (GET) {"version":"2.0.0"}
                 • (metaKey) "/test/:hello"
 `
-  t.equal(typeof arrayTree, 'string')
-  t.equal(arrayTree, arrayExpected)
+  t.assert.equal(typeof arrayTree, 'string')
+  t.assert.equal(arrayTree, arrayExpected)
 
-  t.equal(typeof radixTree, 'string')
-  t.equal(radixTree, radixExpected)
+  t.assert.equal(typeof radixTree, 'string')
+  t.assert.equal(radixTree, radixExpected)
 })
 
 test('pretty print - print all methods', t => {
@@ -676,6 +675,6 @@ M-SEARCH, MERGE, MKACTIVITY, MKCALENDAR, MKCOL, MOVE, NOTIFY, OPTIONS, PATCH, \
 POST, PROPFIND, PROPPATCH, PURGE, PUT, QUERY, REBIND, REPORT, SEARCH, SOURCE, \
 SUBSCRIBE, TRACE, UNBIND, UNLINK, UNLOCK, UNSUBSCRIBE)
 `
-  t.equal(typeof tree, 'string')
-  t.equal(tree, expected)
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
 })

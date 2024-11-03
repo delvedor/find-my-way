@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('..')
 
 test('double colon is replaced with single colon, no parameters', t => {
@@ -11,7 +10,7 @@ test('double colon is replaced with single colon, no parameters', t => {
   })
 
   function handler (req, res, params) {
-    t.same(params, {})
+    t.assert.deepEqual(params, {})
   }
 
   findMyWay.on('GET', '/name::customVerb', handler)
@@ -26,8 +25,8 @@ test('exactly one match for static route with colon', t => {
   function handler () {}
   findMyWay.on('GET', '/name::customVerb', handler)
 
-  t.equal(findMyWay.find('GET', '/name:customVerb').handler, handler)
-  t.equal(findMyWay.find('GET', '/name:test'), null)
+  t.assert.equal(findMyWay.find('GET', '/name:customVerb').handler, handler)
+  t.assert.equal(findMyWay.find('GET', '/name:test'), null)
 })
 
 test('double colon is replaced with single colon, no parameters, same parent node name', t => {
@@ -41,7 +40,7 @@ test('double colon is replaced with single colon, no parameters, same parent nod
   })
 
   findMyWay.on('GET', '/name::customVerb', (req, res, params) => {
-    t.same(params, {})
+    t.assert.deepEqual(params, {})
   })
 
   findMyWay.lookup({ method: 'GET', url: '/name:customVerb', headers: {} }, null)
@@ -50,7 +49,7 @@ test('double colon is replaced with single colon, no parameters, same parent nod
 test('double colon is replaced with single colon, default route, same parent node name', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
-    defaultRoute: () => t.ok('should be default route')
+    defaultRoute: () => t.assert.ok('should be default route')
   })
 
   findMyWay.on('GET', '/name', () => {
@@ -71,7 +70,7 @@ test('double colon is replaced with single colon, with parameters', t => {
   })
 
   findMyWay.on('GET', '/name1::customVerb1/:param1/name2::customVerb2:param2', (req, res, params) => {
-    t.same(params, {
+    t.assert.deepEqual(params, {
       param1: 'value1',
       param2: 'value2'
     })

@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('..')
 
 test('lookup calls route handler with no context', t => {
@@ -11,7 +10,7 @@ test('lookup calls route handler with no context', t => {
 
   findMyWay.on('GET', '/example', function handle (req, res, params) {
     // without context, this will be the result object returned from router.find
-    t.equal(this.handler, handle)
+    t.assert.equal(this.handler, handle)
   })
 
   findMyWay.lookup({ method: 'GET', url: '/example', headers: {} }, null)
@@ -25,7 +24,7 @@ test('lookup calls route handler with context as scope', t => {
   const ctx = { foo: 'bar' }
 
   findMyWay.on('GET', '/example', function handle (req, res, params) {
-    t.equal(this, ctx)
+    t.assert.equal(this, ctx)
   })
 
   findMyWay.lookup({ method: 'GET', url: '/example', headers: {} }, null, ctx)
@@ -37,7 +36,7 @@ test('lookup calls default route handler with no context', t => {
   const findMyWay = FindMyWay({
     defaultRoute (req, res) {
       // without context, the default route's scope is the router itself
-      t.equal(this, findMyWay)
+      t.assert.equal(this, findMyWay)
     }
   })
 
@@ -51,7 +50,7 @@ test('lookup calls default route handler with context as scope', t => {
 
   const findMyWay = FindMyWay({
     defaultRoute (req, res) {
-      t.equal(this, ctx)
+      t.assert.equal(this, ctx)
     }
   })
 

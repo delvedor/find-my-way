@@ -1,13 +1,13 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const { NullObject } = require('../lib/null-object')
 
 test('NullObject', t => {
   t.plan(2)
   const nullObject = new NullObject()
-  t.ok(nullObject instanceof NullObject)
-  t.ok(typeof nullObject === 'object')
+  t.assert.ok(nullObject instanceof NullObject)
+  t.assert.ok(typeof nullObject === 'object')
 })
 
 test('has no methods from generic Object class', t => {
@@ -30,7 +30,7 @@ test('has no methods from generic Object class', t => {
   const nullObject = new NullObject()
 
   for (const propertyName of propertyNames) {
-    t.notOk(propertyName in nullObject, propertyName)
+    t.assert.ok(!propertyName in nullObject, propertyName)
   }
-  t.equal(getAllPropertyNames(nullObject).length, 0)
+  t.assert.equal(getAllPropertyNames(nullObject).length, 0)
 })

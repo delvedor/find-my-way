@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 function initializeRoutes (router, handler, quantity) {
@@ -19,7 +19,7 @@ test('verify routes registered', t => {
   const defaultHandler = (req, res, params) => res.end(JSON.stringify({ hello: 'world' }))
 
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
-  t.equal(findMyWay.routes.length, quantity)
+  t.assert.equal(findMyWay.routes.length, quantity)
   findMyWay.routes.forEach((route, idx) => {
     t.match(route, {
       method: 'GET',
@@ -40,7 +40,7 @@ test('verify routes registered and deregister', t => {
   const defaultHandler = (req, res, params) => res.end(JSON.stringify({ hello: 'world' }))
 
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
-  t.equal(findMyWay.routes.length, quantity)
+  t.assert.equal(findMyWay.routes.length, quantity)
   findMyWay.off('GET', '/test-route-0')
-  t.equal(findMyWay.routes.length, quantity - 1)
+  t.assert.equal(findMyWay.routes.length, quantity - 1)
 })

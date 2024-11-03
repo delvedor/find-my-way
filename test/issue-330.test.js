@@ -1,5 +1,4 @@
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('..')
 const proxyquire = require('proxyquire')
 const HandlerStorage = require('../lib/handler-storage')
@@ -58,9 +57,9 @@ test('case insensitive static routes', (t) => {
   findMyWay.on('GET', '/foo/bar', () => {})
   findMyWay.on('GET', '/foo/bar/baz', () => {})
 
-  t.ok(findMyWay.findRoute('GET', '/FoO'))
-  t.ok(findMyWay.findRoute('GET', '/FOo/Bar'))
-  t.ok(findMyWay.findRoute('GET', '/fOo/Bar/bAZ'))
+  t.assert.ok(findMyWay.findRoute('GET', '/FoO'))
+  t.assert.ok(findMyWay.findRoute('GET', '/FOo/Bar'))
+  t.assert.ok(findMyWay.findRoute('GET', '/fOo/Bar/bAZ'))
 })
 
 test('wildcard must be the last character in the route', (t) => {
@@ -84,8 +83,8 @@ test('does not find the route if maxParamLength is exceeded', t => {
 
   findMyWay.on('GET', '/:id(\\d+)', () => {})
 
-  t.equal(findMyWay.find('GET', '/123'), null)
-  t.ok(findMyWay.find('GET', '/12'))
+  t.assert.equal(findMyWay.find('GET', '/123'), null)
+  t.assert.ok(findMyWay.find('GET', '/12'))
 })
 
 test('Should check if a regex is safe to use', (t) => {
@@ -134,13 +133,13 @@ test('Constrainer.noteUsage', (t) => {
   t.plan(3)
 
   const constrainer = new Constrainer()
-  t.equal(constrainer.strategiesInUse.size, 0)
+  t.assert.equal(constrainer.strategiesInUse.size, 0)
 
   constrainer.noteUsage()
-  t.equal(constrainer.strategiesInUse.size, 0)
+  t.assert.equal(constrainer.strategiesInUse.size, 0)
 
   constrainer.noteUsage({ host: 'fastify.io' })
-  t.equal(constrainer.strategiesInUse.size, 1)
+  t.assert.equal(constrainer.strategiesInUse.size, 1)
 })
 
 test('Cannot derive constraints without active strategies.', (t) => {
@@ -149,20 +148,20 @@ test('Cannot derive constraints without active strategies.', (t) => {
   const constrainer = new Constrainer()
   const before = constrainer.deriveSyncConstraints
   constrainer._buildDeriveConstraints()
-  t.same(constrainer.deriveSyncConstraints, before)
+  t.assert.deepEqual(constrainer.deriveSyncConstraints, before)
 })
 
 test('getMatchingHandler should return null if not compiled', (t) => {
   t.plan(1)
 
   const handlerStorage = new HandlerStorage()
-  t.equal(handlerStorage.getMatchingHandler({ foo: 'bar' }), null)
+  t.assert.equal(handlerStorage.getMatchingHandler({ foo: 'bar' }), null)
 })
 
 test('safeDecodeURIComponent should replace %3x to null for every x that is not a valid lowchar', (t) => {
   t.plan(1)
 
-  t.equal(safeDecodeURIComponent('Hello%3xWorld'), 'HellonullWorld')
+  t.assert.equal(safeDecodeURIComponent('Hello%3xWorld'), 'HellonullWorld')
 })
 
 test('SemVerStore version should be a string', (t) => {
@@ -179,13 +178,13 @@ test('SemVerStore.maxMajor should increase automatically', (t) => {
   const Storage = acceptVersionStrategy.storage
   const storage = new Storage()
 
-  t.equal(storage.maxMajor, 0)
+  t.assert.equal(storage.maxMajor, 0)
 
   storage.set('2')
-  t.equal(storage.maxMajor, 2)
+  t.assert.equal(storage.maxMajor, 2)
 
   storage.set('1')
-  t.equal(storage.maxMajor, 2)
+  t.assert.equal(storage.maxMajor, 2)
 })
 
 test('SemVerStore.maxPatches should increase automatically', (t) => {
@@ -195,13 +194,13 @@ test('SemVerStore.maxPatches should increase automatically', (t) => {
   const storage = new Storage()
 
   storage.set('2.0.0')
-  t.same(storage.maxPatches, { '2.0': 0 })
+  t.assert.deepEqual(storage.maxPatches, { '2.0': 0 })
 
   storage.set('2.0.2')
-  t.same(storage.maxPatches, { '2.0': 2 })
+  t.assert.deepEqual(storage.maxPatches, { '2.0': 2 })
 
   storage.set('2.0.1')
-  t.same(storage.maxPatches, { '2.0': 2 })
+  t.assert.deepEqual(storage.maxPatches, { '2.0': 2 })
 })
 
 test('Major version must be a numeric value', t => {
@@ -218,7 +217,7 @@ test('httpMethodStrategy storage handles set and get operations correctly', (t) 
 
   const storage = httpMethodStrategy.storage()
 
-  t.equal(storage.get('foo'), null)
+  t.assert.equal(storage.get('foo'), null)
 
   storage.set('foo', { bar: 'baz' })
   t.strictSame(storage.get('foo'), { bar: 'baz' })
@@ -228,5 +227,5 @@ test('if buildPrettyMeta argument is undefined, will return an object', (t) => {
   t.plan(1)
 
   const findMyWay = FindMyWay()
-  t.same(findMyWay.buildPrettyMeta(), {})
+  t.assert.deepEqual(findMyWay.buildPrettyMeta(), {})
 })

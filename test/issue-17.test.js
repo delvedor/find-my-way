@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('Parametric route, request.url contains dash', t => {
@@ -13,7 +12,7 @@ test('Parametric route, request.url contains dash', t => {
   })
 
   findMyWay.on('GET', '/a/:param/b', (req, res, params) => {
-    t.equal(params.param, 'foo-bar')
+    t.assert.equal(params.param, 'foo-bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/b', headers: {} }, null)
@@ -28,21 +27,21 @@ test('Parametric route with fixed suffix', t => {
   findMyWay.on('GET', '/a/:param-static', () => {})
   findMyWay.on('GET', '/b/:param.static', () => {})
 
-  t.same(findMyWay.find('GET', '/a/param-static', {}).params, { param: 'param' })
-  t.same(findMyWay.find('GET', '/b/param.static', {}).params, { param: 'param' })
+  t.assert.deepEqual(findMyWay.find('GET', '/a/param-static', {}).params, { param: 'param' })
+  t.assert.deepEqual(findMyWay.find('GET', '/b/param.static', {}).params, { param: 'param' })
 
-  t.same(findMyWay.find('GET', '/a/param-param-static', {}).params, { param: 'param-param' })
-  t.same(findMyWay.find('GET', '/b/param.param.static', {}).params, { param: 'param.param' })
+  t.assert.deepEqual(findMyWay.find('GET', '/a/param-param-static', {}).params, { param: 'param-param' })
+  t.assert.deepEqual(findMyWay.find('GET', '/b/param.param.static', {}).params, { param: 'param.param' })
 
-  t.same(findMyWay.find('GET', '/a/param.param-static', {}).params, { param: 'param.param' })
-  t.same(findMyWay.find('GET', '/b/param-param.static', {}).params, { param: 'param-param' })
+  t.assert.deepEqual(findMyWay.find('GET', '/a/param.param-static', {}).params, { param: 'param.param' })
+  t.assert.deepEqual(findMyWay.find('GET', '/b/param-param.static', {}).params, { param: 'param-param' })
 })
 
 test('Regex param exceeds max parameter length', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.ok('route not matched')
+      t.assert.ok('route not matched')
     }
   })
 
@@ -57,7 +56,7 @@ test('Parametric route with regexp and fixed suffix / 1', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.ok('route not matched')
+      t.assert.ok('route not matched')
     }
   })
 
@@ -80,7 +79,7 @@ test('Parametric route with regexp and fixed suffix / 2', t => {
   })
 
   findMyWay.on('GET', '/a/:param(^\\w{3})bar', (req, res, params) => {
-    t.equal(params.param, 'foo')
+    t.assert.equal(params.param, 'foo')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foobar', headers: {} }, null)
@@ -95,7 +94,7 @@ test('Parametric route with regexp and fixed suffix / 3', t => {
   })
 
   findMyWay.on('GET', '/a/:param(^\\w{3}-\\w{3})foo', (req, res, params) => {
-    t.equal(params.param, 'abc-def')
+    t.assert.equal(params.param, 'abc-def')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/abc-deffoo', headers: {} }, null)
@@ -110,13 +109,13 @@ test('Multi parametric route / 1', t => {
   })
 
   findMyWay.on('GET', '/a/:p1-:p2', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar')
   })
 
   findMyWay.on('GET', '/b/:p1.:p2', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-bar', headers: {} }, null)
@@ -132,13 +131,13 @@ test('Multi parametric route / 2', t => {
   })
 
   findMyWay.on('GET', '/a/:p1-:p2', (req, res, params) => {
-    t.equal(params.p1, 'foo-bar')
-    t.equal(params.p2, 'baz')
+    t.assert.equal(params.p1, 'foo-bar')
+    t.assert.equal(params.p2, 'baz')
   })
 
   findMyWay.on('GET', '/b/:p1.:p2', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar-baz')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar-baz')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-bar-baz', headers: {} }, null)
@@ -154,13 +153,13 @@ test('Multi parametric route / 3', t => {
   })
 
   findMyWay.on('GET', '/a/:p_1-:$p', (req, res, params) => {
-    t.equal(params.p_1, 'foo')
-    t.equal(params.$p, 'bar')
+    t.assert.equal(params.p_1, 'foo')
+    t.assert.equal(params.$p, 'bar')
   })
 
   findMyWay.on('GET', '/b/:p_1.:$p', (req, res, params) => {
-    t.equal(params.p_1, 'foo')
-    t.equal(params.$p, 'bar')
+    t.assert.equal(params.p_1, 'foo')
+    t.assert.equal(params.$p, 'bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-bar', headers: {} }, null)
@@ -171,7 +170,7 @@ test('Multi parametric route / 4', t => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.pass('Everything good')
+      t.assert.ok('Everything good')
     }
   })
 
@@ -196,8 +195,8 @@ test('Multi parametric route with regexp / 1', t => {
   })
 
   findMyWay.on('GET', '/at/:hour(^\\d+)h:minute(^\\d+)m', (req, res, params) => {
-    t.equal(params.hour, '0')
-    t.equal(params.minute, '42')
+    t.assert.equal(params.hour, '0')
+    t.assert.equal(params.minute, '42')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/at/0h42m', headers: {} }, null)
@@ -212,12 +211,12 @@ test('Multi parametric route with colon separator', t => {
   })
 
   findMyWay.on('GET', '/:param(.*)::suffix', (req, res, params) => {
-    t.equal(params.param, 'foo')
+    t.assert.equal(params.param, 'foo')
   })
 
   findMyWay.on('GET', '/:param1(.*)::suffix1-:param2(.*)::suffix2/static', (req, res, params) => {
-    t.equal(params.param1, 'foo')
-    t.equal(params.param2, 'bar')
+    t.assert.equal(params.param1, 'foo')
+    t.assert.equal(params.param2, 'bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/foo:suffix', headers: {} }, null)
@@ -233,23 +232,23 @@ test('Multi parametric route with regexp / 2', t => {
   })
 
   findMyWay.on('GET', '/a/:uuid(^[\\d-]{19})-:user(^\\w+)', (req, res, params) => {
-    t.equal(params.uuid, '1111-2222-3333-4444')
-    t.equal(params.user, 'foo')
+    t.assert.equal(params.uuid, '1111-2222-3333-4444')
+    t.assert.equal(params.user, 'foo')
   })
 
   findMyWay.on('GET', '/a/:uuid(^[\\d-]{19})-:user(^\\w+)/account', (req, res, params) => {
-    t.equal(params.uuid, '1111-2222-3333-4445')
-    t.equal(params.user, 'bar')
+    t.assert.equal(params.uuid, '1111-2222-3333-4445')
+    t.assert.equal(params.user, 'bar')
   })
 
   findMyWay.on('GET', '/b/:uuid(^[\\d-]{19}).:user(^\\w+)', (req, res, params) => {
-    t.equal(params.uuid, '1111-2222-3333-4444')
-    t.equal(params.user, 'foo')
+    t.assert.equal(params.uuid, '1111-2222-3333-4444')
+    t.assert.equal(params.user, 'foo')
   })
 
   findMyWay.on('GET', '/b/:uuid(^[\\d-]{19}).:user(^\\w+)/account', (req, res, params) => {
-    t.equal(params.uuid, '1111-2222-3333-4445')
-    t.equal(params.user, 'bar')
+    t.assert.equal(params.uuid, '1111-2222-3333-4445')
+    t.assert.equal(params.user, 'bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/1111-2222-3333-4444-foo', headers: {} }, null)
@@ -268,13 +267,13 @@ test('Multi parametric route with fixed suffix', t => {
   })
 
   findMyWay.on('GET', '/a/:p1-:p2-baz', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar')
   })
 
   findMyWay.on('GET', '/b/:p1.:p2-baz', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-bar-baz', headers: {} }, null)
@@ -290,13 +289,13 @@ test('Multi parametric route with regexp and fixed suffix', t => {
   })
 
   findMyWay.on('GET', '/a/:p1(^\\w+)-:p2(^\\w+)-kuux', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'barbaz')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'barbaz')
   })
 
   findMyWay.on('GET', '/b/:p1(^\\w+).:p2(^\\w+)-kuux', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'barbaz')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'barbaz')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-barbaz-kuux', headers: {} }, null)
@@ -312,13 +311,13 @@ test('Multi parametric route with wildcard', t => {
   })
 
   findMyWay.on('GET', '/a/:p1-:p2/*', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar')
   })
 
   findMyWay.on('GET', '/b/:p1.:p2/*', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/baz', headers: {} }, null)
@@ -334,15 +333,15 @@ test('Nested multi parametric route', t => {
   })
 
   findMyWay.on('GET', '/a/:p1-:p2/b/:p3', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar')
-    t.equal(params.p3, 'baz')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar')
+    t.assert.equal(params.p3, 'baz')
   })
 
   findMyWay.on('GET', '/b/:p1.:p2/b/:p3', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, 'bar')
-    t.equal(params.p3, 'baz')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, 'bar')
+    t.assert.equal(params.p3, 'baz')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-bar/b/baz', headers: {} }, null)
@@ -358,15 +357,15 @@ test('Nested multi parametric route with regexp / 1', t => {
   })
 
   findMyWay.on('GET', '/a/:p1(^\\w{3})-:p2(^\\d+)/b/:p3', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, '42')
-    t.equal(params.p3, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, '42')
+    t.assert.equal(params.p3, 'bar')
   })
 
   findMyWay.on('GET', '/b/:p1(^\\w{3}).:p2(^\\d+)/b/:p3', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, '42')
-    t.equal(params.p3, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, '42')
+    t.assert.equal(params.p3, 'bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-42/b/bar', headers: {} }, null)
@@ -382,15 +381,15 @@ test('Nested multi parametric route with regexp / 2', t => {
   })
 
   findMyWay.on('GET', '/a/:p1(^\\w{3})-:p2/b/:p3', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, '42')
-    t.equal(params.p3, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, '42')
+    t.assert.equal(params.p3, 'bar')
   })
 
   findMyWay.on('GET', '/b/:p1(^\\w{3}).:p2/b/:p3', (req, res, params) => {
-    t.equal(params.p1, 'foo')
-    t.equal(params.p2, '42')
-    t.equal(params.p3, 'bar')
+    t.assert.equal(params.p1, 'foo')
+    t.assert.equal(params.p2, '42')
+    t.assert.equal(params.p3, 'bar')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/foo-42/b/bar', headers: {} }, null)

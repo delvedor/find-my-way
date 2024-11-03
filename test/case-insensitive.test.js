@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('case insensitive static routes of level 1', t => {
@@ -15,7 +14,7 @@ test('case insensitive static routes of level 1', t => {
   })
 
   findMyWay.on('GET', '/woo', (req, res, params) => {
-    t.pass('we should be here')
+    t.assert.ok('we should be here')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/WOO', headers: {} }, null)
@@ -32,7 +31,7 @@ test('case insensitive static routes of level 2', t => {
   })
 
   findMyWay.on('GET', '/foo/woo', (req, res, params) => {
-    t.pass('we should be here')
+    t.assert.ok('we should be here')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/FoO/WOO', headers: {} }, null)
@@ -49,7 +48,7 @@ test('case insensitive static routes of level 3', t => {
   })
 
   findMyWay.on('GET', '/foo/bar/woo', (req, res, params) => {
-    t.pass('we should be here')
+    t.assert.ok('we should be here')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/bAR/WoO', headers: {} }, null)
@@ -66,7 +65,7 @@ test('parametric case insensitive', t => {
   })
 
   findMyWay.on('GET', '/foo/:param', (req, res, params) => {
-    t.equal(params.param, 'bAR')
+    t.assert.equal(params.param, 'bAR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/bAR', headers: {} }, null)
@@ -83,7 +82,7 @@ test('parametric case insensitive with a static part', t => {
   })
 
   findMyWay.on('GET', '/foo/my-:param', (req, res, params) => {
-    t.equal(params.param, 'bAR')
+    t.assert.equal(params.param, 'bAR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/MY-bAR', headers: {} }, null)
@@ -100,7 +99,7 @@ test('parametric case insensitive with capital letter', t => {
   })
 
   findMyWay.on('GET', '/foo/:Param', (req, res, params) => {
-    t.equal(params.Param, 'bAR')
+    t.assert.equal(params.Param, 'bAR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/Foo/bAR', headers: {} }, null)
@@ -117,7 +116,7 @@ test('case insensitive with capital letter in static path with param', t => {
   })
 
   findMyWay.on('GET', '/Foo/bar/:param', (req, res, params) => {
-    t.equal(params.param, 'baZ')
+    t.assert.equal(params.param, 'baZ')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/foo/bar/baZ', headers: {} }, null)
@@ -138,11 +137,11 @@ test('case insensitive with multiple paths containing capital letter in static p
   })
 
   findMyWay.on('GET', '/Foo/bar/:param', (req, res, params) => {
-    t.equal(params.param, 'baZ')
+    t.assert.equal(params.param, 'baZ')
   })
 
   findMyWay.on('GET', '/Foo/baz/:param', (req, res, params) => {
-    t.equal(params.param, 'baR')
+    t.assert.equal(params.param, 'baR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/foo/bar/baZ', headers: {} }, null)
@@ -160,8 +159,8 @@ test('case insensitive with multiple mixed-case params within same slash couple'
   })
 
   findMyWay.on('GET', '/foo/:param1-:param2', (req, res, params) => {
-    t.equal(params.param1, 'My')
-    t.equal(params.param2, 'bAR')
+    t.assert.equal(params.param1, 'My')
+    t.assert.equal(params.param2, 'bAR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/FOO/My-bAR', headers: {} }, null)
@@ -178,8 +177,8 @@ test('case insensitive with multiple mixed-case params', t => {
   })
 
   findMyWay.on('GET', '/foo/:param1/:param2', (req, res, params) => {
-    t.equal(params.param1, 'My')
-    t.equal(params.param2, 'bAR')
+    t.assert.equal(params.param1, 'My')
+    t.assert.equal(params.param2, 'bAR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/FOO/My/bAR', headers: {} }, null)
@@ -196,7 +195,7 @@ test('case insensitive with wildcard', t => {
   })
 
   findMyWay.on('GET', '/foo/*', (req, res, params) => {
-    t.equal(params['*'], 'baR')
+    t.assert.equal(params['*'], 'baR')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/FOO/baR', headers: {} }, null)
@@ -213,16 +212,16 @@ test('parametric case insensitive with multiple routes', t => {
   })
 
   findMyWay.on('POST', '/foo/:param/Static/:userId/Save', (req, res, params) => {
-    t.equal(params.param, 'bAR')
-    t.equal(params.userId, 'one')
+    t.assert.equal(params.param, 'bAR')
+    t.assert.equal(params.userId, 'one')
   })
   findMyWay.on('POST', '/foo/:param/Static/:userId/Update', (req, res, params) => {
-    t.equal(params.param, 'Bar')
-    t.equal(params.userId, 'two')
+    t.assert.equal(params.param, 'Bar')
+    t.assert.equal(params.userId, 'two')
   })
   findMyWay.on('POST', '/foo/:param/Static/:userId/CANCEL', (req, res, params) => {
-    t.equal(params.param, 'bAR')
-    t.equal(params.userId, 'THREE')
+    t.assert.equal(params.param, 'bAR')
+    t.assert.equal(params.userId, 'THREE')
   })
 
   findMyWay.lookup({ method: 'POST', url: '/foo/bAR/static/one/SAVE', headers: {} }, null)

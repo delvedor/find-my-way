@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../..')
 
 test('A route supports host constraints under http2 protocol', t => {
@@ -10,13 +9,13 @@ test('A route supports host constraints under http2 protocol', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '/', {}, (req, res) => {
-    t.fail()
+    t.assert.assert.fail()
   })
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, (req, res) => {
-    t.equal(req.headers[':authority'], 'fastify.io')
+    t.assert.equal(req.headers[':authority'], 'fastify.io')
   })
   findMyWay.on('GET', '/', { constraints: { host: /.+\.de/ } }, (req, res) => {
-    t.ok(req.headers[':authority'].endsWith('.de'))
+    t.assert.ok(req.headers[':authority'].endsWith('.de'))
   })
 
   findMyWay.lookup({

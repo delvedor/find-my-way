@@ -1,8 +1,7 @@
 'use strict'
 
 const httpMethods = require('../lib/http-methods')
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 t.test('should support shorthand', t => {
@@ -17,7 +16,7 @@ t.test('should support shorthand', t => {
       const findMyWay = FindMyWay()
 
       findMyWay[methodName]('/test', () => {
-        t.ok('inside the handler')
+        t.assert.ok('inside the handler')
       })
 
       findMyWay.lookup({ method: m, url: '/test', headers: {} }, null)
@@ -30,7 +29,7 @@ test('should support `.all` shorthand', t => {
   const findMyWay = FindMyWay()
 
   findMyWay.all('/test', () => {
-    t.ok('inside the handler')
+    t.assert.ok('inside the handler')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/test', headers: {} }, null)

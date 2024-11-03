@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('Parametric and static with shared prefix / 1', t => {
@@ -17,7 +16,7 @@ test('Parametric and static with shared prefix / 1', t => {
   })
 
   findMyWay.on('GET', '/:param', (req, res, params) => {
-    t.equal(params.param, 'winter')
+    t.assert.equal(params.param, 'winter')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/winter', headers: {} }, null)
@@ -32,7 +31,7 @@ test('Parametric and static with shared prefix / 2', t => {
   })
 
   findMyWay.on('GET', '/woo', (req, res, params) => {
-    t.ok('we should be here')
+    t.assert.ok('we should be here')
   })
 
   findMyWay.on('GET', '/:param', (req, res, params) => {
@@ -46,7 +45,7 @@ test('Parametric and static with shared prefix (nested)', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.ok('We should be here')
+      t.assert.ok('We should be here')
     }
   })
 
@@ -74,7 +73,7 @@ test('Parametric and static with shared prefix and different suffix', t => {
   })
 
   findMyWay.on('GET', '/example/:param/nested/other', (req, res, params) => {
-    t.ok('We should be here')
+    t.assert.ok('We should be here')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/example/shared/nested/other', headers: {} }, null)
@@ -93,7 +92,7 @@ test('Parametric and static with shared prefix (with wildcard)', t => {
   })
 
   findMyWay.on('GET', '/:param', (req, res, params) => {
-    t.equal(params.param, 'winter')
+    t.assert.equal(params.param, 'winter')
   })
 
   findMyWay.on('GET', '/*', (req, res, params) => {
@@ -120,7 +119,7 @@ test('Parametric and static with shared prefix (nested with wildcard)', t => {
   })
 
   findMyWay.on('GET', '/*', (req, res, params) => {
-    t.equal(params['*'], 'winter/coming')
+    t.assert.equal(params['*'], 'winter/coming')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/winter/coming', headers: {} }, null)
@@ -139,7 +138,7 @@ test('Parametric and static with shared prefix (nested with split)', t => {
   })
 
   findMyWay.on('GET', '/:param', (req, res, params) => {
-    t.equal(params.param, 'winter')
+    t.assert.equal(params.param, 'winter')
   })
 
   findMyWay.on('GET', '/wo', (req, res, params) => {

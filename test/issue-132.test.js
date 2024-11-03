@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('../')
 
 test('Wildcard mixed with dynamic and common prefix / 1', t => {
@@ -13,19 +12,19 @@ test('Wildcard mixed with dynamic and common prefix / 1', t => {
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
-    t.equal(req.method, 'OPTIONS')
+    t.assert.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('GET', '/obj/params/*', (req, res, params) => {
-    t.equal(req.method, 'GET')
+    t.assert.equal(req.method, 'GET')
   })
 
   findMyWay.on('GET', '/obj/:id', (req, res, params) => {
-    t.equal(req.method, 'GET')
+    t.assert.equal(req.method, 'GET')
   })
 
   findMyWay.on('GET', '/obj_params/*', (req, res, params) => {
-    t.equal(req.method, 'GET')
+    t.assert.equal(req.method, 'GET')
   })
 
   findMyWay.lookup({ method: 'OPTIONS', url: '/obj/params', headers: {} }, null)
@@ -48,23 +47,23 @@ test('Wildcard mixed with dynamic and common prefix / 2', t => {
   })
 
   findMyWay.on('OPTIONS', '/*', (req, res, params) => {
-    t.equal(req.method, 'OPTIONS')
+    t.assert.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('OPTIONS', '/obj/*', (req, res, params) => {
-    t.equal(req.method, 'OPTIONS')
+    t.assert.equal(req.method, 'OPTIONS')
   })
 
   findMyWay.on('GET', '/obj/params/*', (req, res, params) => {
-    t.equal(req.method, 'GET')
+    t.assert.equal(req.method, 'GET')
   })
 
   findMyWay.on('GET', '/obj/:id', (req, res, params) => {
-    t.equal(req.method, 'GET')
+    t.assert.equal(req.method, 'GET')
   })
 
   findMyWay.on('GET', '/obj_params/*', (req, res, params) => {
-    t.equal(req.method, 'GET')
+    t.assert.equal(req.method, 'GET')
   })
 
   findMyWay.lookup({ method: 'OPTIONS', url: '/obj_params/params', headers: {} }, null)

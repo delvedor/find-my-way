@@ -1,9 +1,9 @@
 'use strict'
 
-const t = require('tap')
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
-t.test('issue-240: .find matching', (t) => {
+test('issue-240: .find matching', (t) => {
   t.plan(14)
 
   const findMyWay = FindMyWay({ ignoreDuplicateSlashes: true })
@@ -13,18 +13,18 @@ t.test('issue-240: .find matching', (t) => {
   findMyWay.on('GET', '/a/b', fixedPath)
   findMyWay.on('GET', '/a/:pam/c', varPath)
 
-  t.equal(findMyWay.find('GET', '/a/b').handler, fixedPath)
-  t.equal(findMyWay.find('GET', '/a//b').handler, fixedPath)
-  t.equal(findMyWay.find('GET', '/a/b/c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a//b/c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a///b/c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a//b//c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a///b///c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a/foo/c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a//foo/c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a///foo/c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a//foo//c').handler, varPath)
-  t.equal(findMyWay.find('GET', '/a///foo///c').handler, varPath)
-  t.notOk(findMyWay.find('GET', '/a/c'))
-  t.notOk(findMyWay.find('GET', '/a//c'))
+  t.assert.equal(findMyWay.find('GET', '/a/b').handler, fixedPath)
+  t.assert.equal(findMyWay.find('GET', '/a//b').handler, fixedPath)
+  t.assert.equal(findMyWay.find('GET', '/a/b/c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a//b/c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a///b/c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a//b//c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a///b///c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a/foo/c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a//foo/c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a///foo/c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a//foo//c').handler, varPath)
+  t.assert.equal(findMyWay.find('GET', '/a///foo///c').handler, varPath)
+  t.assert.ok(!findMyWay.find('GET', '/a/c'))
+  t.assert.ok(!findMyWay.find('GET', '/a//c'))
 })

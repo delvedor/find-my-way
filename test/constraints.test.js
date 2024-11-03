@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const {test} = require('node:test')
 const FindMyWay = require('..')
 const alpha = () => { }
 const beta = () => { }
@@ -15,12 +14,12 @@ test('A route could support multiple host constraints while versioned', t => {
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '1.1.0' } }, beta)
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '2.1.0' } }, gamma)
 
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.x' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.1.x' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.x' }).handler, gamma)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.1.x' }).handler, gamma)
-  t.notOk(findMyWay.find('GET', '/', { host: 'fastify.io', version: '3.x' }))
-  t.notOk(findMyWay.find('GET', '/', { host: 'something-else.io', version: '1.x' }))
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.x' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.1.x' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.x' }).handler, gamma)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.1.x' }).handler, gamma)
+  t.assert.ok(!findMyWay.find('GET', '/', { host: 'fastify.io', version: '3.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { host: 'something-else.io', version: '1.x' }))
 })
 
 test('Constrained routes are matched before unconstrainted routes when the constrained route is added last', t => {
@@ -31,9 +30,9 @@ test('Constrained routes are matched before unconstrainted routes when the const
   findMyWay.on('GET', '/', {}, alpha)
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, beta)
 
-  t.equal(findMyWay.find('GET', '/', {}).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'example.com' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', {}).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'example.com' }).handler, alpha)
 })
 
 test('Constrained routes are matched before unconstrainted routes when the constrained route is added first', t => {
@@ -44,9 +43,9 @@ test('Constrained routes are matched before unconstrainted routes when the const
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, beta)
   findMyWay.on('GET', '/', {}, alpha)
 
-  t.equal(findMyWay.find('GET', '/', {}).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'example.com' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', {}).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'example.com' }).handler, alpha)
 })
 
 test('Routes with multiple constraints are matched before routes with one constraint when the doubly-constrained route is added last', t => {
@@ -57,9 +56,9 @@ test('Routes with multiple constraints are matched before routes with one constr
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, alpha)
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '1.0.0' } }, beta)
 
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.0.0' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.0.0' }), null)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.0.0' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.0.0' }), null)
 })
 
 test('Routes with multiple constraints are matched before routes with one constraint when the doubly-constrained route is added first', t => {
@@ -70,9 +69,9 @@ test('Routes with multiple constraints are matched before routes with one constr
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '1.0.0' } }, beta)
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, alpha)
 
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.0.0' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.0.0' }), null)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.0.0' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.0.0' }), null)
 })
 
 test('Routes with multiple constraints are matched before routes with one constraint before unconstrained routes', t => {
@@ -84,9 +83,9 @@ test('Routes with multiple constraints are matched before routes with one constr
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, alpha)
   findMyWay.on('GET', '/', { constraints: {} }, gamma)
 
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.0.0' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.0.0' }), null)
-  t.equal(findMyWay.find('GET', '/', { host: 'example.io' }).handler, gamma)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '1.0.0' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io', version: '2.0.0' }), null)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'example.io' }).handler, gamma)
 })
 
 test('Has constraint strategy method test', t => {
@@ -94,16 +93,16 @@ test('Has constraint strategy method test', t => {
 
   const findMyWay = FindMyWay()
 
-  t.same(findMyWay.hasConstraintStrategy('version'), false)
-  t.same(findMyWay.hasConstraintStrategy('host'), false)
+  t.assert.deepEqual(findMyWay.hasConstraintStrategy('version'), false)
+  t.assert.deepEqual(findMyWay.hasConstraintStrategy('host'), false)
 
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, () => {})
 
-  t.same(findMyWay.hasConstraintStrategy('version'), false)
-  t.same(findMyWay.hasConstraintStrategy('host'), true)
+  t.assert.deepEqual(findMyWay.hasConstraintStrategy('version'), false)
+  t.assert.deepEqual(findMyWay.hasConstraintStrategy('host'), true)
 
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '1.0.0' } }, () => {})
 
-  t.same(findMyWay.hasConstraintStrategy('version'), true)
-  t.same(findMyWay.hasConstraintStrategy('host'), true)
+  t.assert.deepEqual(findMyWay.hasConstraintStrategy('version'), true)
+  t.assert.deepEqual(findMyWay.hasConstraintStrategy('host'), true)
 })
