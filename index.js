@@ -184,8 +184,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       if (!this.caseSensitive) {
         staticNodePath = staticNodePath.toLowerCase()
       }
-      staticNodePath = staticNodePath.split('::').join(':')
-      staticNodePath = staticNodePath.split('%').join('%25')
+      staticNodePath = staticNodePath.replaceAll('::', ':')
+      staticNodePath = staticNodePath.replaceAll('%', '%25')
       // add the static part of the route to the tree
       currentNode = currentNode.createStaticChild(staticNodePath)
     }
@@ -240,8 +240,8 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
           let staticPart = pattern.slice(staticPartStartIndex, j)
           if (staticPart) {
-            staticPart = staticPart.split('::').join(':')
-            staticPart = staticPart.split('%').join('%25')
+            staticPart = staticPart.replaceAll('::', ':')
+            staticPart = staticPart.replaceAll('%', '%25')
             regexps.push(backtrack = escapeRegExp(staticPart))
           }
 
@@ -328,8 +328,8 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
       if (!this.caseSensitive) {
         staticNodePath = staticNodePath.toLowerCase()
       }
-      staticNodePath = staticNodePath.split('::').join(':')
-      staticNodePath = staticNodePath.split('%').join('%25')
+      staticNodePath = staticNodePath.replaceAll('::', ':')
+      staticNodePath = staticNodePath.replaceAll('%', '%25')
       // add the static part of the route to the tree
       currentNode = currentNode.getStaticChild(staticNodePath)
       if (currentNode === null) {
@@ -387,8 +387,8 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
 
           let staticPart = pattern.slice(staticPartStartIndex, j)
           if (staticPart) {
-            staticPart = staticPart.split('::').join(':')
-            staticPart = staticPart.split('%').join('%25')
+            staticPart = staticPart.replaceAll('::', ':')
+            staticPart = staticPart.replaceAll('%', '%25')
             regexps.push(backtrack = escapeRegExp(staticPart))
           }
 
