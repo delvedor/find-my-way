@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 function initializeRoutes (router, handler, quantity) {
@@ -11,23 +11,22 @@ function initializeRoutes (router, handler, quantity) {
 }
 
 test('verify routes registered', t => {
+  const assertPerTest = 5
   const quantity = 5
   // 1 (check length) + quantity of routes * quantity of tests per route
-  t.plan(1 + (quantity * 1))
+  t.plan(1 + (quantity * assertPerTest))
 
   let findMyWay = FindMyWay()
   const defaultHandler = (req, res, params) => res.end(JSON.stringify({ hello: 'world' }))
 
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
-  t.equal(findMyWay.routes.length, quantity)
+  t.assert.equal(findMyWay.routes.length, quantity)
   findMyWay.routes.forEach((route, idx) => {
-    t.match(route, {
-      method: 'GET',
-      path: '/test-route-' + idx,
-      opts: {},
-      handler: defaultHandler,
-      store: undefined
-    })
+    t.assert.equal(route.method, 'GET')
+    t.assert.equal(route.path, '/test-route-' + idx)
+    t.assert.deepStrictEqual(route.opts, {})
+    t.assert.equal(route.handler, defaultHandler)
+    t.assert.equal(route.store, undefined)
   })
 })
 
@@ -40,7 +39,7 @@ test('verify routes registered and deregister', t => {
   const defaultHandler = (req, res, params) => res.end(JSON.stringify({ hello: 'world' }))
 
   findMyWay = initializeRoutes(findMyWay, defaultHandler, quantity)
-  t.equal(findMyWay.routes.length, quantity)
+  t.assert.equal(findMyWay.routes.length, quantity)
   findMyWay.off('GET', '/test-route-0')
-  t.equal(findMyWay.routes.length, quantity - 1)
+  t.assert.equal(findMyWay.routes.length, quantity - 1)
 })

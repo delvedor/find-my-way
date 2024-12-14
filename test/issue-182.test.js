@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('..')
 
 test('Set method property when splitting node', t => {
@@ -9,11 +8,11 @@ test('Set method property when splitting node', t => {
   const findMyWay = FindMyWay()
 
   function handler (req, res, params) {
-    t.pass()
+    t.assert.ok()
   }
 
   findMyWay.on('GET', '/health-a/health', handler)
   findMyWay.on('GET', '/health-b/health', handler)
 
-  t.notMatch(findMyWay.prettyPrint(), /undefined/)
+  t.assert.ok(!findMyWay.prettyPrint().includes('undefined'))
 })

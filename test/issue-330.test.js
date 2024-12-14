@@ -1,5 +1,4 @@
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('..')
 const proxyquire = require('proxyquire')
 const HandlerStorage = require('../lib/handler-storage')
@@ -11,13 +10,13 @@ const httpMethodStrategy = require('../lib/strategies/http-method')
 test('FULL_PATH_REGEXP and OPTIONAL_PARAM_REGEXP should be considered safe', (t) => {
   t.plan(1)
 
-  t.doesNotThrow(() => require('..'))
+  t.assert.doesNotThrow(() => require('..'))
 })
 
 test('should throw an error for unsafe FULL_PATH_REGEXP', (t) => {
   t.plan(1)
 
-  t.throws(() => proxyquire('..', {
+  t.assert.throws(() => proxyquire('..', {
     'safe-regex2': () => false
   }), new Error('the FULL_PATH_REGEXP is not safe, update this module'))
 })
@@ -26,7 +25,7 @@ test('Should throw an error for unsafe OPTIONAL_PARAM_REGEXP', (t) => {
   t.plan(1)
 
   let callCount = 0
-  t.throws(() => proxyquire('..', {
+  t.assert.throws(() => proxyquire('..', {
     'safe-regex2': () => {
       return ++callCount < 2
     }
@@ -40,11 +39,11 @@ test('double colon does not define parametric node', (t) => {
 
   findMyWay.on('GET', '/::id', () => {})
   const route1 = findMyWay.findRoute('GET', '/::id')
-  t.strictSame(route1.params, [])
+  t.assert.deepStrictEqual(route1.params, [])
 
   findMyWay.on('GET', '/:foo(\\d+)::bar', () => {})
   const route2 = findMyWay.findRoute('GET', '/:foo(\\d+)::bar')
-  t.strictSame(route2.params, ['foo'])
+  t.assert.deepStrictEqual(route2.params, ['foo'])
 })
 
 test('case insensitive static routes', (t) => {
@@ -58,9 +57,9 @@ test('case insensitive static routes', (t) => {
   findMyWay.on('GET', '/foo/bar', () => {})
   findMyWay.on('GET', '/foo/bar/baz', () => {})
 
-  t.ok(findMyWay.findRoute('GET', '/FoO'))
-  t.ok(findMyWay.findRoute('GET', '/FOo/Bar'))
-  t.ok(findMyWay.findRoute('GET', '/fOo/Bar/bAZ'))
+  t.assert.ok(findMyWay.findRoute('GET', '/FoO'))
+  t.assert.ok(findMyWay.findRoute('GET', '/FOo/Bar'))
+  t.assert.ok(findMyWay.findRoute('GET', '/fOo/Bar/bAZ'))
 })
 
 test('wildcard must be the last character in the route', (t) => {
@@ -71,9 +70,9 @@ test('wildcard must be the last character in the route', (t) => {
   const findMyWay = FindMyWay()
 
   findMyWay.on('GET', '*', () => {})
-  t.throws(() => findMyWay.findRoute('GET', '*1'), expectedError)
-  t.throws(() => findMyWay.findRoute('GET', '*/'), expectedError)
-  t.throws(() => findMyWay.findRoute('GET', '*?'), expectedError)
+  t.assert.throws(() => findMyWay.findRoute('GET', '*1'), expectedError)
+  t.assert.throws(() => findMyWay.findRoute('GET', '*/'), expectedError)
+  t.assert.throws(() => findMyWay.findRoute('GET', '*?'), expectedError)
 })
 
 test('does not find the route if maxParamLength is exceeded', t => {
@@ -84,8 +83,8 @@ test('does not find the route if maxParamLength is exceeded', t => {
 
   findMyWay.on('GET', '/:id(\\d+)', () => {})
 
-  t.equal(findMyWay.find('GET', '/123'), null)
-  t.ok(findMyWay.find('GET', '/12'))
+  t.assert.equal(findMyWay.find('GET', '/123'), null)
+  t.assert.ok(findMyWay.find('GET', '/12'))
 })
 
 test('Should check if a regex is safe to use', (t) => {
@@ -98,7 +97,7 @@ test('Should check if a regex is safe to use', (t) => {
   findMyWay.on('GET', '/test/:id(\\d+)', () => {})
 
   const unSafeRegex = /(x+x+)+y/
-  t.throws(() => findMyWay.findRoute('GET', `/test/:id(${unSafeRegex.toString()})`), {
+  t.assert.throws(() => findMyWay.findRoute('GET', `/test/:id(${unSafeRegex.toString()})`), {
     message: "The regex '(/(x+x+)+y/)' is not safe!"
   })
 })
@@ -110,7 +109,7 @@ test('Disable safe regex check', (t) => {
 
   const unSafeRegex = /(x+x+)+y/
   findMyWay.on('GET', `/test2/:id(${unSafeRegex.toString()})`, () => {})
-  t.doesNotThrow(() => findMyWay.findRoute('GET', `/test2/:id(${unSafeRegex.toString()})`))
+  t.assert.doesNotThrow(() => findMyWay.findRoute('GET', `/test2/:id(${unSafeRegex.toString()})`))
 })
 
 test('throws error if no strategy registered for constraint key', (t) => {
@@ -118,8 +117,8 @@ test('throws error if no strategy registered for constraint key', (t) => {
 
   const constrainer = new Constrainer()
   const error = new Error('No strategy registered for constraint key invalid-constraint')
-  t.throws(() => constrainer.newStoreForConstraint('invalid-constraint'), error)
-  t.throws(() => constrainer.validateConstraints({ 'invalid-constraint': 'foo' }), error)
+  t.assert.throws(() => constrainer.newStoreForConstraint('invalid-constraint'), error)
+  t.assert.throws(() => constrainer.validateConstraints({ 'invalid-constraint': 'foo' }), error)
 })
 
 test('throws error if pass an undefined constraint value', (t) => {
@@ -127,20 +126,20 @@ test('throws error if pass an undefined constraint value', (t) => {
 
   const constrainer = new Constrainer()
   const error = new Error('Can\'t pass an undefined constraint value, must pass null or no key at all')
-  t.throws(() => constrainer.validateConstraints({ key: undefined }), error)
+  t.assert.throws(() => constrainer.validateConstraints({ key: undefined }), error)
 })
 
 test('Constrainer.noteUsage', (t) => {
   t.plan(3)
 
   const constrainer = new Constrainer()
-  t.equal(constrainer.strategiesInUse.size, 0)
+  t.assert.equal(constrainer.strategiesInUse.size, 0)
 
   constrainer.noteUsage()
-  t.equal(constrainer.strategiesInUse.size, 0)
+  t.assert.equal(constrainer.strategiesInUse.size, 0)
 
   constrainer.noteUsage({ host: 'fastify.io' })
-  t.equal(constrainer.strategiesInUse.size, 1)
+  t.assert.equal(constrainer.strategiesInUse.size, 1)
 })
 
 test('Cannot derive constraints without active strategies.', (t) => {
@@ -149,20 +148,20 @@ test('Cannot derive constraints without active strategies.', (t) => {
   const constrainer = new Constrainer()
   const before = constrainer.deriveSyncConstraints
   constrainer._buildDeriveConstraints()
-  t.same(constrainer.deriveSyncConstraints, before)
+  t.assert.deepEqual(constrainer.deriveSyncConstraints, before)
 })
 
 test('getMatchingHandler should return null if not compiled', (t) => {
   t.plan(1)
 
   const handlerStorage = new HandlerStorage()
-  t.equal(handlerStorage.getMatchingHandler({ foo: 'bar' }), null)
+  t.assert.equal(handlerStorage.getMatchingHandler({ foo: 'bar' }), null)
 })
 
 test('safeDecodeURIComponent should replace %3x to null for every x that is not a valid lowchar', (t) => {
   t.plan(1)
 
-  t.equal(safeDecodeURIComponent('Hello%3xWorld'), 'HellonullWorld')
+  t.assert.equal(safeDecodeURIComponent('Hello%3xWorld'), 'HellonullWorld')
 })
 
 test('SemVerStore version should be a string', (t) => {
@@ -170,7 +169,7 @@ test('SemVerStore version should be a string', (t) => {
 
   const Storage = acceptVersionStrategy.storage
 
-  t.throws(() => new Storage().set(1), new TypeError('Version should be a string'))
+  t.assert.throws(() => new Storage().set(1), new TypeError('Version should be a string'))
 })
 
 test('SemVerStore.maxMajor should increase automatically', (t) => {
@@ -179,13 +178,13 @@ test('SemVerStore.maxMajor should increase automatically', (t) => {
   const Storage = acceptVersionStrategy.storage
   const storage = new Storage()
 
-  t.equal(storage.maxMajor, 0)
+  t.assert.equal(storage.maxMajor, 0)
 
   storage.set('2')
-  t.equal(storage.maxMajor, 2)
+  t.assert.equal(storage.maxMajor, 2)
 
   storage.set('1')
-  t.equal(storage.maxMajor, 2)
+  t.assert.equal(storage.maxMajor, 2)
 })
 
 test('SemVerStore.maxPatches should increase automatically', (t) => {
@@ -195,13 +194,13 @@ test('SemVerStore.maxPatches should increase automatically', (t) => {
   const storage = new Storage()
 
   storage.set('2.0.0')
-  t.same(storage.maxPatches, { '2.0': 0 })
+  t.assert.deepEqual(storage.maxPatches, { '2.0': 0 })
 
   storage.set('2.0.2')
-  t.same(storage.maxPatches, { '2.0': 2 })
+  t.assert.deepEqual(storage.maxPatches, { '2.0': 2 })
 
   storage.set('2.0.1')
-  t.same(storage.maxPatches, { '2.0': 2 })
+  t.assert.deepEqual(storage.maxPatches, { '2.0': 2 })
 })
 
 test('Major version must be a numeric value', t => {
@@ -209,7 +208,7 @@ test('Major version must be a numeric value', t => {
 
   const findMyWay = FindMyWay()
 
-  t.throws(() => findMyWay.on('GET', '/test', { constraints: { version: 'x' } }, () => {}),
+  t.assert.throws(() => findMyWay.on('GET', '/test', { constraints: { version: 'x' } }, () => {}),
     new TypeError('Major version must be a numeric value'))
 })
 
@@ -218,15 +217,15 @@ test('httpMethodStrategy storage handles set and get operations correctly', (t) 
 
   const storage = httpMethodStrategy.storage()
 
-  t.equal(storage.get('foo'), null)
+  t.assert.equal(storage.get('foo'), null)
 
   storage.set('foo', { bar: 'baz' })
-  t.strictSame(storage.get('foo'), { bar: 'baz' })
+  t.assert.deepStrictEqual(storage.get('foo'), { bar: 'baz' })
 })
 
 test('if buildPrettyMeta argument is undefined, will return an object', (t) => {
   t.plan(1)
 
   const findMyWay = FindMyWay()
-  t.same(findMyWay.buildPrettyMeta(), {})
+  t.assert.deepEqual(findMyWay.buildPrettyMeta(), {})
 })

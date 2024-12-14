@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 test('Wildcard route match when regexp route fails', (t) => {
@@ -11,5 +10,5 @@ test('Wildcard route match when regexp route fails', (t) => {
   findMyWay.on('GET', '/:a(a)', () => {})
   findMyWay.on('GET', '/*', () => {})
 
-  t.same(findMyWay.find('GET', '/b', {}).params, { '*': 'b' })
+  t.assert.deepEqual(findMyWay.find('GET', '/b', {}).params, { '*': 'b' })
 })

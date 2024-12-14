@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('..')
 
 test('Matching order', t => {
@@ -12,7 +11,7 @@ test('Matching order', t => {
   findMyWay.on('GET', '/foo/bar/*', () => {})
   findMyWay.on('GET', '/foo/:param/static', () => {})
 
-  t.same(findMyWay.find('GET', '/foo/bar/static', { host: 'test' }).params, {})
-  t.same(findMyWay.find('GET', '/foo/bar/static').params, { '*': 'static' })
-  t.same(findMyWay.find('GET', '/foo/value/static').params, { param: 'value' })
+  t.assert.deepEqual(findMyWay.find('GET', '/foo/bar/static', { host: 'test' }).params, {})
+  t.assert.deepEqual(findMyWay.find('GET', '/foo/bar/static').params, { '*': 'static' })
+  t.assert.deepEqual(findMyWay.find('GET', '/foo/value/static').params, { param: 'value' })
 })

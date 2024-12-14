@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 test('contain param and wildcard together', t => {
@@ -9,18 +8,18 @@ test('contain param and wildcard together', t => {
 
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '/:lang/item/:id', (req, res, params) => {
-    t.same(params.lang, 'fr')
-    t.same(params.id, '12345')
+    t.assert.deepEqual(params.lang, 'fr')
+    t.assert.deepEqual(params.id, '12345')
   })
 
   findMyWay.on('GET', '/:lang/item/*', (req, res, params) => {
-    t.same(params.lang, 'fr')
-    t.same(params['*'], '12345/edit')
+    t.assert.deepEqual(params.lang, 'fr')
+    t.assert.deepEqual(params['*'], '12345/edit')
   })
 
   findMyWay.lookup(

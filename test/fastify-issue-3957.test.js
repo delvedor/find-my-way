@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 test('wildcard should not limit by maxParamLength', t => {
@@ -9,12 +8,12 @@ test('wildcard should not limit by maxParamLength', t => {
 
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('we should not be here, the url is: ' + req.url)
+      t.assert.fail('we should not be here, the url is: ' + req.url)
     }
   })
 
   findMyWay.on('GET', '*', (req, res, params) => {
-    t.same(params['*'], '/portfolios/b5859fb9-6c76-4db8-b3d1-337c5be3fd8b/instruments/2a694406-b43f-439d-aa11-0c814805c930/positions')
+    t.assert.deepEqual(params['*'], '/portfolios/b5859fb9-6c76-4db8-b3d1-337c5be3fd8b/instruments/2a694406-b43f-439d-aa11-0c814805c930/positions')
   })
 
   findMyWay.lookup(

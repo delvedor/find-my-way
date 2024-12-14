@@ -1,17 +1,16 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const http = require('http')
 const FindMyWay = require('../')
 
-test('basic router with http server', t => {
+test('basic router with http server', (t, done) => {
   t.plan(6)
   const findMyWay = FindMyWay()
   findMyWay.on('GET', '/test', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end(JSON.stringify({ hello: 'world' }))
   })
 
@@ -19,28 +18,25 @@ test('basic router with http server', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
-    http.get('http://localhost:' + server.address().port + '/test', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(JSON.parse(body), { hello: 'world' })
-    })
+    const res = await fetch(`http://localhost:${server.address().port}/test`)
+
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.json(), { hello: 'world' })
+    done()
   })
 })
 
-test('router with params with http server', t => {
+test('router with params with http server', (t, done) => {
   t.plan(6)
   const findMyWay = FindMyWay()
   findMyWay.on('GET', '/test/:id', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.equal(params.id, 'hello')
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.equal(params.id, 'hello')
     res.end(JSON.stringify({ hello: 'world' }))
   })
 
@@ -48,22 +44,19 @@ test('router with params with http server', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
-    http.get('http://localhost:' + server.address().port + '/test/hello', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(JSON.parse(body), { hello: 'world' })
-    })
+    const res = await fetch(`http://localhost:${server.address().port}/test/hello`)
+
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.json(), { hello: 'world' })
+    done()
   })
 })
 
-test('default route', t => {
+test('default route', (t, done) => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
@@ -76,17 +69,17 @@ test('default route', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
-    http.get('http://localhost:' + server.address().port, async (res) => {
-      t.equal(res.statusCode, 404)
-    })
+    const res = await fetch(`http://localhost:${server.address().port}`)
+    t.assert.equal(res.status, 404)
+    done()
   })
 })
 
-test('automatic default route', t => {
+test('automatic default route', (t, done) => {
   t.plan(2)
   const findMyWay = FindMyWay()
 
@@ -94,33 +87,33 @@ test('automatic default route', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
-    http.get('http://localhost:' + server.address().port, async (res) => {
-      t.equal(res.statusCode, 404)
-    })
+    const res = await fetch(`http://localhost:${server.address().port}`)
+    t.assert.equal(res.status, 404)
+    done()
   })
 })
 
-test('maps two routes when trailing slash should be trimmed', t => {
+test('maps two routes when trailing slash should be trimmed', (t, done) => {
   t.plan(21)
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: true
   })
 
   findMyWay.on('GET', '/test/', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
   findMyWay.on('GET', '/othertest', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('othertest')
   })
 
@@ -128,60 +121,42 @@ test('maps two routes when trailing slash should be trimmed', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '/test/', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    let res = await fetch(`${baseURL}/test/`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/test', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    res = await fetch(`${baseURL}/test`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/othertest', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'othertest')
-    })
+    res = await fetch(`${baseURL}/othertest`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'othertest')
 
-    http.get(baseURL + '/othertest/', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'othertest')
-    })
+    res = await fetch(`${baseURL}/othertest/`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'othertest')
+
+    done()
   })
 })
 
-test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
+test('does not trim trailing slash when ignoreTrailingSlash is false', (t, done) => {
   t.plan(7)
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false
   })
 
   findMyWay.on('GET', '/test/', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
@@ -189,37 +164,33 @@ test('does not trim trailing slash when ignoreTrailingSlash is false', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '/test/', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    let res = await fetch(`${baseURL}/test/`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/test', async (res) => {
-      t.equal(res.statusCode, 404)
-    })
+    res = await fetch(`${baseURL}/test`)
+    t.assert.equal(res.status, 404)
+
+    done()
   })
 })
 
-test('does not map // when ignoreTrailingSlash is true', t => {
+test('does not map // when ignoreTrailingSlash is true', (t, done) => {
   t.plan(7)
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false
   })
 
   findMyWay.on('GET', '/', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
@@ -227,44 +198,40 @@ test('does not map // when ignoreTrailingSlash is true', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '/', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    let res = await fetch(`${baseURL}/`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '//', async (res) => {
-      t.equal(res.statusCode, 404)
-    })
+    res = await fetch(`${baseURL}//`)
+    t.assert.equal(res.status, 404)
+
+    done()
   })
 })
 
-test('maps two routes when duplicate slashes should be trimmed', t => {
+test('maps two routes when duplicate slashes should be trimmed', (t, done) => {
   t.plan(21)
   const findMyWay = FindMyWay({
     ignoreDuplicateSlashes: true
   })
 
   findMyWay.on('GET', '//test', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
   findMyWay.on('GET', '/othertest', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('othertest')
   })
 
@@ -272,60 +239,42 @@ test('maps two routes when duplicate slashes should be trimmed', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '//test', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    let res = await fetch(`${baseURL}//test`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/test', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    res = await fetch(`${baseURL}/test`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/othertest', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'othertest')
-    })
+    res = await fetch(`${baseURL}/othertest`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'othertest')
 
-    http.get(baseURL + '//othertest', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'othertest')
-    })
+    res = await fetch(`${baseURL}//othertest`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'othertest')
+
+    done()
   })
 })
 
-test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', t => {
+test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', (t, done) => {
   t.plan(7)
   const findMyWay = FindMyWay({
     ignoreDuplicateSlashes: false
   })
 
   findMyWay.on('GET', '//test', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
@@ -333,37 +282,33 @@ test('does not trim duplicate slashes when ignoreDuplicateSlashes is false', t =
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '//test', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    let res = await fetch(`${baseURL}//test`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '/test', async (res) => {
-      t.equal(res.statusCode, 404)
-    })
+    res = await fetch(`${baseURL}/test`)
+    t.assert.equal(res.status, 404)
+
+    done()
   })
 })
 
-test('does map // when ignoreDuplicateSlashes is true', t => {
+test('does map // when ignoreDuplicateSlashes is true', (t, done) => {
   t.plan(11)
   const findMyWay = FindMyWay({
     ignoreDuplicateSlashes: true
   })
 
   findMyWay.on('GET', '/', (req, res, params) => {
-    t.ok(req)
-    t.ok(res)
-    t.ok(params)
+    t.assert.ok(req)
+    t.assert.ok(res)
+    t.assert.ok(params)
     res.end('test')
   })
 
@@ -371,33 +316,25 @@ test('does map // when ignoreDuplicateSlashes is true', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
     const baseURL = 'http://localhost:' + server.address().port
 
-    http.get(baseURL + '/', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    let res = await fetch(`${baseURL}/`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
 
-    http.get(baseURL + '//', async (res) => {
-      let body = ''
-      for await (const chunk of res) {
-        body += chunk
-      }
-      t.equal(res.statusCode, 200)
-      t.same(body, 'test')
-    })
+    res = await fetch(`${baseURL}//`)
+    t.assert.equal(res.status, 200)
+    t.assert.deepEqual(await res.text(), 'test')
+
+    done()
   })
 })
 
-test('versioned routes', t => {
+test('versioned routes', (t, done) => {
   t.plan(3)
 
   const findMyWay = FindMyWay()
@@ -410,28 +347,22 @@ test('versioned routes', t => {
     findMyWay.lookup(req, res)
   })
 
-  server.listen(0, err => {
-    t.error(err)
+  server.listen(0, async err => {
+    t.assert.ifError(err)
     server.unref()
 
-    http.get(
-      'http://localhost:' + server.address().port + '/test',
-      {
-        headers: { 'Accept-Version': '1.x' }
-      },
-      async (res) => {
-        t.equal(res.statusCode, 200)
-      }
-    )
+    let res = await fetch(`http://localhost:${server.address().port}/test`, {
+      headers: { 'Accept-Version': '1.2.3' }
+    })
 
-    http.get(
-      'http://localhost:' + server.address().port + '/test',
-      {
-        headers: { 'Accept-Version': '2.x' }
-      },
-      async (res) => {
-        t.equal(res.statusCode, 404)
-      }
-    )
+    t.assert.equal(res.status, 200)
+
+    res = await fetch(`http://localhost:${server.address().port}/test`, {
+      headers: { 'Accept-Version': '2.x' }
+    })
+
+    t.assert.equal(res.status, 404)
+
+    done()
   })
 })

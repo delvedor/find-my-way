@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('..')
 const rfdc = require('rfdc')({ proto: true })
 
@@ -43,8 +42,8 @@ test('should derive multiple async constraints', t => {
     },
     null,
     (err, result) => {
-      t.equal(err, null)
-      t.equal(result, 'asyncHandler')
+      t.assert.equal(err, null)
+      t.assert.equal(result, 'asyncHandler')
     }
   )
 })
@@ -65,8 +64,8 @@ test('lookup should return an error from deriveConstraint', t => {
     },
     null,
     (err, result) => {
-      t.same(err, new Error('wrong user-agent'))
-      t.equal(result, undefined)
+      t.assert.deepStrictEqual(err, new Error('wrong user-agent'))
+      t.assert.equal(result, undefined)
     }
   )
 })
@@ -89,8 +88,8 @@ test('should derive sync and async constraints', t => {
     },
     null,
     (err, result) => {
-      t.equal(err, null)
-      t.equal(result, 'asyncHandlerV1')
+      t.assert.equal(err, null)
+      t.assert.equal(result, 'asyncHandlerV1')
     }
   )
 
@@ -105,8 +104,8 @@ test('should derive sync and async constraints', t => {
     },
     null,
     (err, result) => {
-      t.equal(err, null)
-      t.equal(result, 'asyncHandlerV2')
+      t.assert.equal(err, null)
+      t.assert.equal(result, 'asyncHandlerV2')
     }
   )
 })

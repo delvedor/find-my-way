@@ -1,14 +1,13 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 test('Nested static parametric route, url with parameter common prefix > 1', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -28,14 +27,14 @@ test('Nested static parametric route, url with parameter common prefix > 1', t =
     res.end('{"message":"hello world"}')
   })
 
-  t.same(findMyWay.find('DELETE', '/a/bbar').params, { id: 'bbar' })
+  t.assert.deepEqual(findMyWay.find('DELETE', '/a/bbar').params, { id: 'bbar' })
 })
 
 test('Parametric route, url with parameter common prefix > 1', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -55,14 +54,14 @@ test('Parametric route, url with parameter common prefix > 1', t => {
     res.end('{"message":"hello world"}')
   })
 
-  t.same(findMyWay.find('GET', '/aab').params, { id: 'aab' })
+  t.assert.deepEqual(findMyWay.find('GET', '/aab').params, { id: 'aab' })
 })
 
 test('Parametric route, url with multi parameter common prefix > 1', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -82,14 +81,14 @@ test('Parametric route, url with multi parameter common prefix > 1', t => {
     res.end('{"message":"hello world"}')
   })
 
-  t.same(findMyWay.find('GET', '/hello/aab').params, { a: 'hello', b: 'aab' })
+  t.assert.deepEqual(findMyWay.find('GET', '/hello/aab').params, { a: 'hello', b: 'aab' })
 })
 
 test('Mixed routes, url with parameter common prefix > 1', t => {
   t.plan(11)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -133,24 +132,24 @@ test('Mixed routes, url with parameter common prefix > 1', t => {
     res.end('{"winter":"is here"}')
   })
 
-  t.same(findMyWay.find('GET', '/test').params, {})
-  t.same(findMyWay.find('GET', '/testify').params, {})
-  t.same(findMyWay.find('GET', '/test/hello').params, {})
-  t.same(findMyWay.find('GET', '/test/hello/test').params, {})
-  t.same(findMyWay.find('GET', '/te/hello').params, { a: 'hello' })
-  t.same(findMyWay.find('GET', '/te/').params, { a: '' })
-  t.same(findMyWay.find('GET', '/testy').params, { c: 'testy' })
-  t.same(findMyWay.find('GET', '/besty').params, { c: 'besty' })
-  t.same(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
-  t.same(findMyWay.find('GET', '/te/hello/'), null)
-  t.same(findMyWay.find('GET', '/te/hellos/testy'), null)
+  t.assert.deepEqual(findMyWay.find('GET', '/test').params, {})
+  t.assert.deepEqual(findMyWay.find('GET', '/testify').params, {})
+  t.assert.deepEqual(findMyWay.find('GET', '/test/hello').params, {})
+  t.assert.deepEqual(findMyWay.find('GET', '/test/hello/test').params, {})
+  t.assert.deepEqual(findMyWay.find('GET', '/te/hello').params, { a: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/te/').params, { a: '' })
+  t.assert.deepEqual(findMyWay.find('GET', '/testy').params, { c: 'testy' })
+  t.assert.deepEqual(findMyWay.find('GET', '/besty').params, { c: 'besty' })
+  t.assert.deepEqual(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
+  t.assert.deepEqual(findMyWay.find('GET', '/te/hello/'), null)
+  t.assert.deepEqual(findMyWay.find('GET', '/te/hellos/testy'), null)
 })
 
 test('Parent parametric brother should not rewrite child node parametric brother', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -166,14 +165,14 @@ test('Parent parametric brother should not rewrite child node parametric brother
     res.end('{"hello":"world"}')
   })
 
-  t.same(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
+  t.assert.deepEqual(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
 })
 
 test('Mixed parametric routes, with last defined route being static', t => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -200,8 +199,8 @@ test('Mixed parametric routes, with last defined route being static', t => {
     res.end('{"hello":"world"}')
   })
 
-  t.same(findMyWay.find('GET', '/test/hello').params, { a: 'hello' })
-  t.same(findMyWay.find('GET', '/test/hello/world/test').params, { c: 'world' })
-  t.same(findMyWay.find('GET', '/test/hello/world/te').params, { c: 'world', k: 'te' })
-  t.same(findMyWay.find('GET', '/test/hello/world/testy').params, { c: 'world', k: 'testy' })
+  t.assert.deepEqual(findMyWay.find('GET', '/test/hello').params, { a: 'hello' })
+  t.assert.deepEqual(findMyWay.find('GET', '/test/hello/world/test').params, { c: 'world' })
+  t.assert.deepEqual(findMyWay.find('GET', '/test/hello/world/te').params, { c: 'world', k: 'te' })
+  t.assert.deepEqual(findMyWay.find('GET', '/test/hello/world/testy').params, { c: 'world', k: 'testy' })
 })

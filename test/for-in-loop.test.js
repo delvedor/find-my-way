@@ -2,10 +2,12 @@
 
 /* eslint no-extend-native: off */
 
-const t = require('tap')
+const { test } = require('node:test')
 
 // Something could extend the Array prototype
 Array.prototype.test = null
-t.doesNotThrow(() => {
-  require('../')
+test('for-in-loop', t => {
+  t.assert.doesNotThrow(() => {
+    require('../')
+  })
 })

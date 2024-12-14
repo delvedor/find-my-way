@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('..')
 const noop = () => { }
 
@@ -30,11 +29,11 @@ test('A route could support multiple versions (find) / 1', t => {
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, noop)
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, noop)
 
-  t.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=2' }))
-  t.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=3' }))
-  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=4' }))
-  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=5' }))
-  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=6' }))
+  t.assert.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=2' }))
+  t.assert.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=3' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=4' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=5' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=6' }))
 })
 
 test('A route could support multiple versions (find) / 1 (add strategy outside constructor)', t => {
@@ -47,11 +46,11 @@ test('A route could support multiple versions (find) / 1 (add strategy outside c
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, noop)
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, noop)
 
-  t.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=2' }))
-  t.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=3' }))
-  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=4' }))
-  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=5' }))
-  t.notOk(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=6' }))
+  t.assert.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=2' }))
+  t.assert.ok(findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=3' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=4' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=5' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { version: 'application/vnd.example.api+json;version=6' }))
 })
 
 test('Overriding default strategies uses the custom deriveConstraint function', t => {
@@ -60,11 +59,11 @@ test('Overriding default strategies uses the custom deriveConstraint function', 
   const findMyWay = FindMyWay({ constraints: { version: customVersioning } })
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, (req, res, params) => {
-    t.equal(req.headers.accept, 'application/vnd.example.api+json;version=2')
+    t.assert.equal(req.headers.accept, 'application/vnd.example.api+json;version=2')
   })
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, (req, res, params) => {
-    t.equal(req.headers.accept, 'application/vnd.example.api+json;version=3')
+    t.assert.equal(req.headers.accept, 'application/vnd.example.api+json;version=3')
   })
 
   findMyWay.lookup({
@@ -87,11 +86,11 @@ test('Overriding default strategies uses the custom deriveConstraint function (a
   findMyWay.addConstraintStrategy(customVersioning)
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=2' } }, (req, res, params) => {
-    t.equal(req.headers.accept, 'application/vnd.example.api+json;version=2')
+    t.assert.equal(req.headers.accept, 'application/vnd.example.api+json;version=2')
   })
 
   findMyWay.on('GET', '/', { constraints: { version: 'application/vnd.example.api+json;version=3' } }, (req, res, params) => {
-    t.equal(req.headers.accept, 'application/vnd.example.api+json;version=3')
+    t.assert.equal(req.headers.accept, 'application/vnd.example.api+json;version=3')
   })
 
   findMyWay.lookup({
@@ -113,8 +112,8 @@ test('Overriding custom strategies throws as error (add strategy outside constru
 
   findMyWay.addConstraintStrategy(customVersioning)
 
-  t.throws(() => findMyWay.addConstraintStrategy(customVersioning),
-    'There already exists a custom constraint with the name version.'
+  t.assert.throws(() => findMyWay.addConstraintStrategy(customVersioning),
+    new Error('There already exists a custom constraint with the name version.')
   )
 })
 
@@ -125,7 +124,7 @@ test('Overriding default strategies after defining a route with constraint', t =
 
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io', version: '1.0.0' } }, () => {})
 
-  t.throws(() => findMyWay.addConstraintStrategy(customVersioning),
-    'There already exists a route with version constraint.'
+  t.assert.throws(() => findMyWay.addConstraintStrategy(customVersioning),
+    new Error('There already exists a route with version constraint.')
   )
 })

@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const querystring = require('fast-querystring')
 const FindMyWay = require('../')
 
@@ -10,13 +9,13 @@ test('Custom querystring parser', t => {
 
   const findMyWay = FindMyWay({
     querystringParser: function (str) {
-      t.equal(str, 'foo=bar&baz=faz')
+      t.assert.equal(str, 'foo=bar&baz=faz')
       return querystring.parse(str)
     }
   })
   findMyWay.on('GET', '/', () => {})
 
-  t.same(findMyWay.find('GET', '/?foo=bar&baz=faz').searchParams, { foo: 'bar', baz: 'faz' })
+  t.assert.deepEqual(findMyWay.find('GET', '/?foo=bar&baz=faz').searchParams, { foo: 'bar', baz: 'faz' })
 })
 
 test('Custom querystring parser should be called also if there is nothing to parse', t => {
@@ -24,13 +23,13 @@ test('Custom querystring parser should be called also if there is nothing to par
 
   const findMyWay = FindMyWay({
     querystringParser: function (str) {
-      t.equal(str, '')
+      t.assert.equal(str, '')
       return querystring.parse(str)
     }
   })
   findMyWay.on('GET', '/', () => {})
 
-  t.same(findMyWay.find('GET', '/').searchParams, {})
+  t.assert.deepEqual(findMyWay.find('GET', '/').searchParams, {})
 })
 
 test('Querystring without value', t => {
@@ -38,10 +37,10 @@ test('Querystring without value', t => {
 
   const findMyWay = FindMyWay({
     querystringParser: function (str) {
-      t.equal(str, 'foo')
+      t.assert.equal(str, 'foo')
       return querystring.parse(str)
     }
   })
   findMyWay.on('GET', '/', () => {})
-  t.same(findMyWay.find('GET', '/?foo').searchParams, { foo: '' })
+  t.assert.deepEqual(findMyWay.find('GET', '/?foo').searchParams, { foo: '' })
 })

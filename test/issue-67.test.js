@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('../')
 const noop = () => {}
 
@@ -13,7 +12,7 @@ test('static routes', t => {
   findMyWay.on('GET', '/b/bulk', noop)
   findMyWay.on('GET', '/b/ulk', noop)
 
-  t.equal(findMyWay.find('GET', '/bulk'), null)
+  t.assert.equal(findMyWay.find('GET', '/bulk'), null)
 })
 
 test('parametric routes', t => {
@@ -27,11 +26,11 @@ test('parametric routes', t => {
   findMyWay.on('GET', '/foo/search', noop)
   findMyWay.on('GET', '/foo/submit', noop)
 
-  t.equal(findMyWay.find('GET', '/foo/awesome-parameter').handler, foo)
-  t.equal(findMyWay.find('GET', '/foo/b-first-character').handler, foo)
-  t.equal(findMyWay.find('GET', '/foo/s-first-character').handler, foo)
-  t.equal(findMyWay.find('GET', '/foo/se-prefix').handler, foo)
-  t.equal(findMyWay.find('GET', '/foo/sx-prefix').handler, foo)
+  t.assert.equal(findMyWay.find('GET', '/foo/awesome-parameter').handler, foo)
+  t.assert.equal(findMyWay.find('GET', '/foo/b-first-character').handler, foo)
+  t.assert.equal(findMyWay.find('GET', '/foo/s-first-character').handler, foo)
+  t.assert.equal(findMyWay.find('GET', '/foo/se-prefix').handler, foo)
+  t.assert.equal(findMyWay.find('GET', '/foo/sx-prefix').handler, foo)
 })
 
 test('parametric with common prefix', t => {
@@ -40,7 +39,7 @@ test('parametric with common prefix', t => {
 
   findMyWay.on('GET', '/test', noop)
   findMyWay.on('GET', '/:test', (req, res, params) => {
-    t.same(
+    t.assert.deepEqual(
       { test: 'text' },
       params
     )

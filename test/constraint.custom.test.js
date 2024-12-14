@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('..')
 const alpha = () => { }
 const beta = () => { }
@@ -32,9 +31,9 @@ test('A route could support a custom constraint strategy', t => {
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, alpha)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, beta)
 
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget' }).handler, beta)
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'wget' }).handler, beta)
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
 })
 
 test('A route could support a custom constraint strategy (add strategy outside constructor)', t => {
@@ -47,9 +46,9 @@ test('A route could support a custom constraint strategy (add strategy outside c
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, alpha)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, beta)
 
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget' }).handler, beta)
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'wget' }).handler, beta)
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
 })
 
 test('A route could support a custom constraint strategy while versioned', t => {
@@ -62,16 +61,16 @@ test('A route could support a custom constraint strategy while versioned', t => 
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget', version: '2.0.0' } }, gamma)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget', version: '3.0.0' } }, delta)
 
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '2.x' }).handler, gamma)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '3.x' }).handler, delta)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '2.x' }).handler, gamma)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '3.x' }).handler, delta)
 
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
 
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '1.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'wget', version: '1.x' }))
 })
 
 test('A route could support a custom constraint strategy while versioned (add strategy outside constructor)', t => {
@@ -86,16 +85,16 @@ test('A route could support a custom constraint strategy while versioned (add st
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget', version: '2.0.0' } }, gamma)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget', version: '3.0.0' } }, delta)
 
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '2.x' }).handler, gamma)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '3.x' }).handler, delta)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '2.x' }).handler, gamma)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '3.x' }).handler, delta)
 
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
 
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'wget', version: '1.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'wget', version: '1.x' }))
 })
 
 test('A route could support a custom constraint strategy while versioned and host constrained', t => {
@@ -107,16 +106,16 @@ test('A route could support a custom constraint strategy while versioned and hos
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '2.0.0', host: 'fastify.io' } }, beta)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '2.0.0', host: 'example.io' } }, delta)
 
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'fastify.io' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'fastify.io' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'example.io' }).handler, delta)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'fastify.io' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'fastify.io' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'example.io' }).handler, delta)
 
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x', host: 'fastify.io' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'example.io' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x', host: 'fastify.io' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'example.io' }))
 })
 
 test('A route could support a custom constraint strategy while versioned and host constrained (add strategy outside constructor)', t => {
@@ -130,16 +129,16 @@ test('A route could support a custom constraint strategy while versioned and hos
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '2.0.0', host: 'fastify.io' } }, beta)
   findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl', version: '2.0.0', host: 'example.io' } }, delta)
 
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'fastify.io' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'fastify.io' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'example.io' }).handler, delta)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'fastify.io' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'fastify.io' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x', host: 'example.io' }).handler, delta)
 
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x', host: 'fastify.io' }))
-  t.notOk(findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'example.io' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'chrome', version: '1.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '2.x' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '3.x', host: 'fastify.io' }))
+  t.assert.ok(!findMyWay.find('GET', '/', { requestedBy: 'curl', version: '1.x', host: 'example.io' }))
 })
 
 test('Custom constraint strategies can set mustMatchWhenDerived flag to true which prevents matches to unconstrained routes when a constraint is derived and there are no other routes', t => {
@@ -153,11 +152,11 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
       }
     },
     defaultRoute (req, res) {
-      t.pass()
+      t.assert.ok('pass')
     }
   })
 
-  findMyWay.on('GET', '/', {}, () => t.fail())
+  findMyWay.on('GET', '/', {}, () => t.assert.assert.fail())
 
   findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
 })
@@ -167,7 +166,7 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
 
   const findMyWay = FindMyWay({
     defaultRoute (req, res) {
-      t.pass()
+      t.assert.ok('pass')
     }
   })
 
@@ -176,7 +175,7 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
     mustMatchWhenDerived: true
   })
 
-  findMyWay.on('GET', '/', {}, () => t.fail())
+  findMyWay.on('GET', '/', {}, () => t.assert.assert.fail())
 
   findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
 })
@@ -192,13 +191,13 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
       }
     },
     defaultRoute (req, res) {
-      t.pass()
+      t.assert.ok('pass')
     }
   })
 
-  findMyWay.on('GET', '/', {}, () => t.fail())
-  findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, () => t.fail())
-  findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, () => t.fail())
+  findMyWay.on('GET', '/', {}, () => t.assert.assert.fail())
+  findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, () => t.assert.assert.fail())
+  findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, () => t.assert.assert.fail())
 
   findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
 })
@@ -208,7 +207,7 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
 
   const findMyWay = FindMyWay({
     defaultRoute (req, res) {
-      t.pass()
+      t.assert.ok('pass')
     }
   })
 
@@ -217,9 +216,9 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to true whi
     mustMatchWhenDerived: true
   })
 
-  findMyWay.on('GET', '/', {}, () => t.fail())
-  findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, () => t.fail())
-  findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, () => t.fail())
+  findMyWay.on('GET', '/', {}, () => t.assert.assert.fail())
+  findMyWay.on('GET', '/', { constraints: { requestedBy: 'curl' } }, () => t.assert.assert.fail())
+  findMyWay.on('GET', '/', { constraints: { requestedBy: 'wget' } }, () => t.assert.assert.fail())
 
   findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
 })
@@ -235,11 +234,11 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to false wh
       }
     },
     defaultRoute (req, res) {
-      t.fail()
+      t.assert.assert.fail()
     }
   })
 
-  findMyWay.on('GET', '/', {}, () => t.pass())
+  findMyWay.on('GET', '/', {}, () => t.assert.ok('pass'))
 
   findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
 })
@@ -249,7 +248,7 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to false wh
 
   const findMyWay = FindMyWay({
     defaultRoute (req, res) {
-      t.pass()
+      t.assert.ok('pass')
     }
   })
 
@@ -258,7 +257,7 @@ test('Custom constraint strategies can set mustMatchWhenDerived flag to false wh
     mustMatchWhenDerived: true
   })
 
-  findMyWay.on('GET', '/', {}, () => t.pass())
+  findMyWay.on('GET', '/', {}, () => t.assert.ok('pass'))
 
   findMyWay.lookup({ method: 'GET', url: '/', headers: { 'user-agent': 'node' } }, null)
 })
@@ -268,7 +267,7 @@ test('Has constraint strategy method test', t => {
 
   const findMyWay = FindMyWay()
 
-  t.same(findMyWay.hasConstraintStrategy(customHeaderConstraint.name), false)
+  t.assert.deepEqual(findMyWay.hasConstraintStrategy(customHeaderConstraint.name), false)
   findMyWay.addConstraintStrategy(customHeaderConstraint)
-  t.same(findMyWay.hasConstraintStrategy(customHeaderConstraint.name), true)
+  t.assert.deepEqual(findMyWay.hasConstraintStrategy(customHeaderConstraint.name), true)
 })

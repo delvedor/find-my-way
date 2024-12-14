@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('..')
 const alpha = () => { }
 const beta = () => { }
@@ -16,10 +15,10 @@ test('A route supports multiple host constraints', t => {
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, beta)
   findMyWay.on('GET', '/', { constraints: { host: 'example.com' } }, gamma)
 
-  t.equal(findMyWay.find('GET', '/', {}).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { host: 'something-else.io' }).handler, alpha)
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'example.com' }).handler, gamma)
+  t.assert.equal(findMyWay.find('GET', '/', {}).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'something-else.io' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'example.com' }).handler, gamma)
 })
 
 test('A route supports wildcard host constraints', t => {
@@ -30,10 +29,10 @@ test('A route supports wildcard host constraints', t => {
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, beta)
   findMyWay.on('GET', '/', { constraints: { host: /.*\.fastify\.io/ } }, gamma)
 
-  t.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, beta)
-  t.equal(findMyWay.find('GET', '/', { host: 'foo.fastify.io' }).handler, gamma)
-  t.equal(findMyWay.find('GET', '/', { host: 'bar.fastify.io' }).handler, gamma)
-  t.notOk(findMyWay.find('GET', '/', { host: 'example.com' }))
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'fastify.io' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'foo.fastify.io' }).handler, gamma)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'bar.fastify.io' }).handler, gamma)
+  t.assert.ok(!findMyWay.find('GET', '/', { host: 'example.com' }))
 })
 
 test('A route supports multiple host constraints (lookup)', t => {
@@ -43,13 +42,13 @@ test('A route supports multiple host constraints (lookup)', t => {
 
   findMyWay.on('GET', '/', {}, (req, res) => {})
   findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, (req, res) => {
-    t.equal(req.headers.host, 'fastify.io')
+    t.assert.equal(req.headers.host, 'fastify.io')
   })
   findMyWay.on('GET', '/', { constraints: { host: 'example.com' } }, (req, res) => {
-    t.equal(req.headers.host, 'example.com')
+    t.assert.equal(req.headers.host, 'example.com')
   })
   findMyWay.on('GET', '/', { constraints: { host: /.+\.fancy\.ca/ } }, (req, res) => {
-    t.ok(req.headers.host.endsWith('.fancy.ca'))
+    t.assert.ok(req.headers.host.endsWith('.fancy.ca'))
   })
 
   findMyWay.lookup({
@@ -85,7 +84,7 @@ test('A route supports up to 31 host constraints', (t) => {
     findMyWay.on('GET', '/', { constraints: { host } }, alpha)
   }
 
-  t.equal(findMyWay.find('GET', '/', { host: 'h01' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'h01' }).handler, alpha)
 })
 
 test('A route throws when constraint limit exceeded', (t) => {
@@ -98,8 +97,8 @@ test('A route throws when constraint limit exceeded', (t) => {
     findMyWay.on('GET', '/', { constraints: { host } }, alpha)
   }
 
-  t.throws(
+  t.assert.throws(
     () => findMyWay.on('GET', '/', { constraints: { host: 'h31' } }, beta),
-    'find-my-way supports a maximum of 31 route handlers per node when there are constraints, limit reached'
+    new Error('find-my-way supports a maximum of 31 route handlers per node when there are constraints, limit reached')
   )
 })

@@ -1,22 +1,21 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('../')
 
 test('Test route with optional parameter', (t) => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/a/:param/b/:optional?', (req, res, params) => {
     if (params.optional) {
-      t.equal(params.optional, 'foo')
+      t.assert.equal(params.optional, 'foo')
     } else {
-      t.equal(params.optional, undefined)
+      t.assert.equal(params.optional, undefined)
     }
   })
 
@@ -28,7 +27,7 @@ test('Test for duplicate route with optional param', (t) => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
@@ -36,9 +35,9 @@ test('Test for duplicate route with optional param', (t) => {
 
   try {
     findMyWay.on('GET', '/foo', (req, res, params) => {})
-    t.fail('method is already declared for route with optional param')
+    t.assert.fail('method is already declared for route with optional param')
   } catch (e) {
-    t.equal(e.message, 'Method \'GET\' already declared for route \'/foo\' with constraints \'{}\'')
+    t.assert.equal(e.message, 'Method \'GET\' already declared for route \'/foo\' with constraints \'{}\'')
   }
 })
 
@@ -46,15 +45,15 @@ test('Test for param with ? not at the end', (t) => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   try {
     findMyWay.on('GET', '/foo/:bar?/baz', (req, res, params) => {})
-    t.fail('Optional Param in the middle of the path is not allowed')
+    t.assert.fail('Optional Param in the middle of the path is not allowed')
   } catch (e) {
-    t.equal(e.message, 'Optional Parameter needs to be the last parameter of the path')
+    t.assert.equal(e.message, 'Optional Parameter needs to be the last parameter of the path')
   }
 })
 
@@ -62,14 +61,14 @@ test('Multi parametric route with optional param', (t) => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/a/:p1-:p2?', (req, res, params) => {
     if (params.p1 && params.p2) {
-      t.equal(params.p1, 'foo-bar')
-      t.equal(params.p2, 'baz')
+      t.assert.equal(params.p1, 'foo-bar')
+      t.assert.equal(params.p2, 'baz')
     }
   })
 
@@ -82,15 +81,15 @@ test('Optional Parameter with ignoreTrailingSlash = true', (t) => {
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: true,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
     if (params.optional) {
-      t.equal(params.optional, 'foo')
+      t.assert.equal(params.optional, 'foo')
     } else {
-      t.equal(params.optional, undefined)
+      t.assert.equal(params.optional, undefined)
     }
   })
 
@@ -105,17 +104,17 @@ test('Optional Parameter with ignoreTrailingSlash = false', (t) => {
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false,
     defaultRoute: (req, res) => {
-      t.match(req.url, '/test/hello/foo/')
+      t.assert.equal(req.url, '/test/hello/foo/')
     }
   })
 
   findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
     if (req.url === '/test/hello/') {
-      t.same(params, { optional: '' })
+      t.assert.deepEqual(params, { optional: '' })
     } else if (req.url === '/test/hello') {
-      t.same(params, {})
+      t.assert.deepEqual(params, {})
     } else if (req.url === '/test/hello/foo') {
-      t.same(params, { optional: 'foo' })
+      t.assert.deepEqual(params, { optional: 'foo' })
     }
   })
 
@@ -130,15 +129,15 @@ test('Optional Parameter with ignoreDuplicateSlashes = true', (t) => {
   const findMyWay = FindMyWay({
     ignoreDuplicateSlashes: true,
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
     if (params.optional) {
-      t.equal(params.optional, 'foo')
+      t.assert.equal(params.optional, 'foo')
     } else {
-      t.equal(params.optional, undefined)
+      t.assert.equal(params.optional, undefined)
     }
   })
 
@@ -154,20 +153,20 @@ test('Optional Parameter with ignoreDuplicateSlashes = false', (t) => {
     ignoreDuplicateSlashes: false,
     defaultRoute: (req, res) => {
       if (req.url === '/test//hello') {
-        t.same(req.params, undefined)
+        t.assert.deepEqual(req.params, undefined)
       } else if (req.url === '/test//hello/foo') {
-        t.same(req.params, undefined)
+        t.assert.deepEqual(req.params, undefined)
       }
     }
   })
 
   findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
     if (req.url === '/test/hello/') {
-      t.same(params, { optional: '' })
+      t.assert.deepEqual(params, { optional: '' })
     } else if (req.url === '/test/hello') {
-      t.same(params, {})
+      t.assert.deepEqual(params, {})
     } else if (req.url === '/test/hello/foo') {
-      t.same(params, { optional: 'foo' })
+      t.assert.deepEqual(params, { optional: 'foo' })
     }
   })
 
@@ -181,34 +180,34 @@ test('deregister a route with optional param', (t) => {
   t.plan(4)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/a/:param/b/:optional?', (req, res, params) => {})
 
-  t.ok(findMyWay.find('GET', '/a/:param/b'))
-  t.ok(findMyWay.find('GET', '/a/:param/b/:optional'))
+  t.assert.ok(findMyWay.find('GET', '/a/:param/b'))
+  t.assert.ok(findMyWay.find('GET', '/a/:param/b/:optional'))
 
   findMyWay.off('GET', '/a/:param/b/:optional?')
 
-  t.notOk(findMyWay.find('GET', '/a/:param/b'))
-  t.notOk(findMyWay.find('GET', '/a/:param/b/:optional'))
+  t.assert.ok(!findMyWay.find('GET', '/a/:param/b'))
+  t.assert.ok(!findMyWay.find('GET', '/a/:param/b/:optional'))
 })
 
 test('optional parameter on root', (t) => {
   t.plan(2)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.fail('Should not be defaultRoute')
+      t.assert.fail('Should not be defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/:optional?', (req, res, params) => {
     if (params.optional) {
-      t.equal(params.optional, 'foo')
+      t.assert.equal(params.optional, 'foo')
     } else {
-      t.equal(params.optional, undefined)
+      t.assert.equal(params.optional, undefined)
     }
   })
 

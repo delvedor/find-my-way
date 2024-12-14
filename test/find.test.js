@@ -1,7 +1,6 @@
 'use strict'
 
-const t = require('tap')
-const test = t.test
+const { test } = require('node:test')
 const FindMyWay = require('..')
 
 test('find calls can pass no constraints', t => {
@@ -11,7 +10,7 @@ test('find calls can pass no constraints', t => {
   findMyWay.on('GET', '/a', () => {})
   findMyWay.on('GET', '/a/b', () => {})
 
-  t.ok(findMyWay.find('GET', '/a'))
-  t.ok(findMyWay.find('GET', '/a/b'))
-  t.notOk(findMyWay.find('GET', '/a/b/c'))
+  t.assert.ok(findMyWay.find('GET', '/a'))
+  t.assert.ok(findMyWay.find('GET', '/a/b'))
+  t.assert.ok(!findMyWay.find('GET', '/a/b/c'))
 })
