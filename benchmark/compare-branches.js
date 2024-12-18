@@ -47,14 +47,13 @@ async function executeCommandOnBranch (command, branch) {
 function parseBenchmarksStdout (text) {
   const results = []
 
-  const lines = text.split('\n')
-  for (const line of lines) {
+  for (const line of text.split('\n')) {
     const match = /^(.+?)(\.*) x (.+) ops\/sec .*$/.exec(line)
     if (match !== null) {
       results.push({
         name: match[1],
         alignedName: match[1] + match[2],
-        result: parseInt(match[3].split(',').join(''))
+        result: parseInt(match[3].replaceAll(',', ''))
       })
     }
   }
