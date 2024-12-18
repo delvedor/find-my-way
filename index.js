@@ -79,7 +79,7 @@ function Router (opts) {
     assert(typeof opts.querystringParser === 'function', 'querystringParser must be a function')
     this.querystringParser = opts.querystringParser
   } else {
-    this.querystringParser = (query) => query === '' ? {} : querystring.parse(query)
+    this.querystringParser = (query) => query.length === 0 ? {} : querystring.parse(query)
   }
 
   this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive
@@ -792,15 +792,15 @@ function getClosingParenthensePosition (path, idx) {
   while (idx < path.length) {
     idx++
 
-    // ignore skipped chars
-    if (path[idx] === '\\') {
+    // ignore skipped chars "\"
+    if (path.charCodeAt(idx) === 92) {
       idx++
       continue
     }
 
-    if (path[idx] === ')') {
+    if (path.charCodeAt(idx) === 41) {
       parentheses--
-    } else if (path[idx] === '(') {
+    } else if (path.charCodeAt(idx) === 40) {
       parentheses++
     }
 
