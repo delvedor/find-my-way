@@ -71,6 +71,8 @@ declare namespace Router {
     deriveConstraint<Context>(req: Req<V>, ctx?: Context) : T,
   }
 
+  type QuerystringParser = (s: string) => unknown;
+
   interface Config<V extends HTTPVersion> {
     ignoreTrailingSlash?: boolean;
 
@@ -81,6 +83,8 @@ declare namespace Router {
     caseSensitive?: boolean;
 
     maxParamLength?: number;
+
+    querystringParser?: QuerystringParser;
 
     defaultRoute?(
       req: Req<V>,
