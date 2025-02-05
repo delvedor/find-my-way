@@ -17,6 +17,7 @@ let http2Res!: Http2ServerResponse;
     allowUnsafeRegex: false,
     caseSensitive: false,
     maxParamLength: 42,
+    querystringParser: (queryString) => {},
     defaultRoute (http1Req, http1Res) {},
     onBadUrl (path, http1Req, http1Res) {},
     constraints: {
@@ -92,6 +93,7 @@ let http2Res!: Http2ServerResponse;
     allowUnsafeRegex: false,
     caseSensitive: false,
     maxParamLength: 42,
+    querystringParser: (queryString) => {},
     defaultRoute (http1Req, http1Res) {},
     onBadUrl (path, http1Req, http1Res) {},
     constraints
