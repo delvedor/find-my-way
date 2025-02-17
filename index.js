@@ -769,7 +769,7 @@ function escapeRegExp (string) {
 }
 
 function removeDuplicateSlashes (path) {
-  return path.includes('//') ? path.replace(REMOVE_DUPLICATE_SLASHES_REGEXP, '/') : path
+  return path.indexOf('//') !== -1 ? path.replace(REMOVE_DUPLICATE_SLASHES_REGEXP, '/') : path
 }
 
 function trimLastSlash (path) {
