@@ -12,7 +12,7 @@ let done!: (err: Error | null, result: any) => void;
 
 // HTTP1
 {
-  let handler: Router.Handler<Router.HTTPVersion.V1>
+  let handler!: Router.Handler<Router.HTTPVersion.V1>
   const router = Router({
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
@@ -90,7 +90,7 @@ let done!: (err: Error | null, result: any) => void;
     }
   }
 
-  let handler: Router.Handler<Router.HTTPVersion.V2>
+  let handler!: Router.Handler<Router.HTTPVersion.V2>
   const router = Router<Router.HTTPVersion.V2>({
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
@@ -133,7 +133,7 @@ let done!: (err: Error | null, result: any) => void;
 
 // Custom Constraint
 {
-  let handler: Router.Handler<Router.HTTPVersion.V1>
+  let handler!: Router.Handler<Router.HTTPVersion.V1>
 
   interface AcceptAndContentType { accept?: string, contentType?: string }
 
