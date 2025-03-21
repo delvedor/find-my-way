@@ -58,6 +58,8 @@ declare namespace Router {
     searchParams: { [k: string]: string }
   ) => any;
 
+  type Done = (err: Error | null, result: any) => void;
+
   interface ConstraintStrategy<V extends HTTPVersion, T = string> {
     name: string,
     mustMatchWhenDerived?: boolean,
@@ -160,7 +162,8 @@ declare namespace Router {
     lookup<Context>(
       req: Req<V>,
       res: Res<V>,
-      ctx?: Context
+      ctx?: Context | Done,
+      done?: Done
     ): any;
 
     find(
