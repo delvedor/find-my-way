@@ -25,7 +25,7 @@
     "speed"
   ],
   "engines": {
-    "node": ">=14"
+    "node": ">=20"
   },
   "author": "Tomas Della Vedova - @delvedor (http://delved.org)",
   "license": "MIT",
