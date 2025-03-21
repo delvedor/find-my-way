@@ -38,6 +38,8 @@ const { safeDecodeURI, safeDecodeURIComponent } = require('./lib/url-sanitizer')
 
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 const OPTIONAL_PARAM_REGEXP = /(\/:[^/()]*?)\?(\/?)/
+const ESCAPE_REGEXP = /[.*+?^${}()|[\]\\]/g
+const REMOVE_DUPLICATE_SLASHES_REGEXP = /\/\/+/g
 
 if (!isRegexSafe(FULL_PATH_REGEXP)) {
   throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
@@ -45,6 +47,14 @@ if (!isRegexSafe(FULL_PATH_REGEXP)) {
 
 if (!isRegexSafe(OPTIONAL_PARAM_REGEXP)) {
   throw new Error('the OPTIONAL_PARAM_REGEXP is not safe, update this module')
+}
+
+if (!isRegexSafe(ESCAPE_REGEXP)) {
+  throw new Error('the ESCAPE_REGEXP is not safe, update this module')
+}
+
+if (!isRegexSafe(REMOVE_DUPLICATE_SLASHES_REGEXP)) {
+  throw new Error('the REMOVE_DUPLICATE_SLASHES_REGEXP is not safe, update this module')
 }
 
 function Router (opts) {
@@ -755,11 +765,11 @@ Router.prototype.all = function (path, handler, store) {
 module.exports = Router
 
 function escapeRegExp (string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return string.replace(ESCAPE_REGEXP, '\\$&')
 }
 
 function removeDuplicateSlashes (path) {
-  return path.replace(/\/\/+/g, '/')
+  return path.indexOf('//') !== -1 ? path.replace(REMOVE_DUPLICATE_SLASHES_REGEXP, '/') : path
 }
 
 function trimLastSlash (path) {
