@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/delvedor/find-my-way#readme",
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^24.0.8",
     "benchmark": "^2.1.4",
     "borp": "^0.20.0",
     "chalk": "^5.4.1",
