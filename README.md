@@ -28,6 +28,7 @@ Do you need a real-world example that uses this router? Check out [Fastify](http
   - [hasRoute (method, path, [constraints])](#hasroute-method-path-constraints)
   - [lookup(request, response, [context], [done])](#lookuprequest-response-context-done)
   - [find(method, path, [constraints])](#findmethod-path-constraints)
+  - [sanitizeUrlPath(url, [useSemicolonDelimiter])](#sanitizeurlpathurl-usesemicolondelimiter)
   - [prettyPrint([{ method: 'GET', commonPrefix: false, includeMeta: true || [] }])](#prettyprint-commonprefix-false-includemeta-true---)
   - [reset()](#reset)
   - [routes](#routes)
@@ -488,6 +489,27 @@ router.find('GET', '/example', { host: 'fastify.io', version: '1.x' })
 // => { handler: Function, params: Object, store: Object}
 // => null
 ```
+
+#### sanitizeUrlPath(url, [useSemicolonDelimiter])
+Sanitize and decode a URL path using the same logic that `lookup` uses internally.
+
+```js
+const FindMyWay = require('find-my-way')
+
+const url = '/foo%20bar?foo=bar'
+const path = FindMyWay.sanitizeUrlPath(url)
+
+console.log(path) // '/foo bar'
+```
+
+If you need to support `;` as a query string delimiter (for example `/foo;bar=1`), pass `useSemicolonDelimiter: true`:
+
+```js
+const path = FindMyWay.sanitizeUrlPath('/foo;bar=1', true)
+console.log(path) // '/foo'
+```
+
+This function will throw an error if the URL is malformed.
 
 <a name="pretty-print"></a>
 #### prettyPrint([{ commonPrefix: false, includeMeta: true || [] }])

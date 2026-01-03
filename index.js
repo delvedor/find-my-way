@@ -762,6 +762,14 @@ Router.prototype.all = function (path, handler, store) {
   this.on(httpMethods, path, handler, store)
 }
 
+Router.sanitizeUrlPath = function sanitizeUrlPath (url, useSemicolonDelimiter) {
+  const decoded = safeDecodeURI(url, useSemicolonDelimiter)
+  if (decoded.shouldDecodeParam) {
+    return safeDecodeURIComponent(decoded.path)
+  }
+  return decoded.path
+}
+
 module.exports = Router
 
 function escapeRegExp (string) {
