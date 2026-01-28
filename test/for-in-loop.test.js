@@ -11,3 +11,12 @@ test('for-in-loop', t => {
     require('../')
   })
 })
+
+test('ignore inherited constraint keys', t => {
+  const findMyWay = require('../')()
+  const constraints = Object.create({ tap: true })
+
+  t.assert.doesNotThrow(() => {
+    findMyWay.on('GET', '/test', { constraints }, () => {})
+  })
+})
