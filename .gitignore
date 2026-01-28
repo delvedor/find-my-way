@@ -45,3 +45,10 @@ jspm_packages
 package-lock.json
 
 .tap
+
+# AI agent metadata
+.pi
+.agent
+.agents
+CLAUDE.md
+AGENTS.md
