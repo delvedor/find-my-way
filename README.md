@@ -29,6 +29,8 @@ Do you need a real-world example that uses this router? Check out [Fastify](http
   - [lookup(request, response, [context], [done])](#lookuprequest-response-context-done)
   - [find(method, path, [constraints])](#findmethod-path-constraints)
   - [sanitizeUrlPath(url, [useSemicolonDelimiter])](#sanitizeurlpathurl-usesemicolondelimiter)
+  - [removeDuplicateSlashes(path)](#removeduplicateslashespath)
+  - [trimLastSlash(path)](#trimlastslashpath)
   - [prettyPrint([{ method: 'GET', commonPrefix: false, includeMeta: true || [] }])](#prettyprint-commonprefix-false-includemeta-true---)
   - [reset()](#reset)
   - [routes](#routes)
@@ -510,6 +512,34 @@ console.log(path) // '/foo'
 ```
 
 This function will throw an error if the URL is malformed.
+
+#### removeDuplicateSlashes(path)
+Collapse consecutive `/` characters in a path into a single slash.
+This is the same normalization used internally when `ignoreDuplicateSlashes` is enabled.
+
+```js
+const FindMyWay = require('find-my-way')
+
+FindMyWay.removeDuplicateSlashes('//a//b///c')
+// => '/a/b/c'
+```
+
+#### trimLastSlash(path)
+Remove one trailing slash from a path, except for the root path `/`.
+This is the same normalization used internally when `ignoreTrailingSlash` is enabled.
+
+```js
+const FindMyWay = require('find-my-way')
+
+FindMyWay.trimLastSlash('/a/b/')
+// => '/a/b'
+
+FindMyWay.trimLastSlash('/')
+// => '/'
+```
+
+When both normalizations are needed, apply them in the same order used by the router:
+`removeDuplicateSlashes` first, then `trimLastSlash`.
 
 <a name="pretty-print"></a>
 #### prettyPrint([{ commonPrefix: false, includeMeta: true || [] }])
