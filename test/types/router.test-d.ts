@@ -10,6 +10,11 @@ let http2Res!: Http2ServerResponse;
 let ctx!: { req: IncomingMessage; res: ServerResponse };
 let done!: (err: Error | null, result: any) => void;
 
+expectType<string>(Router.sanitizeUrlPath('/hello/%20world?foo=bar'))
+expectType<string>(Router.sanitizeUrlPath('/hello/%23world;foo=bar', true))
+expectType<string>(Router.removeDuplicateSlashes('//hello///world'))
+expectType<string>(Router.trimLastSlash('/hello/'))
+
 // HTTP1
 {
   let handler!: Router.Handler<Router.HTTPVersion.V1>

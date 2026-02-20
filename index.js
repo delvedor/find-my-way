@@ -770,6 +770,9 @@ Router.sanitizeUrlPath = function sanitizeUrlPath (url, useSemicolonDelimiter) {
   return decoded.path
 }
 
+Router.removeDuplicateSlashes = removeDuplicateSlashes
+Router.trimLastSlash = trimLastSlash
+
 module.exports = Router
 
 function escapeRegExp (string) {

@@ -75,6 +75,10 @@ declare namespace Router {
 
   type QuerystringParser = (s: string) => unknown;
 
+  function sanitizeUrlPath(url: string, useSemicolonDelimiter?: boolean): string;
+  function removeDuplicateSlashes(path: string): string;
+  function trimLastSlash(path: string): string;
+
   interface Config<V extends HTTPVersion> {
     ignoreTrailingSlash?: boolean;
 
