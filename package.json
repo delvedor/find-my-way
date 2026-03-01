@@ -36,7 +36,7 @@
   "devDependencies": {
     "@types/node": "^25.0.3",
     "benchmark": "^2.1.4",
-    "borp": "^0.21.0",
+    "borp": "^1.0.0",
     "chalk": "^5.4.1",
     "inquirer": "^13.1.0",
     "pre-commit": "^1.2.2",
