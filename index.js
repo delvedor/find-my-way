@@ -172,7 +172,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   if (pattern === '*' && this.trees[method].prefix.length !== 0) {
     const currentRoot = this.trees[method]
     this.trees[method] = new StaticNode('')
-    this.trees[method].staticChildren['/'] = currentRoot
+    this.trees[method].staticChildren.set(47, currentRoot)
   }
 
   let currentNode = this.trees[method]
