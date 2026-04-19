@@ -378,7 +378,7 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
             regexps.push(trimRegExpStartAndEnd(regexString))
 
             j = endOfRegexIndex + 1
-            isParamSafe = false
+            isParamSafe = true
           } else {
             regexps.push(isParamSafe ? '(.*?)' : `(${backtrack}|(?:(?!${backtrack}).)*)`)
             isParamSafe = false
