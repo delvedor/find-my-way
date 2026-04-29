@@ -487,7 +487,7 @@ Router.prototype.off = function off (method, path, constraints) {
     assert(path.length === optionalParamMatch.index + optionalParamMatch[0].length, 'Optional Parameter needs to be the last parameter of the path')
 
     const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
-    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
+    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2') || '/'
 
     this.off(method, pathFull, constraints)
     this.off(method, pathOptional, constraints)
