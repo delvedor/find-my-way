@@ -611,6 +611,17 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   const brothersNodesStack = []
   let maxParamLengthExceeded = false
 
+  const backtrack = () => {
+    if (brothersNodesStack.length === 0) {
+      return null
+    }
+
+    const brotherNodeState = brothersNodesStack.pop()
+    pathIndex = brotherNodeState.brotherPathIndex
+    params.splice(brotherNodeState.paramsCount)
+    return brotherNodeState.brotherNode
+  }
+
   while (true) {
     if (pathIndex === pathLen && currentNode.isLeafNode) {
       const handle = currentNode.handlerStorage.getMatchingHandler(derivedConstraints)
@@ -627,84 +638,101 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     let node = currentNode.getNextNode(path, pathIndex, brothersNodesStack, params.length)
 
     if (node === null) {
-      if (brothersNodesStack.length === 0) {
+      node = backtrack()
+      if (node === null) {
         if (maxParamLengthExceeded && this.onMaxParamLength) {
           return this._onMaxParamLength(originPath)
         }
         return null
       }
-
-      const brotherNodeState = brothersNodesStack.pop()
-      pathIndex = brotherNodeState.brotherPathIndex
-      params.splice(brotherNodeState.paramsCount)
-      node = brotherNodeState.brotherNode
     }
 
     currentNode = node
 
-    // static route
-    if (currentNode.kind === NODE_TYPES.STATIC) {
-      pathIndex += currentNode.prefix.length
-      continue
-    }
+    while (true) {
+      // static route
+      if (currentNode.kind === NODE_TYPES.STATIC) {
+        pathIndex += currentNode.prefix.length
+        break
+      }
 
-    if (currentNode.kind === NODE_TYPES.WILDCARD) {
-      let param = originPath.slice(pathIndex)
+      if (currentNode.kind === NODE_TYPES.WILDCARD) {
+        let param = originPath.slice(pathIndex)
+        if (shouldDecodeParam) {
+          param = safeDecodeURIComponent(param)
+        }
+
+        params.push(param)
+        pathIndex = pathLen
+        break
+      }
+
+      // parametric node
+      let paramEndIndex = originPath.indexOf('/', pathIndex)
+      if (paramEndIndex === -1) {
+        paramEndIndex = pathLen
+      }
+
+      let param = originPath.slice(pathIndex, paramEndIndex)
       if (shouldDecodeParam) {
         param = safeDecodeURIComponent(param)
       }
 
-      params.push(param)
-      pathIndex = pathLen
-      continue
-    }
-
-    // parametric node
-    let paramEndIndex = originPath.indexOf('/', pathIndex)
-    if (paramEndIndex === -1) {
-      paramEndIndex = pathLen
-    }
-
-    let param = originPath.slice(pathIndex, paramEndIndex)
-    if (shouldDecodeParam) {
-      param = safeDecodeURIComponent(param)
-    }
-
-    if (currentNode.isRegex) {
-      const matchedParameters = currentNode.regex.exec(param)
-      if (matchedParameters === null) {
-        node = null
-        continue
-      }
-
-      let regexMaxParamLengthExceeded = false
-      for (let i = 1; i < matchedParameters.length; i++) {
-        const matchedParam = matchedParameters[i]
-        if (matchedParam.length > maxParamLength) {
-          regexMaxParamLengthExceeded = true
-          break
+      if (currentNode.isRegex) {
+        const matchedParameters = currentNode.regex.exec(param)
+        if (matchedParameters === null) {
+          currentNode = backtrack()
+          if (currentNode === null) {
+            if (maxParamLengthExceeded && this.onMaxParamLength) {
+              return this._onMaxParamLength(originPath)
+            }
+            return null
+          }
+          continue
         }
+
+        let regexMaxParamLengthExceeded = false
+        for (let i = 1; i < matchedParameters.length; i++) {
+          const matchedParam = matchedParameters[i]
+          if (matchedParam.length > maxParamLength) {
+            regexMaxParamLengthExceeded = true
+            break
+          }
+        }
+
+        if (regexMaxParamLengthExceeded) {
+          maxParamLengthExceeded = true
+          currentNode = backtrack()
+          if (currentNode === null) {
+            if (this.onMaxParamLength) {
+              return this._onMaxParamLength(originPath)
+            }
+            return null
+          }
+          continue
+        }
+
+        for (let i = 1; i < matchedParameters.length; i++) {
+          params.push(matchedParameters[i])
+        }
+      } else {
+        if (param.length > maxParamLength) {
+          maxParamLengthExceeded = true
+          currentNode = backtrack()
+          if (currentNode === null) {
+            if (this.onMaxParamLength) {
+              return this._onMaxParamLength(originPath)
+            }
+            return null
+          }
+          continue
+        }
+        params.push(param)
       }
 
-      if (regexMaxParamLengthExceeded) {
-        maxParamLengthExceeded = true
-        node = null
-        continue
-      }
-
-      for (let i = 1; i < matchedParameters.length; i++) {
-        params.push(matchedParameters[i])
-      }
-    } else {
-      if (param.length > maxParamLength) {
-        maxParamLengthExceeded = true
-        node = null
-        continue
-      }
-      params.push(param)
+      pathIndex = paramEndIndex
+      break
     }
-
-    pathIndex = paramEndIndex
   }
 }
 
