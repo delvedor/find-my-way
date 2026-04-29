@@ -609,17 +609,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
   const brothersNodesStack = []
 
-  const backtrack = () => {
-    if (brothersNodesStack.length === 0) {
-      return null
-    }
-
-    const brotherNodeState = brothersNodesStack.pop()
-    pathIndex = brotherNodeState.brotherPathIndex
-    params.splice(brotherNodeState.paramsCount)
-    return brotherNodeState.brotherNode
-  }
-
   while (true) {
     if (pathIndex === pathLen && currentNode.isLeafNode) {
       const handle = currentNode.handlerStorage.getMatchingHandler(derivedConstraints)
@@ -636,10 +625,14 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     let node = currentNode.getNextNode(path, pathIndex, brothersNodesStack, params.length)
 
     if (node === null) {
-      node = backtrack()
-      if (node === null) {
+      if (brothersNodesStack.length === 0) {
         return null
       }
+
+      const brotherNodeState = brothersNodesStack.pop()
+      pathIndex = brotherNodeState.brotherPathIndex
+      params.splice(brotherNodeState.paramsCount)
+      node = brotherNodeState.brotherNode
     }
 
     currentNode = node
@@ -676,10 +669,14 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       if (currentNode.isRegex) {
         const matchedParameters = currentNode.regex.exec(param)
         if (matchedParameters === null) {
-          currentNode = backtrack()
-          if (currentNode === null) {
+          if (brothersNodesStack.length === 0) {
             return null
           }
+
+          const brotherNodeState = brothersNodesStack.pop()
+          pathIndex = brotherNodeState.brotherPathIndex
+          params.splice(brotherNodeState.paramsCount)
+          currentNode = brotherNodeState.brotherNode
           continue
         }
 
