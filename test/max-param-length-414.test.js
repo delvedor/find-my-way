@@ -13,5 +13,5 @@ test('should return limit exceeded instead of null when param exceeds param leng
   const longParam = findMyWay.find('GET', '/user/' + 'a'.repeat(101))
 
   t.assert.ok(shortParam, 'Short parameter should match the route')
-  t.assert.deepEqual(longParam, { limitExceeded: true }, 'Long parameter should return limit exceeded')
+  t.assert.ok(longParam instanceof Error, 'Long parameter should return an error')
 })

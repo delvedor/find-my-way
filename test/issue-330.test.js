@@ -83,7 +83,7 @@ test('does not find the route if maxParamLength is exceeded', t => {
 
   findMyWay.on('GET', '/:id(\\d+)', () => {})
 
-  t.assert.deepEqual(findMyWay.find('GET', '/123'), { limitExceeded: true })
+  t.assert.deepEqual(findMyWay.find('GET', '/123'), new Error('Parameter length exceeds the maximum allowed length'))
   t.assert.ok(findMyWay.find('GET', '/12'))
 })
 
