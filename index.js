@@ -672,13 +672,13 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       for (let i = 1; i < matchedParameters.length; i++) {
         const matchedParam = matchedParameters[i]
         if (matchedParam.length > maxParamLength) {
-          return null
+          return new Error('Parameter length exceeds the maximum allowed length')
         }
         params.push(matchedParam)
       }
     } else {
       if (param.length > maxParamLength) {
-        return null
+        return new Error('Parameter length exceeds the maximum allowed length')
       }
       params.push(param)
     }
