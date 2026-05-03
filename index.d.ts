@@ -103,6 +103,12 @@ declare namespace Router {
       res: Res<V>
     ): void;
 
+    onMaxParamLength?(
+      path: string,
+      req: Req<V>,
+      res: Res<V>
+    ): void;
+
     constraints? : {
       [key: string]: ConstraintStrategy<V>
     }

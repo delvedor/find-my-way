@@ -96,6 +96,7 @@ function Router (opts) {
   this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false
   this.ignoreDuplicateSlashes = opts.ignoreDuplicateSlashes || false
   this.maxParamLength = opts.maxParamLength || 100
+  this.onMaxParamLength = opts.onMaxParamLength || null
   this.allowUnsafeRegex = opts.allowUnsafeRegex || false
   this.constrainer = new Constrainer(opts.constraints)
   this.useSemicolonDelimiter = opts.useSemicolonDelimiter || false
@@ -608,6 +609,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   const pathLen = path.length
 
   const brothersNodesStack = []
+  let maxParamLengthExceeded = false
 
   while (true) {
     if (pathIndex === pathLen && currentNode.isLeafNode) {
@@ -626,6 +628,9 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     if (node === null) {
       if (brothersNodesStack.length === 0) {
+        if (maxParamLengthExceeded && this.onMaxParamLength) {
+          return this._onMaxParamLength(originPath)
+        }
         return null
       }
 
@@ -667,18 +672,34 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     if (currentNode.isRegex) {
       const matchedParameters = currentNode.regex.exec(param)
-      if (matchedParameters === null) continue
+      if (matchedParameters === null) {
+        node = null
+        continue
+      }
 
+      let regexMaxParamLengthExceeded = false
       for (let i = 1; i < matchedParameters.length; i++) {
         const matchedParam = matchedParameters[i]
         if (matchedParam.length > maxParamLength) {
-          return null
+          regexMaxParamLengthExceeded = true
+          break
         }
-        params.push(matchedParam)
+      }
+
+      if (regexMaxParamLengthExceeded) {
+        maxParamLengthExceeded = true
+        node = null
+        continue
+      }
+
+      for (let i = 1; i < matchedParameters.length; i++) {
+        params.push(matchedParameters[i])
       }
     } else {
       if (param.length > maxParamLength) {
-        return null
+        maxParamLengthExceeded = true
+        node = null
+        continue
       }
       params.push(param)
     }
@@ -714,6 +735,18 @@ Router.prototype._onBadUrl = function (path) {
   const onBadUrl = this.onBadUrl
   return {
     handler: (req, res, ctx) => onBadUrl(path, req, res),
+    params: {},
+    store: null
+  }
+}
+
+Router.prototype._onMaxParamLength = function (path) {
+  if (this.onMaxParamLength === null) {
+    return null
+  }
+  const onMaxParamLength = this.onMaxParamLength
+  return {
+    handler: (req, res, ctx) => onMaxParamLength(path, req, res),
     params: {},
     store: null
   }
