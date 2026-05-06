@@ -126,6 +126,16 @@ const router = require('find-my-way')({
 })
 ```
 
+If you want to handle the case where the `maxParamLength` is exceeded, you can provide a custom `onMaxParamLength` handler. This handler will be invoked if no other route (e.g. a wildcard) matches the path.
+```js
+const router = require('find-my-way')({
+  onMaxParamLength: function (path, req, res) {
+    res.statusCode = 414
+    res.end('URI Too Long')
+  }
+})
+```
+
 If you are using a regex based route, `find-my-way` will throw an error if detects potentially catastrophic exponential-time regular expressions *(internally uses [`safe-regex2`](https://github.com/fastify/safe-regex2))*.<br/>
 If you want to disable this behavior, pass the option `allowUnsafeRegex`.
 ```js

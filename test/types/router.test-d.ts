@@ -27,6 +27,7 @@ expectType<string>(Router.trimLastSlash('/hello/'))
     querystringParser: (queryString) => {},
     defaultRoute (http1Req, http1Res) {},
     onBadUrl (path, http1Req, http1Res) {},
+    onMaxParamLength (path, http1Req, http1Res) {},
     constraints: {
       foo: {
         name: 'foo',
