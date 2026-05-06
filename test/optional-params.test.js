@@ -214,3 +214,18 @@ test('optional parameter on root', (t) => {
   findMyWay.lookup({ method: 'GET', url: '/', headers: {} }, null)
   findMyWay.lookup({ method: 'GET', url: '/foo', headers: {} }, null)
 })
+
+test('off should remove root optional param route', (t) => {
+  const findMyWay = FindMyWay()
+  const noop = () => {}
+
+  findMyWay.on('GET', '/:id?', noop)
+
+  t.assert.notEqual(findMyWay.find('GET', '/'), null)
+  t.assert.notEqual(findMyWay.find('GET', '/123'), null)
+
+  findMyWay.off('GET', '/:id?')
+
+  t.assert.equal(findMyWay.find('GET', '/'), null)
+  t.assert.equal(findMyWay.find('GET', '/123'), null)
+})
