@@ -514,18 +514,16 @@ Router.prototype._off = function _off (method, path, constraints) {
   assert(typeof method === 'string', 'Method should be a string')
   assert(httpMethods.includes(method), `Method '${method}' is not an http method.`)
 
-  function matcherWithoutConstraints (route) {
-    return method !== route.method || path !== route.path
-  }
-
-  function matcherWithConstraints (route) {
-    return matcherWithoutConstraints(route) || !deepEqual(constraints, route.opts.constraints || {})
-  }
-
-  const predicate = constraints ? matcherWithConstraints : matcherWithoutConstraints
-
   // Rebuild tree without the specific route
-  const newRoutes = this.routes.filter(predicate)
+  const newRoutes = constraints
+    ? this.routes.filter(route =>
+      method !== route.method ||
+        path !== route.path ||
+        !deepEqual(constraints, route.opts.constraints || {})
+    )
+    : this.routes.filter(route =>
+      method !== route.method || path !== route.path
+    )
   this._rebuild(newRoutes)
 }
 
