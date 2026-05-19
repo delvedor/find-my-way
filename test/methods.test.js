@@ -739,6 +739,30 @@ test('Unsupported method (wildcard find)', t => {
   t.assert.deepEqual(findMyWay.find('TROLL', '/hello/world'), null)
 })
 
+test('Unsupported method (constructor lookup)', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.assert.equal(req.method, 'constructor')
+    }
+  })
+
+  findMyWay.on('GET', '/', () => {
+    t.assert.fail('We should not be here')
+  })
+
+  findMyWay.lookup({ method: 'constructor', url: '/', headers: {} }, null)
+})
+
+test('Unsupported method (constructor find)', t => {
+  t.plan(1)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/', () => {})
+
+  t.assert.deepEqual(findMyWay.find('constructor', '/'), null)
+})
+
 test('register all known HTTP methods', t => {
   t.plan(6)
   const findMyWay = FindMyWay()

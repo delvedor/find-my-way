@@ -102,7 +102,7 @@ function Router (opts) {
   this.useSemicolonDelimiter = opts.useSemicolonDelimiter || false
 
   this.routes = []
-  this.trees = {}
+  this.trees = Object.create(null)
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -467,7 +467,7 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 }
 
 Router.prototype.reset = function reset () {
-  this.trees = {}
+  this.trees = Object.create(null)
   this.routes = []
 }
 

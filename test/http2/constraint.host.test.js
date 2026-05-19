@@ -42,3 +42,25 @@ test('A route supports host constraints under http2 protocol', t => {
     }
   })
 })
+
+test('HTTP/2 method constructor should fall back to default route', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay({
+    defaultRoute: (req, res) => {
+      t.assert.equal(req.method, 'constructor')
+    }
+  })
+
+  findMyWay.on('GET', '/', (req, res) => {
+    t.assert.fail('We should not be here')
+  })
+
+  findMyWay.lookup({
+    method: 'constructor',
+    url: '/',
+    headers: {
+      ':authority': 'localhost'
+    }
+  }, null)
+})
