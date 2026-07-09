@@ -690,7 +690,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
         let regexMaxParamLengthExceeded = false
         for (let i = 1; i < matchedParameters.length; i++) {
-          const matchedParam = matchedParameters[i]
+          const matchedParam = matchedParameters[i] ?? ''
           if (matchedParam.length > maxParamLength) {
             regexMaxParamLengthExceeded = true
             break
@@ -714,7 +714,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         }
 
         for (let i = 1; i < matchedParameters.length; i++) {
-          params.push(matchedParameters[i])
+          params.push(matchedParameters[i] ?? '')
         }
       } else {
         if (param.length > maxParamLength) {
