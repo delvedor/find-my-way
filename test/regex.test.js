@@ -267,3 +267,16 @@ test('prevent back-tracking', { timeout: 20 }, (t) => {
   findMyWay.on('GET', '/:foo-:bar-', (req, res, params) => {})
   findMyWay.find('GET', '/' + '-'.repeat(16000) + 'a', { host: 'fastify.io' })
 })
+
+test('lookup matches empty regex captures', t => {
+  t.plan(1)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/test/:id(^((?!abc).)*$)', (req, res, params) => t.assert.equal(params.id, ''))
+
+  findMyWay.lookup({ method: 'GET', url: '/test/', headers: {} }, {
+    statusCode: 0,
+    end: () => {}
+  })
+})
