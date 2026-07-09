@@ -70,6 +70,50 @@ test('lookup should return an error from deriveConstraint', t => {
   )
 })
 
+test('should call done only once when multiple async constraints error', (t, testDone) => {
+  t.plan(3)
+
+  const erroringConstraint = {
+    name: 'erroring',
+    storage: function () {
+      const store = {}
+      return {
+        get: (key) => store[key] || null,
+        set: (key, value) => { store[key] = value }
+      }
+    },
+    deriveConstraint: (req, ctx, done) => {
+      done(new Error('boom'))
+    }
+  }
+
+  const erroringConstraint2 = rfdc(erroringConstraint)
+  erroringConstraint2.name = 'erroring2'
+
+  const router = FindMyWay({ constraints: { erroring: erroringConstraint, erroring2: erroringConstraint2 } })
+  router.on('GET', '/', { constraints: { erroring: 'a', erroring2: 'b' } }, () => 'handler')
+
+  let callCount = 0
+  router.lookup(
+    {
+      method: 'GET',
+      url: '/',
+      headers: {}
+    },
+    null,
+    (err, result) => {
+      callCount++
+      t.assert.deepStrictEqual(err, new Error('boom'))
+      t.assert.equal(result, undefined)
+    }
+  )
+
+  setTimeout(() => {
+    t.assert.equal(callCount, 1)
+    testDone()
+  }, 50)
+})
+
 test('should derive sync and async constraints', t => {
   t.plan(4)
 
