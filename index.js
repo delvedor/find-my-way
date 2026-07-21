@@ -102,7 +102,7 @@ function Router (opts) {
   this.useSemicolonDelimiter = opts.useSemicolonDelimiter || false
 
   this.routes = []
-  this.trees = {}
+  this.trees = Object.create(null)
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -379,7 +379,7 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
             regexps.push(trimRegExpStartAndEnd(regexString))
 
             j = endOfRegexIndex + 1
-            isParamSafe = false
+            isParamSafe = true
           } else {
             regexps.push(isParamSafe ? '(.*?)' : `(${backtrack}|(?:(?!${backtrack}).)*)`)
             isParamSafe = false
@@ -467,7 +467,7 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 }
 
 Router.prototype.reset = function reset () {
-  this.trees = {}
+  this.trees = Object.create(null)
   this.routes = []
 }
 
@@ -488,7 +488,7 @@ Router.prototype.off = function off (method, path, constraints) {
     assert(path.length === optionalParamMatch.index + optionalParamMatch[0].length, 'Optional Parameter needs to be the last parameter of the path')
 
     const pathFull = path.replace(OPTIONAL_PARAM_REGEXP, '$1$2')
-    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2')
+    const pathOptional = path.replace(OPTIONAL_PARAM_REGEXP, '$2') || '/'
 
     this.off(method, pathFull, constraints)
     this.off(method, pathOptional, constraints)
@@ -642,69 +642,102 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 
     currentNode = node
 
-    // static route
-    if (currentNode.kind === NODE_TYPES.STATIC) {
-      pathIndex += currentNode.prefix.length
-      continue
-    }
+    while (true) {
+      // static route
+      if (currentNode.kind === NODE_TYPES.STATIC) {
+        pathIndex += currentNode.prefix.length
+        break
+      }
 
-    if (currentNode.kind === NODE_TYPES.WILDCARD) {
-      let param = originPath.slice(pathIndex)
+      if (currentNode.kind === NODE_TYPES.WILDCARD) {
+        let param = originPath.slice(pathIndex)
+        if (shouldDecodeParam) {
+          param = safeDecodeURIComponent(param)
+        }
+
+        params.push(param)
+        pathIndex = pathLen
+        break
+      }
+
+      // parametric node
+      let paramEndIndex = originPath.indexOf('/', pathIndex)
+      if (paramEndIndex === -1) {
+        paramEndIndex = pathLen
+      }
+
+      let param = originPath.slice(pathIndex, paramEndIndex)
       if (shouldDecodeParam) {
         param = safeDecodeURIComponent(param)
       }
 
-      params.push(param)
-      pathIndex = pathLen
-      continue
-    }
+      if (currentNode.isRegex) {
+        const matchedParameters = currentNode.regex.exec(param)
+        if (matchedParameters === null) {
+          if (brothersNodesStack.length === 0) {
+            if (maxParamLengthExceeded && this.onMaxParamLength) {
+              return this._onMaxParamLength(originPath)
+            }
+            return null
+          }
 
-    // parametric node
-    let paramEndIndex = originPath.indexOf('/', pathIndex)
-    if (paramEndIndex === -1) {
-      paramEndIndex = pathLen
-    }
-
-    let param = originPath.slice(pathIndex, paramEndIndex)
-    if (shouldDecodeParam) {
-      param = safeDecodeURIComponent(param)
-    }
-
-    if (currentNode.isRegex) {
-      const matchedParameters = currentNode.regex.exec(param)
-      if (matchedParameters === null) {
-        node = null
-        continue
-      }
-
-      let regexMaxParamLengthExceeded = false
-      for (let i = 1; i < matchedParameters.length; i++) {
-        const matchedParam = matchedParameters[i]
-        if (matchedParam.length > maxParamLength) {
-          regexMaxParamLengthExceeded = true
-          break
+          const brotherNodeState = brothersNodesStack.pop()
+          pathIndex = brotherNodeState.brotherPathIndex
+          params.splice(brotherNodeState.paramsCount)
+          currentNode = brotherNodeState.brotherNode
+          continue
         }
+
+        let regexMaxParamLengthExceeded = false
+        for (let i = 1; i < matchedParameters.length; i++) {
+          const matchedParam = matchedParameters[i] ?? ''
+          if (matchedParam.length > maxParamLength) {
+            regexMaxParamLengthExceeded = true
+            break
+          }
+        }
+
+        if (regexMaxParamLengthExceeded) {
+          maxParamLengthExceeded = true
+          if (brothersNodesStack.length === 0) {
+            if (this.onMaxParamLength) {
+              return this._onMaxParamLength(originPath)
+            }
+            return null
+          }
+
+          const brotherNodeState = brothersNodesStack.pop()
+          pathIndex = brotherNodeState.brotherPathIndex
+          params.splice(brotherNodeState.paramsCount)
+          currentNode = brotherNodeState.brotherNode
+          continue
+        }
+
+        for (let i = 1; i < matchedParameters.length; i++) {
+          params.push(matchedParameters[i] ?? '')
+        }
+      } else {
+        if (param.length > maxParamLength) {
+          maxParamLengthExceeded = true
+          if (brothersNodesStack.length === 0) {
+            if (this.onMaxParamLength) {
+              return this._onMaxParamLength(originPath)
+            }
+            return null
+          }
+
+          const brotherNodeState = brothersNodesStack.pop()
+          pathIndex = brotherNodeState.brotherPathIndex
+          params.splice(brotherNodeState.paramsCount)
+          currentNode = brotherNodeState.brotherNode
+          continue
+        }
+        params.push(param)
       }
 
-      if (regexMaxParamLengthExceeded) {
-        maxParamLengthExceeded = true
-        node = null
-        continue
-      }
-
-      for (let i = 1; i < matchedParameters.length; i++) {
-        params.push(matchedParameters[i])
-      }
-    } else {
-      if (param.length > maxParamLength) {
-        maxParamLengthExceeded = true
-        node = null
-        continue
-      }
-      params.push(param)
+      pathIndex = paramEndIndex
+      break
     }
-
-    pathIndex = paramEndIndex
   }
 }
 

@@ -179,6 +179,23 @@ test('findRoute returns null for a multi-parametric route', (t) => {
   equalRouters(t, findMyWay, fundMyWayClone)
 })
 
+test('findRoute returns handler for a regex + non-regex multi-param route', (t) => {
+  t.plan(8)
+
+  const findMyWay = FindMyWay()
+
+  const handler = () => {}
+  findMyWay.on('GET', '/:name(\\d+)-:other', handler)
+
+  const fundMyWayClone = rfdc(findMyWay)
+
+  const route = findMyWay.findRoute('GET', '/:name(\\d+)-:other')
+  t.assert.equal(route.handler, handler)
+  t.assert.deepEqual(route.params, ['name', 'other'])
+
+  equalRouters(t, findMyWay, fundMyWayClone)
+})
+
 test('findRoute returns handler and regexp param for a regexp route', (t) => {
   t.plan(8)
 

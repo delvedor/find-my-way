@@ -2,7 +2,7 @@
 
 const { spawn } = require('child_process')
 
-const chalk = require('chalk')
+const { default: chalk } = require('chalk')
 const inquirer = require('inquirer')
 const simpleGit = require('simple-git')
 
@@ -25,10 +25,10 @@ async function selectBranchName (message, branches) {
 }
 
 async function executeCommandOnBranch (command, branch) {
-  console.log(chalk.grey(`Checking out "${branch}"`))
+  console.log(chalk.gray(`Checking out "${branch}"`))
   await git.checkout(branch)
 
-  console.log(chalk.grey(`Execute "${command}"`))
+  console.log(chalk.gray(`Execute "${command}"`))
   const childProcess = spawn(command, { stdio: 'pipe', shell: true })
 
   let result = ''
