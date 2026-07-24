@@ -206,6 +206,9 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       let isParamSafe = true
       let backtrack = ''
       const regexps = []
+      // Canonical form of this node, accumulated one parameter at a time so
+      // static parts between parameters survive into the pattern.
+      let nodePatternParts = ''
 
       let lastParamStartIndex = i + 1
       for (let j = lastParamStartIndex; ; j++) {
@@ -257,9 +260,10 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
           }
 
           lastParamStartIndex = j + 1
+          nodePatternParts += '()' + staticPart
 
           if (isEndOfNode || pattern.charCodeAt(j) === 47 || j === pattern.length) {
-            const nodePattern = isRegexNode ? '()' + staticPart : staticPart
+            const nodePattern = isRegexNode ? nodePatternParts : staticPart
             const nodePath = pattern.slice(i, j)
 
             pattern = pattern.slice(0, i + 1) + nodePattern + pattern.slice(j)
@@ -353,6 +357,9 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
       let isParamSafe = true
       let backtrack = ''
       const regexps = []
+      // Canonical form of this node, accumulated one parameter at a time so
+      // static parts between parameters survive into the pattern.
+      let nodePatternParts = ''
 
       let lastParamStartIndex = i + 1
       for (let j = lastParamStartIndex; ; j++) {
@@ -404,9 +411,10 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
           }
 
           lastParamStartIndex = j + 1
+          nodePatternParts += '()' + staticPart
 
           if (isEndOfNode || pattern.charCodeAt(j) === 47 || j === pattern.length) {
-            const nodePattern = isRegexNode ? '()' + staticPart : staticPart
+            const nodePattern = isRegexNode ? nodePatternParts : staticPart
             const nodePath = pattern.slice(i, j)
 
             pattern = pattern.slice(0, i + 1) + nodePattern + pattern.slice(j)
