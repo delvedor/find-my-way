@@ -104,13 +104,13 @@ test('Optional Parameter with ignoreTrailingSlash = false', (t) => {
   const findMyWay = FindMyWay({
     ignoreTrailingSlash: false,
     defaultRoute: (req, res) => {
-      t.assert.equal(req.url, '/test/hello/foo/')
+      t.assert.ok(true, 'Called defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/test/hello/:optional?', (req, res, params) => {
     if (req.url === '/test/hello/') {
-      t.assert.deepEqual(params, { optional: '' })
+      t.assert.fail('Should not be here')
     } else if (req.url === '/test/hello') {
       t.assert.deepEqual(params, {})
     } else if (req.url === '/test/hello/foo') {

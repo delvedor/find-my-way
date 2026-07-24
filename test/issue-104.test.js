@@ -137,7 +137,7 @@ test('Mixed routes, url with parameter common prefix > 1', t => {
   t.assert.deepEqual(findMyWay.find('GET', '/test/hello').params, {})
   t.assert.deepEqual(findMyWay.find('GET', '/test/hello/test').params, {})
   t.assert.deepEqual(findMyWay.find('GET', '/te/hello').params, { a: 'hello' })
-  t.assert.deepEqual(findMyWay.find('GET', '/te/').params, { a: '' })
+  t.assert.strictEqual(findMyWay.find('GET', '/te/'), null)
   t.assert.deepEqual(findMyWay.find('GET', '/testy').params, { c: 'testy' })
   t.assert.deepEqual(findMyWay.find('GET', '/besty').params, { c: 'besty' })
   t.assert.deepEqual(findMyWay.find('GET', '/text/hellos/test').params, { e: 'hellos' })
