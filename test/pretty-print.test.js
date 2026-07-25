@@ -678,3 +678,49 @@ SUBSCRIBE, TRACE, UNBIND, UNLINK, UNLOCK, UNSUBSCRIBE)
   t.assert.equal(typeof tree, 'string')
   t.assert.equal(tree, expected)
 })
+
+test('pretty print - regex constraint values are serialized', t => {
+  t.plan(4)
+
+  const findMyWay = FindMyWay()
+  findMyWay.on('GET', '/test', () => {})
+  findMyWay.on('GET', '/test', { constraints: { host: /^auth\..*\.fastify\.io$/ } }, () => {})
+  findMyWay.on('GET', '/test', { constraints: { host: /^admin\..*$/ } }, () => {})
+
+  const radixTree = findMyWay.prettyPrint()
+  const radixExpected = `\
+└── /
+    └── test (GET)
+        test (GET) {"host":"/^auth\\\\..*\\\\.fastify\\\\.io$/"}
+        test (GET) {"host":"/^admin\\\\..*$/"}
+`
+  t.assert.equal(typeof radixTree, 'string')
+  t.assert.equal(radixTree, radixExpected)
+
+  const arrayTree = findMyWay.prettyPrint({ commonPrefix: false })
+  const arrayExpected = `\
+└── /test (GET)
+    /test (GET) {"host":"/^auth\\\\..*\\\\.fastify\\\\.io$/"}
+    /test (GET) {"host":"/^admin\\\\..*$/"}
+`
+  t.assert.equal(typeof arrayTree, 'string')
+  t.assert.equal(arrayTree, arrayExpected)
+})
+
+test('pretty print - regex values in includeMeta are serialized', t => {
+  t.plan(2)
+
+  const findMyWay = FindMyWay({
+    buildPrettyMeta: route => route.store
+  })
+  findMyWay.on('GET', '/x', () => {}, { pattern: /foo/i })
+
+  const tree = findMyWay.prettyPrint({ includeMeta: true })
+  const expected = `\
+└── /
+    └── x (GET)
+        • (pattern) "/foo/i"
+`
+  t.assert.equal(typeof tree, 'string')
+  t.assert.equal(tree, expected)
+})
