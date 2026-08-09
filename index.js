@@ -34,7 +34,7 @@ const { StaticNode, NODE_TYPES } = require('./lib/node')
 const Constrainer = require('./lib/constrainer')
 const httpMethods = require('./lib/http-methods')
 const httpMethodStrategy = require('./lib/strategies/http-method')
-const { safeDecodeURI, safeDecodeURIComponent } = require('./lib/url-sanitizer')
+const { safeDecodeURI, safeDecodeURIComponent, safeDecodeURINativeScan, safeDecodeURICharScan, MIN_NATIVE_SCAN_LENGTH } = require('./lib/url-sanitizer')
 
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 const OPTIONAL_PARAM_REGEXP = /(\/:[^/()]*?)\?(\/?)/
@@ -173,7 +173,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   if (pattern === '*' && this.trees[method].prefix.length !== 0) {
     const currentRoot = this.trees[method]
     this.trees[method] = new StaticNode('')
-    this.trees[method].staticChildren['/'] = currentRoot
+    this.trees[method].setStaticChild('/', currentRoot)
   }
 
   let currentNode = this.trees[method]
@@ -592,7 +592,12 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   let shouldDecodeParam
 
   try {
-    sanitizedUrl = safeDecodeURI(path, this.useSemicolonDelimiter)
+    // Dispatching between the two scan strategies here rather than inside
+    // safeDecodeURI keeps the call depth low enough for V8 to inline the
+    // char scan, which matters for short paths.
+    sanitizedUrl = path.length >= MIN_NATIVE_SCAN_LENGTH
+      ? safeDecodeURINativeScan(path, this.useSemicolonDelimiter)
+      : safeDecodeURICharScan(path, this.useSemicolonDelimiter, 1)
     path = sanitizedUrl.path
     querystring = sanitizedUrl.querystring
     shouldDecodeParam = sanitizedUrl.shouldDecodeParam
