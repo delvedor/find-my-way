@@ -103,6 +103,7 @@ function Router (opts) {
 
   this.routes = []
   this.trees = Object.create(null)
+  this._treeGET = null
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -177,6 +178,9 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   }
 
   let currentNode = this.trees[method]
+  if (method === 'GET') {
+    this._treeGET = currentNode
+  }
   let parentNodePathIndex = currentNode.prefix.length
 
   const params = []
@@ -476,6 +480,7 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 
 Router.prototype.reset = function reset () {
   this.trees = Object.create(null)
+  this._treeGET = null
   this.routes = []
 }
 
@@ -573,8 +578,12 @@ Router.prototype.callHandler = function callHandler (handle, req, res, ctx) {
 }
 
 Router.prototype.find = function find (method, path, derivedConstraints) {
-  let currentNode = this.trees[method]
-  if (currentNode === undefined) return null
+  // GET is by far the most common method. Comparing two interned strings is
+  // a pointer comparison, and _treeGET is a plain instance field whose load
+  // compiles to a fixed-offset access, while this.trees is a 35-key
+  // dictionary-mode object whose lookup always goes through a generic IC.
+  let currentNode = method === 'GET' ? this._treeGET : this.trees[method]
+  if (currentNode == null) return null
 
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
