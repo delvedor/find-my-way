@@ -34,7 +34,7 @@ const { StaticNode, NODE_TYPES } = require('./lib/node')
 const Constrainer = require('./lib/constrainer')
 const httpMethods = require('./lib/http-methods')
 const httpMethodStrategy = require('./lib/strategies/http-method')
-const { safeDecodeURI, safeDecodeURIComponent } = require('./lib/url-sanitizer')
+const { safeDecodeURI, safeDecodeURIComponent, safeDecodeURINativeScan, safeDecodeURICharScan, MIN_NATIVE_SCAN_LENGTH } = require('./lib/url-sanitizer')
 
 const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 const OPTIONAL_PARAM_REGEXP = /(\/:[^/()]*?)\?(\/?)/
@@ -103,6 +103,7 @@ function Router (opts) {
 
   this.routes = []
   this.trees = Object.create(null)
+  this._treeGET = null
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -173,10 +174,13 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   if (pattern === '*' && this.trees[method].prefix.length !== 0) {
     const currentRoot = this.trees[method]
     this.trees[method] = new StaticNode('')
-    this.trees[method].staticChildren['/'] = currentRoot
+    this.trees[method].setStaticChild('/', currentRoot)
   }
 
   let currentNode = this.trees[method]
+  if (method === 'GET') {
+    this._treeGET = currentNode
+  }
   let parentNodePathIndex = currentNode.prefix.length
 
   const params = []
@@ -476,6 +480,7 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 
 Router.prototype.reset = function reset () {
   this.trees = Object.create(null)
+  this._treeGET = null
   this.routes = []
 }
 
@@ -573,8 +578,12 @@ Router.prototype.callHandler = function callHandler (handle, req, res, ctx) {
 }
 
 Router.prototype.find = function find (method, path, derivedConstraints) {
-  let currentNode = this.trees[method]
-  if (currentNode === undefined) return null
+  // GET is by far the most common method. Comparing two interned strings is
+  // a pointer comparison, and _treeGET is a plain instance field whose load
+  // compiles to a fixed-offset access, while this.trees is a 35-key
+  // dictionary-mode object whose lookup always goes through a generic IC.
+  let currentNode = method === 'GET' ? this._treeGET : this.trees[method]
+  if (currentNode == null) return null
 
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
     path = path.replace(FULL_PATH_REGEXP, '/')
@@ -592,7 +601,12 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   let shouldDecodeParam
 
   try {
-    sanitizedUrl = safeDecodeURI(path, this.useSemicolonDelimiter)
+    // Dispatching between the two scan strategies here rather than inside
+    // safeDecodeURI keeps the call depth low enough for V8 to inline the
+    // char scan, which matters for short paths.
+    sanitizedUrl = path.length >= MIN_NATIVE_SCAN_LENGTH
+      ? safeDecodeURINativeScan(path, this.useSemicolonDelimiter)
+      : safeDecodeURICharScan(path, this.useSemicolonDelimiter, 1)
     path = sanitizedUrl.path
     querystring = sanitizedUrl.querystring
     shouldDecodeParam = sanitizedUrl.shouldDecodeParam
