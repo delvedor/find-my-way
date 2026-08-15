@@ -158,10 +158,16 @@ test('getMatchingHandler should return null if not compiled', (t) => {
   t.assert.equal(handlerStorage.getMatchingHandler({ foo: 'bar' }), null)
 })
 
-test('safeDecodeURIComponent should replace %3x to null for every x that is not a valid lowchar', (t) => {
+test('safeDecodeURIComponent should preserve %3x for every x that is not a valid lowchar', (t) => {
   t.plan(1)
 
-  t.assert.equal(safeDecodeURIComponent('Hello%3xWorld'), 'HellonullWorld')
+  t.assert.equal(safeDecodeURIComponent('Hello%3xWorld'), 'Hello%3xWorld')
+})
+
+test('safeDecodeURIComponent should preserve unrecognized %XX sequences (e.g. double-encoded %2520)', (t) => {
+  t.plan(1)
+
+  t.assert.equal(safeDecodeURIComponent('%20'), '%20')
 })
 
 test('SemVerStore version should be a string', (t) => {
