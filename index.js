@@ -36,14 +36,9 @@ const httpMethods = require('./lib/http-methods')
 const httpMethodStrategy = require('./lib/strategies/http-method')
 const { safeDecodeURI, safeDecodeURIComponent, safeDecodeURINativeScan, safeDecodeURICharScan, MIN_NATIVE_SCAN_LENGTH } = require('./lib/url-sanitizer')
 
-const FULL_PATH_REGEXP = /^https?:\/\/.*?\//
 const OPTIONAL_PARAM_REGEXP = /(\/:[^/()]*?)\?(\/?)/
 const ESCAPE_REGEXP = /[.*+?^${}()|[\]\\]/g
 const REMOVE_DUPLICATE_SLASHES_REGEXP = /\/\/+/g
-
-if (!isRegexSafe(FULL_PATH_REGEXP)) {
-  throw new Error('the FULL_PATH_REGEXP is not safe, update this module')
-}
 
 if (!isRegexSafe(OPTIONAL_PARAM_REGEXP)) {
   throw new Error('the OPTIONAL_PARAM_REGEXP is not safe, update this module')
@@ -586,7 +581,11 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   if (currentNode == null) return null
 
   if (path.charCodeAt(0) !== 47) { // 47 is '/'
-    path = path.replace(FULL_PATH_REGEXP, '/')
+    const absolutePath = getPathFromAbsoluteUrl(path)
+    if (absolutePath === null) {
+      return this._onBadUrl(path)
+    }
+    path = absolutePath
   }
 
   // This must be run before sanitizeUrl as the resulting function
@@ -865,6 +864,54 @@ module.exports = Router
 
 function escapeRegExp (string) {
   return string.replace(ESCAPE_REGEXP, '\\$&')
+}
+
+function getPathFromAbsoluteUrl (url) {
+  const schemeEnd = url.indexOf('://')
+  if (schemeEnd === -1) {
+    return url
+  }
+
+  const scheme = url.slice(0, schemeEnd).toLowerCase()
+  if (scheme !== 'http' && scheme !== 'https') {
+    return url
+  }
+
+  const authorityStart = schemeEnd + 3
+  let authorityEnd = url.length
+
+  const pathStart = url.indexOf('/', authorityStart)
+  if (pathStart !== -1) {
+    authorityEnd = pathStart
+  }
+
+  const queryStart = url.indexOf('?', authorityStart)
+  if (queryStart !== -1 && queryStart < authorityEnd) {
+    authorityEnd = queryStart
+  }
+
+  // Fragments are not valid in an HTTP request target. In particular, do not
+  // allow a slash after one to be interpreted as the start of the path.
+  if (url.indexOf('#', authorityStart) !== -1 || authorityEnd === authorityStart) {
+    return null
+  }
+
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== `${scheme}:` || parsed.host.length === 0) {
+      return null
+    }
+  } catch (error) {
+    return null
+  }
+
+  if (authorityEnd === url.length) {
+    return '/'
+  }
+  if (authorityEnd === queryStart) {
+    return '/' + url.slice(queryStart)
+  }
+  return url.slice(pathStart)
 }
 
 function removeDuplicateSlashes (path) {

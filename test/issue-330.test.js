@@ -7,28 +7,17 @@ const { safeDecodeURIComponent } = require('../lib/url-sanitizer')
 const acceptVersionStrategy = require('../lib/strategies/accept-version')
 const httpMethodStrategy = require('../lib/strategies/http-method')
 
-test('FULL_PATH_REGEXP and OPTIONAL_PARAM_REGEXP should be considered safe', (t) => {
+test('OPTIONAL_PARAM_REGEXP should be considered safe', (t) => {
   t.plan(1)
 
   t.assert.doesNotThrow(() => require('..'))
 })
 
-test('should throw an error for unsafe FULL_PATH_REGEXP', (t) => {
+test('Should throw an error for unsafe OPTIONAL_PARAM_REGEXP', (t) => {
   t.plan(1)
 
   t.assert.throws(() => proxyquire('..', {
     'safe-regex2': () => false
-  }), new Error('the FULL_PATH_REGEXP is not safe, update this module'))
-})
-
-test('Should throw an error for unsafe OPTIONAL_PARAM_REGEXP', (t) => {
-  t.plan(1)
-
-  let callCount = 0
-  t.assert.throws(() => proxyquire('..', {
-    'safe-regex2': () => {
-      return ++callCount < 2
-    }
   }), new Error('the OPTIONAL_PARAM_REGEXP is not safe, update this module'))
 })
 
