@@ -5,6 +5,11 @@
   "main": "index.js",
   "type": "commonjs",
   "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib"
+  ],
   "scripts": {
     "bench": "node ./benchmark/bench.js",
     "bench:cmp": "node ./benchmark/compare-branches.js",
