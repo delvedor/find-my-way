@@ -38,7 +38,7 @@
     "benchmark": "^2.1.4",
     "borp": "^1.0.0",
     "chalk": "^6.0.0",
-    "eslint": "^9.39.5",
+    "eslint": "^10.9.1",
     "inquirer": "^14.0.2",
     "neostandard": "^0.13.0",
     "pre-commit": "^2.0.0",
