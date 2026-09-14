@@ -48,3 +48,32 @@ test('stateful regex flags (g, y) are stripped to ensure deterministic caching',
   t.assert.equal(storage2.get('bar.fastify.io'), 'wildcard')
   t.assert.equal(storage2.get('baz.fastify.io'), 'wildcard')
 })
+
+test('regex cache evicts its oldest half when full', (t) => {
+  const storage = acceptHostStrategy.storage()
+  storage.set(/^host-/, true)
+
+  const originalTest = RegExp.prototype.test
+  let testCalls = 0
+  RegExp.prototype.test = function (value) { // eslint-disable-line no-extend-native
+    testCalls++
+    return originalTest.call(this, value)
+  }
+  t.after(() => { RegExp.prototype.test = originalTest }) // eslint-disable-line no-extend-native
+
+  for (let i = 0; i < 1000; i++) {
+    t.assert.equal(storage.get(`host-${i}`), true)
+  }
+
+  t.assert.equal(testCalls, 1000)
+  t.assert.equal(storage.get('host-0'), true)
+  t.assert.equal(testCalls, 1000)
+
+  t.assert.equal(storage.get('host-overflow'), true)
+  t.assert.equal(testCalls, 1001)
+
+  t.assert.equal(storage.get('host-499'), true)
+  t.assert.equal(testCalls, 1002)
+  t.assert.equal(storage.get('host-500'), true)
+  t.assert.equal(testCalls, 1002)
+})
