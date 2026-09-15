@@ -30,7 +30,7 @@ const querystring = require('fast-querystring')
 const isRegexSafe = require('safe-regex2')
 const deepEqual = require('fast-deep-equal')
 const { prettyPrintTree } = require('./lib/pretty-print')
-const { StaticNode, NODE_TYPES } = require('./lib/node')
+const { createStaticNode, NODE_TYPES } = require('./lib/node')
 const Constrainer = require('./lib/constrainer')
 const httpMethods = require('./lib/http-methods')
 const httpMethodStrategy = require('./lib/strategies/http-method')
@@ -162,13 +162,13 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
 
   // Boot the tree for this method if it doesn't exist yet
   if (this.trees[method] === undefined) {
-    this.trees[method] = new StaticNode('/')
+    this.trees[method] = createStaticNode('/')
   }
 
   let pattern = path
   if (pattern === '*' && this.trees[method].prefix.length !== 0) {
     const currentRoot = this.trees[method]
-    this.trees[method] = new StaticNode('')
+    this.trees[method] = createStaticNode('')
     this.trees[method].setStaticChild('/', currentRoot)
   }
 
@@ -626,9 +626,18 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
   const maxParamLength = this.maxParamLength
 
   let pathIndex = currentNode.prefix.length
-  const params = []
   const pathLen = path.length
 
+  // Matched parameter values, by position. Routes rarely have more than a
+  // few parameters, so the first four are kept in locals and only further
+  // ones spill into an array: the common case never allocates for them.
+  // handle._createParamsObject expects the same layout.
+  let paramsCount = 0
+  let param0, param1, param2, param3
+  let extraParams = null
+
+  // Backtracking stack of sibling nodes still to try, as flat triples
+  // (node, pathIndex, paramsCount) rather than one object per entry.
   const brothersNodesStack = []
   let maxParamLengthExceeded = false
 
@@ -639,13 +648,13 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         return {
           handler: handle.handler,
           store: handle.store,
-          params: handle._createParamsObject(params),
+          params: handle._createParamsObject(param0, param1, param2, param3, extraParams),
           searchParams: this.querystringParser(querystring)
         }
       }
     }
 
-    let node = currentNode.getNextNode(path, pathIndex, brothersNodesStack, params.length)
+    let node = currentNode.getNextNode(path, pathIndex, brothersNodesStack, paramsCount)
 
     if (node === null) {
       if (brothersNodesStack.length === 0) {
@@ -655,10 +664,11 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         return null
       }
 
-      const brotherNodeState = brothersNodesStack.pop()
-      pathIndex = brotherNodeState.brotherPathIndex
-      params.splice(brotherNodeState.paramsCount)
-      node = brotherNodeState.brotherNode
+      const stackLength = brothersNodesStack.length
+      paramsCount = brothersNodesStack[stackLength - 1]
+      pathIndex = brothersNodesStack[stackLength - 2]
+      node = brothersNodesStack[stackLength - 3]
+      brothersNodesStack.length = stackLength - 3
     }
 
     currentNode = node
@@ -670,21 +680,14 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         break
       }
 
-      if (currentNode.kind === NODE_TYPES.WILDCARD) {
-        let param = originPath.slice(pathIndex)
-        if (shouldDecodeParam) {
-          param = safeDecodeURIComponent(param)
+      // parametric or wildcard node: both consume a slice of the path as a
+      // parameter value, the wildcard simply takes everything that is left
+      let paramEndIndex = pathLen
+      if (currentNode.kind === NODE_TYPES.PARAMETRIC) {
+        paramEndIndex = originPath.indexOf('/', pathIndex)
+        if (paramEndIndex === -1) {
+          paramEndIndex = pathLen
         }
-
-        params.push(param)
-        pathIndex = pathLen
-        break
-      }
-
-      // parametric node
-      let paramEndIndex = originPath.indexOf('/', pathIndex)
-      if (paramEndIndex === -1) {
-        paramEndIndex = pathLen
       }
 
       let param = originPath.slice(pathIndex, paramEndIndex)
@@ -692,72 +695,70 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
         param = safeDecodeURIComponent(param)
       }
 
+      let matched = true
+      let regexMatches = null
       if (currentNode.isRegex) {
-        const matchedParameters = currentNode.regex.exec(param)
-        if (matchedParameters === null) {
-          if (brothersNodesStack.length === 0) {
-            if (maxParamLengthExceeded && this.onMaxParamLength) {
-              return this._onMaxParamLength(originPath)
+        regexMatches = currentNode.regex.exec(param)
+        if (regexMatches === null) {
+          matched = false
+        } else {
+          for (let i = 1; i < regexMatches.length; i++) {
+            const matchedParam = regexMatches[i] ?? ''
+            if (matchedParam.length > maxParamLength) {
+              maxParamLengthExceeded = true
+              matched = false
+              break
             }
-            return null
-          }
-
-          const brotherNodeState = brothersNodesStack.pop()
-          pathIndex = brotherNodeState.brotherPathIndex
-          params.splice(brotherNodeState.paramsCount)
-          currentNode = brotherNodeState.brotherNode
-          continue
-        }
-
-        let regexMaxParamLengthExceeded = false
-        for (let i = 1; i < matchedParameters.length; i++) {
-          const matchedParam = matchedParameters[i] ?? ''
-          if (matchedParam.length > maxParamLength) {
-            regexMaxParamLengthExceeded = true
-            break
           }
         }
-
-        if (regexMaxParamLengthExceeded) {
-          maxParamLengthExceeded = true
-          if (brothersNodesStack.length === 0) {
-            if (this.onMaxParamLength) {
-              return this._onMaxParamLength(originPath)
-            }
-            return null
-          }
-
-          const brotherNodeState = brothersNodesStack.pop()
-          pathIndex = brotherNodeState.brotherPathIndex
-          params.splice(brotherNodeState.paramsCount)
-          currentNode = brotherNodeState.brotherNode
-          continue
-        }
-
-        for (let i = 1; i < matchedParameters.length; i++) {
-          params.push(matchedParameters[i] ?? '')
-        }
-      } else {
-        if (param.length > maxParamLength) {
-          maxParamLengthExceeded = true
-          if (brothersNodesStack.length === 0) {
-            if (this.onMaxParamLength) {
-              return this._onMaxParamLength(originPath)
-            }
-            return null
-          }
-
-          const brotherNodeState = brothersNodesStack.pop()
-          pathIndex = brotherNodeState.brotherPathIndex
-          params.splice(brotherNodeState.paramsCount)
-          currentNode = brotherNodeState.brotherNode
-          continue
-        }
-        params.push(param)
+      } else if (currentNode.kind === NODE_TYPES.PARAMETRIC && param.length > maxParamLength) {
+        maxParamLengthExceeded = true
+        matched = false
       }
 
-      pathIndex = paramEndIndex
-      break
+      if (matched) {
+        if (regexMatches === null) {
+          if (paramsCount === 0) param0 = param
+          else if (paramsCount === 1) param1 = param
+          else if (paramsCount === 2) param2 = param
+          else if (paramsCount === 3) param3 = param
+          else {
+            if (extraParams === null) extraParams = []
+            extraParams[paramsCount - 4] = param
+          }
+          paramsCount++
+        } else {
+          for (let i = 1; i < regexMatches.length; i++) {
+            const value = regexMatches[i] ?? ''
+            if (paramsCount === 0) param0 = value
+            else if (paramsCount === 1) param1 = value
+            else if (paramsCount === 2) param2 = value
+            else if (paramsCount === 3) param3 = value
+            else {
+              if (extraParams === null) extraParams = []
+              extraParams[paramsCount - 4] = value
+            }
+            paramsCount++
+          }
+        }
+
+        pathIndex = paramEndIndex
+        break
+      }
+
+      // This parametric node did not match: try the next sibling.
+      if (brothersNodesStack.length === 0) {
+        if (maxParamLengthExceeded && this.onMaxParamLength) {
+          return this._onMaxParamLength(originPath)
+        }
+        return null
+      }
+
+      const stackLength = brothersNodesStack.length
+      paramsCount = brothersNodesStack[stackLength - 1]
+      pathIndex = brothersNodesStack[stackLength - 2]
+      currentNode = brothersNodesStack[stackLength - 3]
+      brothersNodesStack.length = stackLength - 3
     }
   }
 }
