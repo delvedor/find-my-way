@@ -97,7 +97,13 @@ function Router (opts) {
   this.useSemicolonDelimiter = opts.useSemicolonDelimiter || false
 
   this.routes = []
-  this.trees = Object.create(null)
+  // Object.create(null) would start out in dictionary mode, making every
+  // non-GET tree lookup a hash probe. A plain literal whose prototype is
+  // nulled afterwards has no inherited keys either, but stays a fast-mode
+  // object for any realistic number of methods. It must not be a NullObject:
+  // V8 sizes objects by constructor, and this one would inflate the params
+  // object that find() allocates with NullObject on every lookup.
+  this.trees = Object.setPrototypeOf({}, null)
   this._treeGET = null
 }
 
@@ -474,7 +480,7 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 }
 
 Router.prototype.reset = function reset () {
-  this.trees = Object.create(null)
+  this.trees = Object.setPrototypeOf({}, null)
   this._treeGET = null
   this.routes = []
 }
@@ -575,8 +581,8 @@ Router.prototype.callHandler = function callHandler (handle, req, res, ctx) {
 Router.prototype.find = function find (method, path, derivedConstraints) {
   // GET is by far the most common method. Comparing two interned strings is
   // a pointer comparison, and _treeGET is a plain instance field whose load
-  // compiles to a fixed-offset access, while this.trees is a 35-key
-  // dictionary-mode object whose lookup always goes through a generic IC.
+  // compiles to a fixed-offset access, while this.trees is keyed by a
+  // variable method name and always goes through a generic keyed IC.
   let currentNode = method === 'GET' ? this._treeGET : this.trees[method]
   if (currentNode == null) return null
 

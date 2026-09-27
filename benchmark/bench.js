@@ -17,6 +17,17 @@ const benchmarks = [
     arguments: [{ method: 'GET', url: '/static' }]
   },
   {
+    name: 'lookup short static POST route',
+    setupURLs: [
+      { method: 'GET', url: '/static' },
+      { method: 'HEAD', url: '/static' },
+      { method: 'POST', url: '/static' },
+      { method: 'PUT', url: '/static' },
+      { method: 'DELETE', url: '/static' }
+    ],
+    arguments: [{ method: 'POST', url: '/static' }]
+  },
+  {
     name: 'lookup long static route',
     setupURLs: [{ method: 'GET', url: '/static/static/static/static/static' }],
     arguments: [{ method: 'GET', url: '/static/static/static/static/static' }]

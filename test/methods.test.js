@@ -852,3 +852,15 @@ test('off removes only unconstrainted route if an empty object is given as const
   t.assert.equal(findMyWay.routes.length, 1)
   t.assert.equal(findMyWay.routes[0].opts.constraints.host, 'fastify.io')
 })
+
+test('method names that exist on Object.prototype do not match a tree', t => {
+  t.plan(3)
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/', () => {})
+  findMyWay.on('POST', '/', () => {})
+
+  t.assert.equal(findMyWay.find('toString', '/'), null)
+  t.assert.equal(findMyWay.find('constructor', '/'), null)
+  t.assert.equal(findMyWay.find('__proto__', '/'), null)
+})
