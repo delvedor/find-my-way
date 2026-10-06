@@ -210,28 +210,29 @@ router.prettyPrint()
 
 #### Compiler mode
 
-By default `find-my-way` walks its radix tree for every lookup. With the
-`compile` option each method's tree is instead compiled into generated
-JavaScript the first time it is looked up after a change: static parts become
-inline char comparisons, the backtracking order is laid out as nested blocks
-and parameters land in fixed locals. Matching semantics are identical to the
-tree walk, lookups are typically two to three times faster, and the compiled
-code is rebuilt lazily whenever routes are added or removed.
+By default `find-my-way` walks its radix tree for every lookup. Calling
+`compile()` once all routes are registered compiles each method's tree into
+generated JavaScript instead: static parts become inline char comparisons, the
+backtracking order is laid out as nested blocks and parameters land in fixed
+locals. Matching semantics are identical to the tree walk and lookups are
+typically two to three times faster.
 
 ```js
-const router = require('find-my-way')({
-  compile: true
-})
+const router = require('find-my-way')()
+router.on('GET', '/users/:id', (req, res, params) => { /* ... */ })
+router.compile()
 ```
+
+Routes can still be added or removed after `compile()`: the trees that
+changed are compiled again on their next lookup, so register routes in bulk
+rather than interleaving them with lookups.
 
 The compiled matcher works on the raw request URL and only falls back to the
 decoded path when it meets a percent-encoded character, so percent-encoded
 URLs are no faster than with the tree walk. Each route produces its own code:
 a table of thousands of routes compiles to several megabytes of JavaScript,
 which warms up per route and no longer fits the CPU caches when traffic is
-spread evenly over all of them. Setting `FIND_MY_WAY_COMPILE=1` in the
-environment turns the option on by default, which is how the test suite is
-run against the compiled lookup.
+spread evenly over all of them.
 
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])

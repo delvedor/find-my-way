@@ -89,13 +89,6 @@ declare namespace Router {
     caseSensitive?: boolean;
 
     maxParamLength?: number;
-    /**
-     * Compile each method's route tree into generated JavaScript on the
-     * first lookup after a change, instead of walking the tree per request.
-     * Defaults to false, or to the value of the FIND_MY_WAY_COMPILE=1
-     * environment variable.
-     */
-    compile?: boolean;
 
     querystringParser?: QuerystringParser;
 
@@ -202,6 +195,13 @@ declare namespace Router {
     ): boolean;
 
     reset(): void;
+    /**
+     * Compile every method's route tree into generated JavaScript and make
+     * lookups dispatch to it instead of walking the tree. Call it once all
+     * routes are registered; trees changed afterwards are compiled again on
+     * their next lookup.
+     */
+    compile(): this;
     prettyPrint(): string;
     prettyPrint(opts: {
       method?: HTTPMethod,

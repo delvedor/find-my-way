@@ -1,6 +1,6 @@
 'use strict'
 
-// Compares the tree-walking lookup with the compiled lookup (compile: true)
+// Compares the tree-walking lookup with the compiled lookup (router.compile())
 // scenario by scenario. Every scenario runs in a fresh worker so the two
 // modes never share JIT state.
 //
@@ -86,11 +86,12 @@ const benchmarks = [
 if (!isMainThread) {
   const { benchmark, compile, rounds, iters } = workerData
   const FindMyWay = require('..')
-  const router = FindMyWay({ compile, defaultRoute: () => false })
+  const router = FindMyWay({ defaultRoute: () => false })
   for (const { method, url, opts } of benchmark.setupURLs) {
     if (opts !== undefined) router.on(method, url, opts, () => true)
     else router.on(method, url, () => true)
   }
+  if (compile) router.compile()
   const reqs = benchmark.arguments.map(a => ({ method: a.method, url: a.url, headers: a.headers || {} }))
   const res = {}
   const n = reqs.length

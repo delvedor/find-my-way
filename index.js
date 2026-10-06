@@ -101,16 +101,13 @@ function Router (opts) {
   this.trees = Object.create(null)
   this._treeGET = null
 
-  // Compiler mode: each method tree is compiled into one generated function
-  // the first time it is looked up after a change, and find() dispatches to
-  // it instead of walking the tree. FIND_MY_WAY_COMPILE=1 turns it on by
-  // default so the whole test suite can be run against the compiled lookup.
-  this.compile = opts.compile === undefined
-    ? process.env.FIND_MY_WAY_COMPILE === '1'
-    : Boolean(opts.compile)
+  // Compiled lookup functions, one per method tree, see compile().
   this._compiledGET = null
   this._compiledTrees = Object.create(null)
-  if (this.compile) {
+  // Testing hook: FIND_MY_WAY_COMPILE=1 makes every router behave as if
+  // compile() had been called, so the whole test suite runs against the
+  // compiled lookup.
+  if (process.env.FIND_MY_WAY_COMPILE === '1') {
     this.find = Router.prototype._findCompiled
   }
 }
@@ -781,6 +778,18 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       brothersNodesStack.length = stackLength - 3
     }
   }
+}
+
+// Compiles every method tree into generated JavaScript and makes find()
+// dispatch to the compiled functions instead of walking the trees. Routes
+// can still be added or removed afterwards: the trees that changed are
+// compiled again on their next lookup.
+Router.prototype.compile = function compile () {
+  this.find = Router.prototype._findCompiled
+  for (const method in this.trees) {
+    this._compileTree(method)
+  }
+  return this
 }
 
 Router.prototype._compileTree = function _compileTree (method) {

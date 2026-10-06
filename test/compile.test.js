@@ -6,8 +6,9 @@ const FindMyWay = require('..')
 // Registers the same routes on a tree-walking router and a compiling one,
 // and checks every url gives the same result from both.
 function assertSameResults (t, routes, urls, opts = {}) {
-  const walking = FindMyWay({ ...opts, compile: false })
-  const compiling = FindMyWay({ ...opts, compile: true })
+  const walking = FindMyWay(opts)
+  walking.find = FindMyWay.prototype.find // the suite may run with FIND_MY_WAY_COMPILE=1
+  const compiling = FindMyWay(opts)
   for (const route of routes) {
     const [method, path, routeOpts] = Array.isArray(route) ? route : ['GET', route]
     const handler = () => path
@@ -19,6 +20,7 @@ function assertSameResults (t, routes, urls, opts = {}) {
       compiling.on(method, path, handler)
     }
   }
+  compiling.compile()
   for (const url of urls) {
     const [method, path, constraints] = Array.isArray(url) ? url : ['GET', url]
     const expected = walking.find(method, path, constraints)
@@ -35,13 +37,19 @@ function normalize (result) {
   return { handler: result.handler(), params: result.params, store: result.store, searchParams: result.searchParams }
 }
 
-test('compile option is off by default and can be turned on', t => {
-  t.plan(4)
-  // The test suite can be run with FIND_MY_WAY_COMPILE=1, which flips the default.
-  t.assert.strictEqual(FindMyWay().compile, process.env.FIND_MY_WAY_COMPILE === '1')
-  t.assert.strictEqual(FindMyWay({ compile: false }).compile, false)
-  t.assert.strictEqual(FindMyWay({ compile: true }).compile, true)
-  t.assert.strictEqual(FindMyWay({ compile: true }).find, FindMyWay.prototype._findCompiled)
+test('compile() compiles every method tree and switches find() to the compiled lookup', t => {
+  t.plan(6)
+  const router = FindMyWay()
+  router.find = FindMyWay.prototype.find // the suite may run with FIND_MY_WAY_COMPILE=1
+  router.on('GET', '/a', () => 'a')
+  router.on('POST', '/a', () => 'post a')
+  t.assert.strictEqual(router.find('GET', '/a').handler(), 'a')
+  t.assert.strictEqual(router._compiledGET, null)
+
+  t.assert.strictEqual(router.compile(), router)
+  t.assert.strictEqual(router.find, FindMyWay.prototype._findCompiled)
+  t.assert.strictEqual(typeof router._compiledGET, 'function')
+  t.assert.strictEqual(typeof router._compiledTrees.POST, 'function')
 })
 
 test('compiled lookup matches the tree walk on static, parametric and wildcard routes', t => {
@@ -128,8 +136,9 @@ test('compiled lookup matches constrained routes', t => {
 })
 
 test('compiled lookup is rebuilt when routes change', t => {
-  const router = FindMyWay({ compile: true })
+  const router = FindMyWay()
   router.on('GET', '/a', () => 'a')
+  router.compile()
   t.assert.strictEqual(router.find('GET', '/a').handler(), 'a')
   t.assert.strictEqual(router.find('GET', '/b'), null)
 
@@ -155,11 +164,12 @@ test('compiled lookup is rebuilt when routes change', t => {
 
 test('lookup uses the compiled matcher', t => {
   t.plan(3)
-  const router = FindMyWay({ compile: true, defaultRoute: (req, res) => { res.statusCode = 404 } })
+  const router = FindMyWay({ defaultRoute: (req, res) => { res.statusCode = 404 } })
   router.on('GET', '/users/:id', (req, res, params, store, searchParams) => {
     t.assert.deepStrictEqual({ ...params }, { id: '42' })
     t.assert.deepStrictEqual({ ...searchParams }, { x: '1' })
   })
+  router.compile()
   router.lookup({ method: 'GET', url: '/users/42?x=1', headers: {} }, {})
   const res = {}
   router.lookup({ method: 'GET', url: '/nope', headers: {} }, res)
