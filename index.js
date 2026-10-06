@@ -109,6 +109,7 @@ function Router (opts) {
   // compiled lookup.
   if (process.env.FIND_MY_WAY_COMPILE === '1') {
     this.find = Router.prototype._findCompiled
+    this.lookup = Router.prototype._lookupCompiled
   }
 }
 
@@ -786,6 +787,7 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
 // compiled again on their next lookup.
 Router.prototype.compile = function compile () {
   this.find = Router.prototype._findCompiled
+  this.lookup = Router.prototype._lookupCompiled
   for (const method in this.trees) {
     this._compileTree(method)
   }
@@ -812,7 +814,25 @@ Router.prototype._findCompiled = function _findCompiled (method, path, derivedCo
     compiled = this._compileTree(method)
     if (compiled === null) return null
   }
-  return compiled(path, derivedConstraints)
+  return compiled.find(path, derivedConstraints)
+}
+
+// lookup() in compiler mode: the compiled lookup calls the route handler
+// straight from the matched leaf instead of building a find() result first.
+// The callback form derives constraints asynchronously and keeps using find().
+Router.prototype._lookupCompiled = function _lookupCompiled (req, res, ctx, done) {
+  if (typeof ctx === 'function' || done !== undefined) {
+    return Router.prototype.lookup.call(this, req, res, ctx, done)
+  }
+
+  const derivedConstraints = this.constrainer.deriveConstraints(req, ctx)
+  const method = req.method
+  let compiled = method === 'GET' ? this._compiledGET : this._compiledTrees[method]
+  if (compiled == null) {
+    compiled = this._compileTree(method)
+    if (compiled === null) return this._defaultRoute(req, res, ctx)
+  }
+  return compiled.lookup(req.url, derivedConstraints, req, res, ctx)
 }
 
 // The URL handling of find(), followed by a call to the compiled matcher

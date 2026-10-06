@@ -214,8 +214,9 @@ By default `find-my-way` walks its radix tree for every lookup. Calling
 `compile()` once all routes are registered compiles each method's tree into
 generated JavaScript instead: static parts become inline char comparisons, the
 backtracking order is laid out as nested blocks and parameters land in fixed
-locals. Matching semantics are identical to the tree walk. Lookups are
-roughly 1.5 to 2.5 times faster, most on static and short parametric routes
+locals, and `lookup()` calls the route handler straight from the matched
+route. Matching semantics are identical to the tree walk. Lookups are roughly
+1.5 to 3 times faster, most on static and short parametric routes
 (`node benchmark/compile-mode.js` compares the two on a fresh URL string per
 request, as a server would).
 

@@ -37,8 +37,8 @@ function normalize (result) {
   return { handler: result.handler(), params: result.params, store: result.store, searchParams: result.searchParams }
 }
 
-test('compile() compiles every method tree and switches find() to the compiled lookup', t => {
-  t.plan(6)
+test('compile() compiles every method tree and switches find() and lookup() to the compiled versions', t => {
+  t.plan(8)
   const router = FindMyWay()
   router.find = FindMyWay.prototype.find // the suite may run with FIND_MY_WAY_COMPILE=1
   router.on('GET', '/a', () => 'a')
@@ -48,8 +48,10 @@ test('compile() compiles every method tree and switches find() to the compiled l
 
   t.assert.strictEqual(router.compile(), router)
   t.assert.strictEqual(router.find, FindMyWay.prototype._findCompiled)
-  t.assert.strictEqual(typeof router._compiledGET, 'function')
-  t.assert.strictEqual(typeof router._compiledTrees.POST, 'function')
+  t.assert.strictEqual(router.lookup, FindMyWay.prototype._lookupCompiled)
+  t.assert.strictEqual(typeof router._compiledGET.find, 'function')
+  t.assert.strictEqual(typeof router._compiledGET.lookup, 'function')
+  t.assert.strictEqual(typeof router._compiledTrees.POST.find, 'function')
 })
 
 test('compiled lookup matches the tree walk on static, parametric and wildcard routes', t => {
@@ -184,7 +186,7 @@ test('large route tables are split into several generated functions', t => {
     urls.push(`/api/res${i}`, `/api/res${i}/${i}`, `/api/res${i}/${i}/sub/${i * 7}?page=2`, `/api/res${i}/static/a/b`, `/api/res${i}/${i}/nope`)
   }
   const compiling = assertSameResults(t, routes, urls)
-  const source = compiling._compiledGET.source
+  const source = compiling._compiledGET.find.source
   t.assert.ok(source.includes('function subtree_'), 'the tree was split into subtree functions')
   const longest = Math.max(...source.split(/^function |^return function /m).map(fn => fn.split('\n').length))
   t.assert.ok(longest < 1000, `the longest generated function has ${longest} lines`)
@@ -192,4 +194,79 @@ test('large route tables are split into several generated functions', t => {
 
 test('regex params with nested capture groups behave like the tree walk', t => {
   assertSameResults(t, ['/n/:id((a)|b)/:rest', '/m/:id((?:a)|b)'], ['/n/a/x', '/n/b/x', '/m/a', '/m/b', '/m/c'])
+})
+
+test('compiled lookup calls the handler directly and keeps its return value and context', t => {
+  t.plan(10)
+  const router = FindMyWay({ defaultRoute: (req, res) => { res.statusCode = 404; return 'default' } })
+  router.on('GET', '/null', () => null)
+  router.on('GET', '/users/:id', function (req, res, params, store, searchParams) {
+    t.assert.deepStrictEqual({ ...params }, { id: '42' })
+    t.assert.deepStrictEqual({ ...searchParams }, { page: '2' })
+    // Without a context the handler is called as a method of its handle
+    // object, exactly as Router#callHandler does.
+    return this !== undefined && this.name === 'ctx' ? 'ctx' : 'no context'
+  }, { kind: 'store' })
+  router.compile()
+  t.assert.strictEqual(typeof router._compiledGET.lookup, 'function')
+
+  const req = (url) => ({ method: 'GET', url, headers: {} })
+  // A handler returning null must not be mistaken for a missing route.
+  t.assert.strictEqual(router.lookup(req('/null'), {}), null)
+  t.assert.strictEqual(router.lookup(req('/users/42?page=2'), {}), 'no context')
+  t.assert.strictEqual(router.lookup(req('/users/42?page=2'), {}, { name: 'ctx' }), 'ctx')
+
+  const res = {}
+  t.assert.strictEqual(router.lookup(req('/nope'), res), 'default')
+  t.assert.strictEqual(res.statusCode, 404)
+})
+
+test('compiled lookup falls back for percent-encoded urls and unknown methods', t => {
+  t.plan(4)
+  const router = FindMyWay({ defaultRoute: () => 'default', onBadUrl: (path) => `bad ${path}` })
+  router.on('GET', '/users/:id', (req, res, params) => params.id)
+  router.compile()
+  const req = (method, url) => ({ method, url, headers: {} })
+  t.assert.strictEqual(router.lookup(req('GET', '/users/john%20doe'), {}), 'john doe')
+  t.assert.strictEqual(router.lookup(req('GET', '/us%65rs/1'), {}), '1')
+  t.assert.strictEqual(router.lookup(req('GET', '/users/%'), {}), 'bad /users/%')
+  t.assert.strictEqual(router.lookup(req('DELETE', '/users/1'), {}), 'default')
+})
+
+test('compiled lookup with a done callback still derives constraints asynchronously', (t, done) => {
+  t.plan(3)
+  const router = FindMyWay({
+    constraints: {
+      secret: {
+        name: 'secret',
+        storage () {
+          const store = new Map()
+          return { get: (key) => store.get(key) || null, set: (key, value) => store.set(key, value) }
+        },
+        deriveConstraint (req, ctx, cb) {
+          setImmediate(() => cb(null, req.headers['x-secret']))
+        }
+      }
+    }
+  })
+  router.on('GET', '/a', { constraints: { secret: 'alpha' } }, () => 'alpha')
+  router.on('GET', '/a', { constraints: { secret: 'beta' } }, () => 'beta')
+  router.compile()
+  router.lookup({ method: 'GET', url: '/a', headers: { 'x-secret': 'beta' } }, {}, (err, result) => {
+    t.assert.ifError(err)
+    t.assert.strictEqual(result, 'beta')
+    t.assert.strictEqual(router.lookup, FindMyWay.prototype._lookupCompiled)
+    done()
+  })
+})
+
+test('static leaves on an all-static path are matched by whole-string comparison', t => {
+  const routes = ['/static', '/a/b', '/a/b/c', '/x/*', '/users/:id', '/users/:id/posts']
+  const urls = ['/static', '/static?x=1', '/static#f', '/stati', '/statics', '/a/b', '/a/b/c', '/a/b?q', '/a/b/', '/x/', '/x/y', '/users/1', '/users/1/posts', '/users/1/posts?x=1']
+  const compiling = assertSameResults(t, routes, urls)
+  const source = compiling._compiledGET.find.source
+  t.assert.ok(source.includes('path === "/static"'), 'leaf without children uses whole-string comparison')
+  t.assert.ok(source.includes('path === "/a/b/c"'), 'nested leaf without children uses whole-string comparison')
+  t.assert.ok(!source.includes('path === "/a/b"'), 'a leaf with children keeps the prefix chain')
+  t.assert.ok(!source.includes('path === "/users/'), 'nothing after a parameter uses whole-string comparison')
 })
