@@ -4,6 +4,13 @@
 // scenario by scenario. Every scenario runs in a fresh worker so the two
 // modes never share JIT state.
 //
+// Every lookup gets a new sequential URL string object, as a server gets a
+// new req.url from the HTTP parser for every request. Reusing one literal string
+// would let V8 caches keyed on the string object (internalized-string map
+// lookups, the String#split results cache) hide costs that real traffic pays.
+// The cost of making the string is measured in the same worker and
+// subtracted from both modes, and shown in its own column.
+//
 //   node benchmark/compile-mode.js [filter] [--rounds N] [--iters N]
 
 const { Worker, isMainThread, workerData, parentPort } = require('node:worker_threads')
@@ -93,17 +100,38 @@ if (!isMainThread) {
   }
   if (compile) router.compile()
   const reqs = benchmark.arguments.map(a => ({ method: a.method, url: a.url, headers: a.headers || {} }))
+  // String.fromCharCode builds a new sequential one-byte string, the same
+  // representation the HTTP parser produces for req.url. Concatenation or
+  // slicing would give cons or sliced strings instead, whose indirection
+  // makes every charCodeAt in the router slower than it is on real traffic.
+  const codes = benchmark.arguments.map(a => Array.from(a.url, c => c.charCodeAt(0)))
   const res = {}
   const n = reqs.length
-  for (let i = 0; i < 200000; i++) router.lookup(reqs[i % n], res)
-  const samples = []
-  for (let r = 0; r < rounds; r++) {
-    const start = process.hrtime.bigint()
-    for (let i = 0; i < iters; i++) router.lookup(reqs[i % n], res)
-    samples.push(Number(process.hrtime.bigint() - start) / iters)
+  let sink = 0
+
+  function freshUrl (i) {
+    return String.fromCharCode.apply(null, codes[i % n])
   }
-  samples.sort((a, b) => a - b)
-  parentPort.postMessage({ median: samples[Math.floor(samples.length / 2)] })
+
+  function measure (fn) {
+    for (let i = 0; i < 200000; i++) fn(i)
+    const samples = []
+    for (let r = 0; r < rounds; r++) {
+      const start = process.hrtime.bigint()
+      for (let i = 0; i < iters; i++) fn(i)
+      samples.push(Number(process.hrtime.bigint() - start) / iters)
+    }
+    samples.sort((a, b) => a - b)
+    return samples[Math.floor(samples.length / 2)]
+  }
+
+  const fresh = measure(i => { sink += freshUrl(i).length })
+  const lookup = measure(i => {
+    const req = reqs[i % n]
+    req.url = freshUrl(i)
+    router.lookup(req, res)
+  })
+  parentPort.postMessage({ median: lookup - fresh, fresh, sink })
 } else {
   const args = process.argv.slice(2)
   let rounds = 15
@@ -126,14 +154,16 @@ if (!isMainThread) {
   ;(async () => {
     const selected = benchmarks.filter(b => filter === null || b.name.includes(filter))
     const width = Math.max(...selected.map(b => b.name.length))
-    console.log(`${'scenario'.padEnd(width)}  ${'walk ns'.padStart(8)}  ${'compiled'.padStart(8)}  speedup`)
+    console.log('ns per lookup with a fresh url string per call, net of the string creation shown in the last column')
+    console.log(`${'scenario'.padEnd(width)}  ${'walk ns'.padStart(8)}  ${'compiled'.padStart(8)}  speedup  ${'string'.padStart(6)}`)
     const ratios = []
     for (const benchmark of selected) {
       const walk = await run(benchmark, false)
       const compiled = await run(benchmark, true)
       const ratio = walk.median / compiled.median
       ratios.push(ratio)
-      console.log(`${benchmark.name.padEnd(width)}  ${walk.median.toFixed(1).padStart(8)}  ${compiled.median.toFixed(1).padStart(8)}  ${ratio.toFixed(2)}x`)
+      const fresh = (walk.fresh + compiled.fresh) / 2
+      console.log(`${benchmark.name.padEnd(width)}  ${walk.median.toFixed(1).padStart(8)}  ${compiled.median.toFixed(1).padStart(8)}  ${(ratio.toFixed(2) + 'x').padStart(7)}  ${fresh.toFixed(1).padStart(6)}`)
     }
     const geomean = Math.exp(ratios.reduce((sum, ratio) => sum + Math.log(ratio), 0) / ratios.length)
     console.log(`geomean speedup: ${geomean.toFixed(2)}x`)
