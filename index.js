@@ -104,13 +104,6 @@ function Router (opts) {
   // Compiled lookup functions, one per method tree, see compile().
   this._compiledGET = null
   this._compiledTrees = Object.create(null)
-  // Testing hook: FIND_MY_WAY_COMPILE=1 makes every router behave as if
-  // compile() had been called, so the whole test suite runs against the
-  // compiled lookup.
-  if (process.env.FIND_MY_WAY_COMPILE === '1') {
-    this.find = Router.prototype._findCompiled
-    this.lookup = Router.prototype._lookupCompiled
-  }
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {

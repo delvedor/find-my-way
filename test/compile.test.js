@@ -7,7 +7,7 @@ const FindMyWay = require('..')
 // and checks every url gives the same result from both.
 function assertSameResults (t, routes, urls, opts = {}) {
   const walking = FindMyWay(opts)
-  walking.find = FindMyWay.prototype.find // the suite may run with FIND_MY_WAY_COMPILE=1
+  walking.find = FindMyWay.prototype.find // the suite may run with the compiled-lookup preload
   const compiling = FindMyWay(opts)
   for (const route of routes) {
     const [method, path, routeOpts] = Array.isArray(route) ? route : ['GET', route]
@@ -40,7 +40,7 @@ function normalize (result) {
 test('compile() compiles every method tree and switches find() and lookup() to the compiled versions', t => {
   t.plan(8)
   const router = FindMyWay()
-  router.find = FindMyWay.prototype.find // the suite may run with FIND_MY_WAY_COMPILE=1
+  router.find = FindMyWay.prototype.find // the suite may run with the compiled-lookup preload
   router.on('GET', '/a', () => 'a')
   router.on('POST', '/a', () => 'post a')
   t.assert.strictEqual(router.find('GET', '/a').handler(), 'a')

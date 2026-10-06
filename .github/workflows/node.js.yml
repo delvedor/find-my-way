@@ -50,6 +50,12 @@ jobs:
       run: |
         npm test
 
+    - name: Test (compiled lookup)
+      env:
+        NODE_OPTIONS: --require=./test/helpers/compiled-lookup-preload.js
+      run: |
+        npx borp
+
     - name: Type Definitions
       run: |
         npm run test:typescript
