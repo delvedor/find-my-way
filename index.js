@@ -588,13 +588,6 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     path = absolutePath
   }
 
-  // This must be run before sanitizeUrl as the resulting function
-  // .sliceParameter must be constructed with same URL string used
-  // throughout the rest of this function.
-  if (this.ignoreDuplicateSlashes) {
-    path = removeDuplicateSlashes(path)
-  }
-
   let sanitizedUrl
   let querystring
   let shouldDecodeParam
@@ -611,6 +604,11 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
     shouldDecodeParam = sanitizedUrl.shouldDecodeParam
   } catch (error) {
     return this._onBadUrl(path)
+  }
+
+  // Run after the querystring is split off so that it is left untouched
+  if (this.ignoreDuplicateSlashes) {
+    path = removeDuplicateSlashes(path)
   }
 
   if (this.ignoreTrailingSlash) {
