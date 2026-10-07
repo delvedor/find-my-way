@@ -270,3 +270,29 @@ test('static leaves on an all-static path are matched by whole-string comparison
   t.assert.ok(!source.includes('path === "/a/b"'), 'a leaf with children keeps the prefix chain')
   t.assert.ok(!source.includes('path === "/users/'), 'nothing after a parameter uses whole-string comparison')
 })
+
+test('onMaxParamLength is reported from a split subtree function', t => {
+  t.plan(3)
+  const router = FindMyWay({ onMaxParamLength: (path) => `too long: ${path}` })
+  for (let i = 0; i < 300; i++) {
+    router.on('GET', `/api/res${i}/:id`, () => 'ok')
+  }
+  router.compile()
+  t.assert.ok(router._compiledGET.find.source.includes('function subtree_'))
+  const url = `/api/res150/${'x'.repeat(101)}`
+  t.assert.strictEqual(router.find('GET', url).handler(), `too long: ${url}`)
+  // The generated code must not leak its locals into the global scope.
+  t.assert.strictEqual(globalThis.maxParamLengthExceeded, undefined)
+})
+
+test('placeholders used while generating code cannot collide with route paths', t => {
+  t.plan(3)
+  const router = FindMyWay()
+  router.on('GET', '/p/aaaaaaaaaa@POS@/x', () => 'long')
+  router.on('GET', '/p/@RETRY@', () => 'retry')
+  router.on('GET', '/p/q', () => 'q')
+  router.compile()
+  t.assert.strictEqual(router.find('GET', '/p/aaaaaaaaaa@POS@/x').handler(), 'long')
+  t.assert.strictEqual(router.find('GET', '/p/@RETRY@').handler(), 'retry')
+  t.assert.strictEqual(router.find('GET', '/p/q').handler(), 'q')
+})
