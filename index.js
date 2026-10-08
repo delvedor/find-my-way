@@ -41,6 +41,13 @@ const OPTIONAL_PARAM_REGEXP = /(\/:[^/()]*?)\?(\/?)/
 const ESCAPE_REGEXP = /[.*+?^${}()|[\]\\]/g
 const REMOVE_DUPLICATE_SLASHES_REGEXP = /\/\/+/g
 
+// URL.parse returns null instead of throwing on malformed input, which skips
+// the error and stack trace allocation on an attacker controlled path. It is
+// only available since Node.js 20.18.0, so fall back to URL.canParse.
+const parseUrl = typeof URL.parse === 'function'
+  ? URL.parse
+  : (url) => URL.canParse(url) ? new URL(url) : null
+
 if (!isRegexSafe(OPTIONAL_PARAM_REGEXP)) {
   throw new Error('the OPTIONAL_PARAM_REGEXP is not safe, update this module')
 }
@@ -1003,12 +1010,8 @@ function getPathFromAbsoluteUrl (url) {
     return null
   }
 
-  try {
-    const parsed = new URL(url)
-    if (parsed.protocol !== `${scheme}:` || parsed.host.length === 0) {
-      return null
-    }
-  } catch (error) {
+  const parsed = parseUrl(url)
+  if (parsed === null || parsed.protocol !== `${scheme}:` || parsed.host.length === 0) {
     return null
   }
 
