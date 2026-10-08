@@ -195,6 +195,13 @@ declare namespace Router {
     ): boolean;
 
     reset(): void;
+    /**
+     * Compile every method's route tree into generated JavaScript and make
+     * lookups dispatch to it instead of walking the tree. Call it once all
+     * routes are registered; trees changed afterwards are compiled again on
+     * their next lookup.
+     */
+    compile(): this;
     prettyPrint(): string;
     prettyPrint(opts: {
       method?: HTTPMethod,

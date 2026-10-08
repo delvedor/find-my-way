@@ -208,6 +208,34 @@ router.prettyPrint()
 
 ```
 
+#### Compiler mode
+
+By default `find-my-way` walks its radix tree for every lookup. Calling
+`compile()` once all routes are registered compiles each method's tree into
+generated JavaScript instead: static parts become inline char comparisons, the
+backtracking order is laid out as nested blocks and parameters land in fixed
+locals, and `lookup()` calls the route handler straight from the matched
+route. Matching semantics are identical to the tree walk. Lookups are roughly
+1.5 to 3 times faster, most on static and short parametric routes
+(`node benchmark/compile-mode.js` compares the two on a fresh URL string per
+request, as a server would).
+
+```js
+const router = require('find-my-way')()
+router.on('GET', '/users/:id', (req, res, params) => { /* ... */ })
+router.compile()
+```
+
+Routes can still be added or removed after `compile()`: the trees that
+changed are compiled again on their next lookup, so register routes in bulk
+rather than interleaving them with lookups.
+
+The compiled matcher works on the raw request URL and only falls back to the
+decoded path when it meets a percent-encoded character, so percent-encoded
+URLs are no faster than with the tree walk. Each route produces its own code:
+a table of thousands of routes compiles to several megabytes of JavaScript,
+which warms up per route and no longer fits the CPU caches when traffic is
+spread evenly over all of them.
 
 <a name="on"></a>
 #### on(method, path, [opts], handler, [store])

@@ -31,6 +31,7 @@ const isRegexSafe = require('safe-regex2')
 const deepEqual = require('fast-deep-equal')
 const { prettyPrintTree } = require('./lib/pretty-print')
 const { createStaticNode, NODE_TYPES } = require('./lib/node')
+const { compileTree } = require('./lib/compiler')
 const Constrainer = require('./lib/constrainer')
 const httpMethods = require('./lib/http-methods')
 const httpMethodStrategy = require('./lib/strategies/http-method')
@@ -99,6 +100,10 @@ function Router (opts) {
   this.routes = []
   this.trees = Object.create(null)
   this._treeGET = null
+
+  // Compiled lookup functions, one per method tree, see compile().
+  this._compiledGET = null
+  this._compiledTrees = Object.create(null)
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -159,6 +164,10 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
   this.constrainer.validateConstraints(constraints)
   // Let the constrainer know if any constraints are being used now
   this.constrainer.noteUsage(constraints)
+
+  // The tree is about to change: drop any compiled lookup functions
+  this._compiledGET = null
+  this._compiledTrees = Object.create(null)
 
   // Boot the tree for this method if it doesn't exist yet
   if (this.trees[method] === undefined) {
@@ -474,6 +483,8 @@ Router.prototype.addConstraintStrategy = function (constraints) {
 }
 
 Router.prototype.reset = function reset () {
+  this._compiledGET = null
+  this._compiledTrees = Object.create(null)
   this.trees = Object.create(null)
   this._treeGET = null
   this.routes = []
@@ -761,6 +772,103 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       brothersNodesStack.length = stackLength - 3
     }
   }
+}
+
+// Compiles every method tree into generated JavaScript and makes find()
+// dispatch to the compiled functions instead of walking the trees. Routes
+// can still be added or removed afterwards: the trees that changed are
+// compiled again on their next lookup.
+Router.prototype.compile = function compile () {
+  this.find = Router.prototype._findCompiled
+  this.lookup = Router.prototype._lookupCompiled
+  for (const method in this.trees) {
+    this._compileTree(method)
+  }
+  return this
+}
+
+Router.prototype._compileTree = function _compileTree (method) {
+  const tree = this.trees[method]
+  if (tree === undefined) return null
+  const compiled = compileTree(this, tree)
+  if (method === 'GET') {
+    this._compiledGET = compiled
+  } else {
+    this._compiledTrees[method] = compiled
+  }
+  return compiled
+}
+
+// find() in compiler mode: dispatches to the function compiled for the
+// method's tree, compiling it first if the tree changed since the last call.
+Router.prototype._findCompiled = function _findCompiled (method, path, derivedConstraints) {
+  let compiled = method === 'GET' ? this._compiledGET : this._compiledTrees[method]
+  if (compiled == null) {
+    compiled = this._compileTree(method)
+    if (compiled === null) return null
+  }
+  return compiled.find(path, derivedConstraints)
+}
+
+// lookup() in compiler mode: the compiled lookup calls the route handler
+// straight from the matched leaf instead of building a find() result first.
+// The callback form derives constraints asynchronously and keeps using find().
+Router.prototype._lookupCompiled = function _lookupCompiled (req, res, ctx, done) {
+  if (typeof ctx === 'function' || done !== undefined) {
+    return Router.prototype.lookup.call(this, req, res, ctx, done)
+  }
+
+  const derivedConstraints = this.constrainer.deriveConstraints(req, ctx)
+  const method = req.method
+  let compiled = method === 'GET' ? this._compiledGET : this._compiledTrees[method]
+  if (compiled == null) {
+    compiled = this._compileTree(method)
+    if (compiled === null) return this._defaultRoute(req, res, ctx)
+  }
+  return compiled.lookup(req.url, derivedConstraints, req, res, ctx)
+}
+
+// The URL handling of find(), followed by a call to the compiled matcher
+// for the sanitized path in place of the tree walk.
+Router.prototype._findSanitized = function _findSanitized (matcher, path, derivedConstraints) {
+  if (path.charCodeAt(0) !== 47) { // 47 is '/'
+    const absolutePath = getPathFromAbsoluteUrl(path)
+    if (absolutePath === null) {
+      return this._onBadUrl(path)
+    }
+    path = absolutePath
+  }
+
+  if (this.ignoreDuplicateSlashes) {
+    path = removeDuplicateSlashes(path)
+  }
+
+  let sanitizedUrl
+  let querystring
+  let shouldDecodeParam
+
+  try {
+    sanitizedUrl = path.length >= MIN_NATIVE_SCAN_LENGTH
+      ? safeDecodeURINativeScan(path, this.useSemicolonDelimiter)
+      : safeDecodeURICharScan(path, this.useSemicolonDelimiter, 1)
+    path = sanitizedUrl.path
+    querystring = sanitizedUrl.querystring
+    shouldDecodeParam = sanitizedUrl.shouldDecodeParam
+  } catch (error) {
+    return this._onBadUrl(path)
+  }
+
+  if (this.ignoreTrailingSlash) {
+    path = trimLastSlash(path)
+  }
+
+  const originPath = path
+
+  if (this.caseSensitive === false) {
+    path = path.toLowerCase()
+  }
+
+  return matcher(path, originPath, shouldDecodeParam, derivedConstraints, querystring)
 }
 
 Router.prototype._rebuild = function (routes) {
