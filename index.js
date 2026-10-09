@@ -844,10 +844,6 @@ Router.prototype._findSanitized = function _findSanitized (matcher, path, derive
     path = absolutePath
   }
 
-  if (this.ignoreDuplicateSlashes) {
-    path = removeDuplicateSlashes(path)
-  }
-
   let sanitizedUrl
   let querystring
   let shouldDecodeParam
@@ -861,6 +857,11 @@ Router.prototype._findSanitized = function _findSanitized (matcher, path, derive
     shouldDecodeParam = sanitizedUrl.shouldDecodeParam
   } catch (error) {
     return this._onBadUrl(path)
+  }
+
+  // Run after the querystring is split off so that it is left untouched
+  if (this.ignoreDuplicateSlashes) {
+    path = removeDuplicateSlashes(path)
   }
 
   if (this.ignoreTrailingSlash) {
