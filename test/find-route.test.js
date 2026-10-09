@@ -290,3 +290,35 @@ test('findRoute returns handler for a constrained route', (t) => {
 
   equalRouters(t, findMyWay, fundMyWayClone)
 })
+
+test('findRoute and duplicate detection follow off() and reset()', (t) => {
+  t.plan(7)
+
+  const findMyWay = FindMyWay()
+
+  const handler1 = () => {}
+  const handler2 = () => {}
+  findMyWay.on('GET', '/example/:id', handler1)
+  findMyWay.on('GET', '/example/:id', { constraints: { version: '1.0.0' } }, handler2)
+
+  findMyWay.off('GET', '/example/:id', {})
+  t.assert.equal(findMyWay.findRoute('GET', '/example/:id'), null)
+  t.assert.equal(
+    findMyWay.findRoute('GET', '/example/:id', { version: '1.0.0' }).handler,
+    handler2
+  )
+
+  findMyWay.on('GET', '/example/:id', handler1)
+  t.assert.equal(findMyWay.findRoute('GET', '/example/:id').handler, handler1)
+  t.assert.throws(
+    () => findMyWay.on('GET', '/example/:id', handler1),
+    /Method 'GET' already declared for route '\/example\/:'/
+  )
+
+  findMyWay.reset()
+  t.assert.equal(findMyWay.findRoute('GET', '/example/:id'), null)
+  t.assert.equal(findMyWay.findRoute('GET', '/example/:id', { version: '1.0.0' }), null)
+
+  findMyWay.on('GET', '/example/:id', handler1)
+  t.assert.equal(findMyWay.findRoute('GET', '/example/:id').handler, handler1)
+})

@@ -105,12 +105,18 @@ function Router (opts) {
   this.useSemicolonDelimiter = opts.useSemicolonDelimiter || false
 
   this.routes = []
+  this._routesByMethodAndPattern = new Map()
   this.trees = Object.create(null)
   this._treeGET = null
 
   // Compiled lookup functions, one per method tree, see compile().
   this._compiledGET = null
   this._compiledTrees = Object.create(null)
+}
+
+function routesWithMethodAndPattern (router, method, pattern) {
+  const byPattern = router._routesByMethodAndPattern.get(method)
+  return byPattern === undefined ? undefined : byPattern.get(pattern)
 }
 
 Router.prototype.on = function on (method, path, opts, handler, store) {
@@ -311,19 +317,28 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
     pattern = '/*'
   }
 
-  for (const existRoute of this.routes) {
-    const routeConstraints = existRoute.opts.constraints || {}
-    if (
-      existRoute.method === method &&
-      existRoute.pattern === pattern &&
-      deepEqual(routeConstraints, constraints)
-    ) {
-      throw new Error(`Method '${method}' already declared for route '${pattern}' with constraints '${JSON.stringify(constraints)}'`)
+  const sameRoutes = routesWithMethodAndPattern(this, method, pattern)
+  if (sameRoutes !== undefined) {
+    for (const existRoute of sameRoutes) {
+      const routeConstraints = existRoute.opts.constraints || {}
+      if (deepEqual(routeConstraints, constraints)) {
+        throw new Error(`Method '${method}' already declared for route '${pattern}' with constraints '${JSON.stringify(constraints)}'`)
+      }
     }
   }
 
   const route = { method, path, pattern, params, opts, handler, store }
   this.routes.push(route)
+  if (sameRoutes !== undefined) {
+    sameRoutes.push(route)
+  } else {
+    let byPattern = this._routesByMethodAndPattern.get(method)
+    if (byPattern === undefined) {
+      byPattern = new Map()
+      this._routesByMethodAndPattern.set(method, byPattern)
+    }
+    byPattern.set(pattern, [route])
+  }
   currentNode.addRoute(route, this.constrainer)
 }
 
@@ -462,13 +477,14 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
     pattern = pattern.toLowerCase()
   }
 
-  for (const existRoute of this.routes) {
+  const sameRoutes = routesWithMethodAndPattern(this, method, pattern)
+  if (sameRoutes === undefined) {
+    return null
+  }
+
+  for (const existRoute of sameRoutes) {
     const routeConstraints = existRoute.opts.constraints || {}
-    if (
-      existRoute.method === method &&
-      existRoute.pattern === pattern &&
-      deepEqual(routeConstraints, constraints)
-    ) {
+    if (deepEqual(routeConstraints, constraints)) {
       return {
         handler: existRoute.handler,
         store: existRoute.store,
@@ -495,6 +511,7 @@ Router.prototype.reset = function reset () {
   this.trees = Object.create(null)
   this._treeGET = null
   this.routes = []
+  this._routesByMethodAndPattern = new Map()
 }
 
 Router.prototype.off = function off (method, path, constraints) {
