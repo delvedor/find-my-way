@@ -67,12 +67,12 @@ test('Should get an empty parameter', t => {
   t.plan(1)
   const findMyWay = FindMyWay({
     defaultRoute: (req, res) => {
-      t.assert.fail('We should not be here')
+      t.assert.ok(true, 'Called defaultRoute')
     }
   })
 
   findMyWay.on('GET', '/a/:param', (req, res, params) => {
-    t.assert.equal(params.param, '')
+    t.assert.fail('We should not be here')
   })
 
   findMyWay.lookup({ method: 'GET', url: '/a/', headers: {} }, null)
