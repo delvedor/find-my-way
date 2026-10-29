@@ -25,6 +25,7 @@ expect(Router.trimLastSlash('/hello/')).type.toBe<string>();
   const router = Router({
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
+    useSemicolonDelimiter: true,
     allowUnsafeRegex: false,
     caseSensitive: false,
     maxParamLength: 42,
@@ -144,6 +145,7 @@ expect(Router.trimLastSlash('/hello/')).type.toBe<string>();
   const router = Router<Router.HTTPVersion.V2>({
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
+    useSemicolonDelimiter: false,
     allowUnsafeRegex: false,
     caseSensitive: false,
     maxParamLength: 42,
