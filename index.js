@@ -352,6 +352,15 @@ Router.prototype.findRoute = function findNode (method, path, constraints = {}) 
     return null
   }
 
+  // Normalize the path the same way on() does before registering it
+  if (this.ignoreDuplicateSlashes) {
+    path = removeDuplicateSlashes(path)
+  }
+
+  if (this.ignoreTrailingSlash) {
+    path = trimLastSlash(path)
+  }
+
   let pattern = path
 
   let currentNode = this.trees[method]
