@@ -2,16 +2,25 @@
 
 const { test } = require('node:test')
 const FindMyWay = require('..')
+const { sanitizeRawUrl } = require('../lib/compiler')
+const { safeDecodeURI } = require('../lib/url-sanitizer')
 
 // Registers the same routes on a tree-walking router and a compiling one,
-// and checks every url gives the same result from both.
+// and checks every url gives the same result from both, through find() and,
+// for urls without derived constraints, through lookup(), which runs its own
+// generated function.
 function assertSameResults (t, routes, urls, opts = {}) {
   const walking = FindMyWay(opts)
-  walking.find = FindMyWay.prototype.find // the suite may run with the compiled-lookup preload
+  // the suite may run with the compiled-lookup preload
+  walking.find = FindMyWay.prototype.find
+  walking.lookup = FindMyWay.prototype.lookup
   const compiling = FindMyWay(opts)
   for (const route of routes) {
     const [method, path, routeOpts] = Array.isArray(route) ? route : ['GET', route]
-    const handler = () => path
+    // Called without arguments by normalize(), with them by lookup().
+    const handler = (req, res, params, store, searchParams) => req === undefined
+      ? path
+      : { path, params: { ...params }, searchParams: { ...searchParams } }
     if (routeOpts) {
       walking.on(method, path, routeOpts, handler)
       compiling.on(method, path, routeOpts, handler)
@@ -26,8 +35,17 @@ function assertSameResults (t, routes, urls, opts = {}) {
     const expected = walking.find(method, path, constraints)
     const actual = compiling.find(method, path, constraints)
     t.assert.deepStrictEqual(normalize(actual), normalize(expected), `${method} ${path}`)
+    if (constraints === undefined) {
+      t.assert.deepStrictEqual(lookup(compiling, method, path), lookup(walking, method, path), `lookup ${method} ${path}`)
+    }
   }
   return compiling
+}
+
+function lookup (router, method, url) {
+  const res = { end () {} }
+  const result = router.lookup({ method, url, headers: {} }, res)
+  return { result, statusCode: res.statusCode }
 }
 
 // The onBadUrl and onMaxParamLength handlers are fresh closures on every
@@ -83,6 +101,118 @@ test('compiled lookup falls back to the sanitized path for percent-encoded urls'
   ]
   assertSameResults(t, routes, urls)
   assertSameResults(t, routes, urls, { onBadUrl: (path) => path })
+})
+
+test('compiled lookup decodes percent-encoded params in place like the tree walk', t => {
+  const routes = ['/static', '/users/me', '/users/:id', '/users/:id/posts/:postId', '/files/*', '/n/:id(^\\d+$)', '/v1/:x']
+  const urls = [
+    // decoded in place
+    '/users/john%20doe', '/users/a%2Fb', '/users/a%2fb', '/users/a%3Fb?x=1', '/users/%25', '/users/%2525', '/users/%25zz',
+    '/users/J%C3%BCrgen', '/users/%c3%bc', '/users/%E2%82%AC', '/users/%F0%9F%98%80', '/users/%22q%22',
+    '/users/john%20doe/posts/hello%2Fworld?page=2', '/files/a%20b/c%2Fd%20e', '/files/%F0%9F%98%80?x', '/n/%31%32',
+    // escapes past the chars the scanners check one by one
+    '/users/abcdefghijklmnop%20q', '/users/abcdefghijklmnop%20q/posts/abcdefghijklmnop%2F?x', '/files/abcdefghijklmnopq/r%20s',
+    // escapes of chars used by static parts go through the sanitized path
+    '/users/m%65', '/users/%6De', '/users/%6de', '/st%61tic', '/us%65rs/me', '/v%31/x', '/users/%6De/posts/1',
+    '/users/abcdefghijklmnop%6De', '/abcdefghijklmnop/%73tatic',
+    // malformed escapes
+    '/users/%', '/users/%2', '/users/%zz', '/users/%C3', '/users/%C3%28', '/users/%C1%81', '/users/%ED%A0%80',
+    '/users/%F4%90%80%80', '/users/%E2%82%AC%', '/files/%E2%82', '/static%', '/static%zz',
+    // no match
+    '/nope%20here', '/users/a%20b/nope', '/nope?x=%20', '/nope?x=%zz', '/n/%41', '/n/%41/x', '/nope%2Fhere'
+  ]
+  const compiling = assertSameResults(t, routes, urls)
+  t.assert.ok(compiling._compiledGET.find.source.includes('decodeSegment('), 'the raw matcher decodes params')
+  assertSameResults(t, routes, urls, { onBadUrl: (path) => path })
+  assertSameResults(t, routes, urls, { useSemicolonDelimiter: true })
+  assertSameResults(t, routes, urls, { maxParamLength: 3, onMaxParamLength: (path) => path })
+  assertSameResults(t, routes, ['/users/a;b', '/users/a%3Bb;c', '/files/a%20b;c?d'], { useSemicolonDelimiter: true })
+})
+
+test('compiled lookup matches non-ASCII static parts sent percent-encoded', t => {
+  // '/\uD83D*' makes the tree split a static part between the two halves of
+  // a surrogate pair, with a wildcard after the first one.
+  const routes = ['/über-uns', '/café/:id', '/😀', '/😃', '/\uD83D*', '/a/:p', '/b/ü/:p']
+  const urls = [
+    '/%C3%BCber-uns', '/%c3%bcber-uns', '/%C3%BCber-uns?x=1', '/caf%C3%A9/1', '/caf%C3%A9/%C3%A9', '/caf%C3%A9/%C3',
+    '/%F0%9F%98%80', '/%F0%9F%98%83', '/%F0%9F%98%81', '/%C3%BC', '/a/%C3%BC', '/a/%F0%9F%98%81', '/b/%C3%BC/%C3%BC'
+  ]
+  assertSameResults(t, routes, urls)
+  assertSameResults(t, routes, urls, { onBadUrl: (path) => path })
+})
+
+test('compiled lookup matches the tree walk on randomly percent-encoded urls', t => {
+  const routes = [
+    '/', '/me', '/users', '/users/me', '/users/:id', '/users/:id/posts/:postId', '/users/:id/x-y', '/:a/:b/c',
+    '/files/*', '/n/:id(^\\d+$)', '/d/:a-:b', '/v1/:x/v2', '/a.b/:x', '/über/:x', '/:x/me/*'
+  ]
+  const values = ['me', 'users', 'x-y', 'a.b', 'v1', 'c', '42', 'a b', 'ü', '😀', 'a/b', 'a?b', '%', 'é#', 'abcdefghijklmnop me']
+  // A seeded generator keeps the urls the same on every run.
+  let seed = 42
+  const random = (n) => {
+    seed = (Math.imul(seed, 1103515245) + 12345) >>> 0
+    return (seed >>> 8) % n
+  }
+  const encode = (text) => {
+    let result = ''
+    for (const char of text) {
+      const kind = random(4)
+      if (kind === 0) {
+        // every UTF-8 byte as an escape, unreserved chars included
+        for (const byte of Buffer.from(char)) result += '%' + byte.toString(16).padStart(2, '0')
+      } else if (kind === 1 || char.charCodeAt(0) > 127) {
+        result += encodeURIComponent(char)
+      } else {
+        result += char
+      }
+    }
+    return result
+  }
+  const urls = []
+  for (let i = 0; i < 2000; i++) {
+    const route = routes[random(routes.length)]
+    const path = route.replace(/:\w+(\([^)]*\))?(-:\w+)?|\*/g, () => values[random(values.length)])
+    const suffix = ['', '', '?q=%20', '#f', '%', '%C3', '/'][random(7)]
+    urls.push(encode(path) + suffix)
+  }
+  assertSameResults(t, routes, urls)
+  assertSameResults(t, routes, urls, { onBadUrl: (path) => path, maxParamLength: 4, onMaxParamLength: (path) => path })
+})
+
+test('sanitizeRawUrl splits and decodes urls exactly like safeDecodeURI', t => {
+  const hex = (byte) => '%' + byte.toString(16).padStart(2, '0')
+  // Continuation bytes on the edges of the ranges UTF-8 allows after each lead byte.
+  const edges = [0x00, 0x2f, 0x7f, 0x80, 0x8f, 0x90, 0x9f, 0xa0, 0xbf, 0xc0, 0xff]
+  const escapes = []
+  for (let lead = 0; lead < 0x100; lead++) {
+    escapes.push(hex(lead), hex(lead).toUpperCase())
+    for (const b of edges) {
+      escapes.push(hex(lead) + hex(b))
+      if (lead < 0xe0) continue
+      for (const c of edges) {
+        escapes.push(hex(lead) + hex(b) + hex(c))
+        if (lead < 0xf0) continue
+        for (const d of edges) escapes.push(hex(lead) + hex(b) + hex(c) + hex(d))
+      }
+    }
+  }
+  const urls = ['/%', '/%2', '/a%zz', '/a%25%2F%3b?x', '/a;b%20?c', '/a#b%', '/%2525', '/a/%C3%BC/%F0%9F%98%80']
+  for (const escape of escapes) urls.push(`/a/${escape}`, `/${escape}b?q=${escape}`)
+
+  const mismatches = []
+  for (const useSemicolonDelimiter of [false, true]) {
+    for (const url of urls) {
+      let expected
+      try {
+        expected = safeDecodeURI(url, useSemicolonDelimiter)
+      } catch {
+        expected = null
+      }
+      const actual = sanitizeRawUrl(url, useSemicolonDelimiter)
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) mismatches.push(url)
+    }
+  }
+  t.assert.deepStrictEqual(mismatches, [])
 })
 
 test('compiled lookup honours the router options', t => {
@@ -221,7 +351,7 @@ test('compiled lookup calls the handler directly and keeps its return value and 
   t.assert.strictEqual(res.statusCode, 404)
 })
 
-test('compiled lookup falls back for percent-encoded urls and unknown methods', t => {
+test('compiled lookup handles percent-encoded urls and unknown methods', t => {
   t.plan(4)
   const router = FindMyWay({ defaultRoute: () => 'default', onBadUrl: (path) => `bad ${path}` })
   router.on('GET', '/users/:id', (req, res, params) => params.id)

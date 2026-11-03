@@ -230,9 +230,12 @@ Routes can still be added or removed after `compile()`: the trees that
 changed are compiled again on their next lookup, so register routes in bulk
 rather than interleaving them with lookups.
 
-The compiled matcher works on the raw request URL and only falls back to the
-decoded path when it meets a percent-encoded character, so percent-encoded
-URLs are no faster than with the tree walk. Each route produces its own code:
+The compiled matcher works on the raw request URL and decodes
+percent-encoded parameters in place. It only falls back to the decoded path
+when an escape decodes to a character used by the static parts of the
+routes, in practice an encoded letter or digit (`/us%65rs`,
+`/users/%61lice`), which clients rarely send: spaces, reserved characters
+and non-ASCII text are decoded in place. Each route produces its own code:
 a table of thousands of routes compiles to several megabytes of JavaScript,
 which warms up per route and no longer fits the CPU caches when traffic is
 spread evenly over all of them.
