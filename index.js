@@ -230,6 +230,12 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
       // Canonical form of this node, accumulated one parameter at a time so
       // static parts between parameters survive into the pattern.
       let nodePatternParts = ''
+      // Every char of a segment matched by a regex node is either inside a
+      // parameter capture group or part of a static part, so a segment longer
+      // than nodeParamCount * maxParamLength + nodeStaticLength can never be a
+      // valid match. It is used to bound the regex input on lookup.
+      let nodeParamCount = 0
+      let nodeStaticLength = 0
 
       let lastParamStartIndex = i + 1
       for (let j = lastParamStartIndex; ; j++) {
@@ -242,6 +248,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
         if (isRegexParam || isStaticPart || isEndOfNode) {
           const paramName = pattern.slice(lastParamStartIndex, j)
           params.push(paramName)
+          nodeParamCount++
 
           isRegexNode = isRegexNode || isRegexParam || isStaticPart
 
@@ -278,6 +285,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
             staticPart = staticPart.replaceAll('::', ':')
             staticPart = staticPart.replaceAll('%', '%25')
             regexps.push(backtrack = escapeRegExp(staticPart))
+            nodeStaticLength += staticPart.length
           }
 
           lastParamStartIndex = j + 1
@@ -291,7 +299,7 @@ Router.prototype._on = function _on (method, path, opts, handler, store) {
             i += nodePattern.length
 
             const regex = isRegexNode ? new RegExp('^' + regexps.join('') + '$') : null
-            currentNode = currentNode.createParametricChild(regex, staticPart || null, nodePath)
+            currentNode = currentNode.createParametricChild(regex, staticPart || null, nodePath, nodeParamCount, nodeStaticLength)
             parentNodePathIndex = i + 1
             break
           }
@@ -731,8 +739,13 @@ Router.prototype.find = function find (method, path, derivedConstraints) {
       let matched = true
       let regexMatches = null
       if (currentNode.isRegex) {
-        regexMatches = currentNode.regex.exec(param)
-        if (regexMatches === null) {
+        // Bound the regex input before running it: a non-matching regex never
+        // reaches the capture group length check below, so an over-long
+        // segment would otherwise be fed to a possibly backtracking regex.
+        if (param.length > currentNode.regexParamCount * maxParamLength + currentNode.regexStaticLength) {
+          maxParamLengthExceeded = true
+          matched = false
+        } else if ((regexMatches = currentNode.regex.exec(param)) === null) {
           matched = false
         } else {
           for (let i = 1; i < regexMatches.length; i++) {
