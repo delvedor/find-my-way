@@ -141,3 +141,45 @@ test('invalid HTTP absolute-form targets use the bad URL handler', t => {
     t.assert.equal(badUrl, url)
   }
 })
+
+for (const compile of [false, true]) {
+  test(`a path that does not start with a slash is not matched as one (compile: ${compile})`, t => {
+    const badUrls = []
+    const findMyWay = FindMyWay({
+      onBadUrl: (path, req, res) => {
+        badUrls.push(path)
+      }
+    })
+
+    const rootHandler = () => {}
+    const adminHandler = () => {}
+    findMyWay.on('GET', '/', rootHandler)
+    findMyWay.on('GET', '/admin', adminHandler)
+    findMyWay.on('GET', '/admin/:id', adminHandler)
+    if (compile) {
+      findMyWay.compile()
+    }
+
+    for (const url of ['*admin', '*admin/42', ':admin', 'admin', 'ftp://localhost/admin']) {
+      t.assert.notEqual(findMyWay.find('GET', url).handler, adminHandler, url)
+      findMyWay.lookup({ method: 'GET', url, headers: {} }, null)
+    }
+    t.assert.deepEqual(badUrls, ['*admin', '*admin/42', ':admin', 'admin', 'ftp://localhost/admin'])
+
+    // The asterisk-form is still routed as before
+    t.assert.equal(findMyWay.find('GET', '*').handler, rootHandler)
+  })
+}
+
+test('the asterisk-form still matches a catch-all route', t => {
+  const findMyWay = FindMyWay({
+    onBadUrl: () => {}
+  })
+
+  const catchAllHandler = () => {}
+  findMyWay.on('OPTIONS', '*', catchAllHandler)
+
+  t.assert.equal(findMyWay.find('OPTIONS', '*').handler, catchAllHandler)
+  t.assert.equal(findMyWay.find('OPTIONS', '/admin').handler, catchAllHandler)
+  t.assert.notEqual(findMyWay.find('OPTIONS', '*admin').handler, catchAllHandler)
+})

@@ -1011,15 +1011,23 @@ function escapeRegExp (string) {
   return string.replace(ESCAPE_REGEXP, '\\$&')
 }
 
+// Called for a path that does not start with `/`. Other than the
+// asterisk-form (`OPTIONS *`), such a path must be an absolute-form URL: the
+// lookup skips its first character, assuming it is `/`, so `*admin` would
+// otherwise match `/admin`.
 function getPathFromAbsoluteUrl (url) {
+  if (url === '*') {
+    return url
+  }
+
   const schemeEnd = url.indexOf('://')
   if (schemeEnd === -1) {
-    return url
+    return null
   }
 
   const scheme = url.slice(0, schemeEnd).toLowerCase()
   if (scheme !== 'http' && scheme !== 'https') {
-    return url
+    return null
   }
 
   const authorityStart = schemeEnd + 3
