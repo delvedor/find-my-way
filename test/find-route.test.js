@@ -322,3 +322,29 @@ test('findRoute and duplicate detection follow off() and reset()', (t) => {
   findMyWay.on('GET', '/example/:id', handler1)
   t.assert.equal(findMyWay.findRoute('GET', '/example/:id').handler, handler1)
 })
+
+test('findRoute normalizes the path like on() when ignoreTrailingSlash is true', (t) => {
+  t.plan(3)
+
+  const findMyWay = FindMyWay({ ignoreTrailingSlash: true })
+
+  const handler = () => {}
+  findMyWay.on('GET', '/example/', handler)
+
+  t.assert.equal(findMyWay.findRoute('GET', '/example/').handler, handler)
+  t.assert.equal(findMyWay.findRoute('GET', '/example').handler, handler)
+  t.assert.equal(findMyWay.hasRoute('GET', '/example/'), true)
+})
+
+test('findRoute normalizes the path like on() when ignoreDuplicateSlashes is true', (t) => {
+  t.plan(3)
+
+  const findMyWay = FindMyWay({ ignoreDuplicateSlashes: true })
+
+  const handler = () => {}
+  findMyWay.on('GET', '//example//:id', handler)
+
+  t.assert.equal(findMyWay.findRoute('GET', '//example//:id').handler, handler)
+  t.assert.equal(findMyWay.findRoute('GET', '/example/:id').handler, handler)
+  t.assert.equal(findMyWay.hasRoute('GET', '//example//:id'), true)
+})
