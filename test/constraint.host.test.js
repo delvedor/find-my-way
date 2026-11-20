@@ -35,6 +35,25 @@ test('A route supports wildcard host constraints', t => {
   t.assert.ok(!findMyWay.find('GET', '/', { host: 'example.com' }))
 })
 
+test('Host constraints match regardless of the case of the host', t => {
+  t.plan(7)
+
+  const findMyWay = FindMyWay()
+
+  findMyWay.on('GET', '/', { constraints: { host: 'fastify.io' } }, alpha)
+  findMyWay.on('GET', '/', { constraints: { host: 'Example.COM' } }, beta)
+  findMyWay.on('GET', '/', { constraints: { host: /.*\.fastify\.io/ } }, gamma)
+  findMyWay.on('GET', '/api', { constraints: { host: /^Api\.Example\.org$/ } }, alpha)
+
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'Fastify.IO' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'example.com' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'EXAMPLE.com' }).handler, beta)
+  t.assert.equal(findMyWay.find('GET', '/', { host: 'Foo.Fastify.io' }).handler, gamma)
+  t.assert.ok(!findMyWay.find('GET', '/', { host: 'Example.org' }))
+  t.assert.equal(findMyWay.find('GET', '/api', { host: 'Api.Example.org' }).handler, alpha)
+  t.assert.equal(findMyWay.find('GET', '/api', { host: 'api.example.org' }).handler, alpha)
+})
+
 test('A route supports multiple host constraints (lookup)', t => {
   t.plan(4)
 
