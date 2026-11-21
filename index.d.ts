@@ -84,6 +84,8 @@ declare namespace Router {
 
     ignoreDuplicateSlashes?: boolean;
 
+    useSemicolonDelimiter?: boolean;
+
     allowUnsafeRegex?: boolean;
 
     caseSensitive?: boolean;
